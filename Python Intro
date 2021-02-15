@@ -1,0 +1,319 @@
+A.	Built-in Data Types
+
+1.	Variable Names
+Variable names can take many forms, although they can only contain numbers, letters (both upper and lower), and underscores (_). They must begin with a letter or an underscore and are CaSe SeNsItIve. Additionally, some words are reserved in Python and so cannot be used for variable names (e.g. importor for). For example,
+x = 1.0
+X = 1.0
+X1 = 1.0
+X1 = 1.0
+x1 = 1.0
+dell = 1.0
+dellreturns = 1.0
+dellReturns = 1.0
+_x = 1.0
+x_ = 1.0
+are all legal and distinct variable names. Note that names which begin or end with an underscore, while legal, are not normally used since by convention these convey special meaning.1 Illegal names do not follow these rules.
+# Not allowed
+x: = 1.0
+1X = 1
+X-1 = 1
+for = 1
+Multiple variables can be assigned on the same line using commas,
+x, y, z = 1, 3.1415, ’a’
+
+2.	Core Native Data Types
+
+2.1	Numeric
+Simple numbers in Python can be either integers, ﬂoats or complex. Integers correspond to either 32 bit or 64-bit integers, depending on whether the python interpreter was compiled for a 32-bit or 64-bit operating system, and ﬂoats are always 64-bit (corresponding to doubles in C/C++). Long integers, on the other hand, do not have a ﬁxed size and so can accommodate numbers which are larger than maximum the basic integer type can handle. This chapter does not cover all Python data types, and instead focuses on those which are most relevant for numerical analysis, econometrics and statistics. The byte, byte array and memory view data types are not described.
+
+Floating Point (ﬂoat)
+The most important (scalar) data type for numerical analysis is the ﬂoat. Unfortunately, not all non- complex numeric data types are ﬂoats. To input a ﬂoating data type, it is necessary to include a . (period, dot) in the expression. This example uses the function type() to determine the data type of a variable.
+>>> x = 1
+>>> type(x)
+int
+>>> x = 1.0
+>>> type(x)
+float
+>>> x = float(1)
+>>> type(x)
+float
+This example shows that using the expression that x = 1produces an integer-valued variable while x = 1.0 produces a ﬂoat-valued variable. Using integers can produce unexpected results and so it is important to include “.0” when expecting a ﬂoat.
+
+Complex (complex)
+Complex numbers are also important for numerical analysis. Complex numbers are created in Python using jor the function complex().
+>>> x = 1.0
+>>> type(x)
+float
+>>> x = 1j
+>>> type(x)
+complex
+>>> x = 2 + 3j
+>>> x
+(2+3j)
+>>> x = complex(1)
+>>> x
+(1+0j)
+Note that a +b jis the same as complex(a ,b ), while complex(a )is the same as a +0j.
+Integers (int and long)
+Floats use an approximation to represent numbers which may contain a decimal portion. The integer data type stores numbers using an exact representation, so that no approximation is needed. The cost of the exact representation is that the integer data type cannot express anything that isn’t an integer, rendering integers of limited use in most numerical work.
+Basic integers can be entered either by excluding the decimal (see ﬂoat), or explicitly using the int() function. The int()function can also be used to convert a ﬂoat to an integer by round towards 0.
+>>> x = 1
+>>> type(x)
+int
+>>> x = 1.0
+>>> type(x)
+float
+>>> x = int(x)
+>>> type(x)
+int
+Integers can range from −231 to 231 − 1. Python contains another type of integer, known as a long integer, which has no effective range limitation. Long integers are entered using the syntax x = 1L or by calling long(). Additionally python will automatically convert integers outside of the standard integer range to long integers.
+>>> x = 1
+>>> x
+1
+>>> type(x)
+int
+>>> x = 1L
+>>> x
+1L
+>>> type(x)
+long
+>>> x = long(2)
+>>> type(x)
+long
+>>> y = 2
+>>> type(y)
+int
+>>> x = y ** 64 # ** is denotes exponentiation, y^64 in TeX
+>>> x
+18446744073709551616L
+The trailing Lafter the number indicates that it is a long integer, rather than a standard integer.
+2.2	Boolean(bool)
+The Boolean data type is used to represent true and false, using the reserved keywords True and False. Boolean variables are important for program ﬂow control (see Chapter 13) and are typically created as a result of logical operations (see Chapter 11), although they can be entered directly.
+>>> x = True
+>>> type(x)
+bool
+>>> x = bool(1)
+>>> x
+True
+>>> x = bool(0)
+>>> x
+False
+Non-zero, non-empty values generally evaluate to true when evaluated by bool(). Zero or empty values such as bool(0), bool(0.0), bool(0.0j), bool(None), bool(’’)and bool([])are all false.
+2.3	Strings(str)
+Strings are not usually important for numerical analysis, although they are frequently encountered when dealing with data ﬁles, especially when importing or when formatting output for human consumption. Strings are delimited using ’’or ""but not using combination of the two delimiters (i.e. do not try ’") in a single string, except when used to express a quotation.
+>>> x = ’abc’
+>>> type(x)
+str
+>>> y = ’"A quotation!"’
+>>> print(y)
+"A quotation!"
+Slicing Strings
+Substrings within a string can be accessed using slicing. Slicing uses []to contain the indices of the char-acters in a string, where the ﬁrst index is 0, and the last is n − 1 (assuming the string has n letters). The following table describes the types of slices which are available. The most useful are s[i ], which will re-turn the character in position i , s[:i ], which return the leading characters from positions 0 to i − 1, and s[i :]which returns the trailing characters from positions i to n − 1. The table below provides a list of the types of slices which can be used. The second column shows that slicing can use negative indices which essentially index the string backward.
+ 
+>>> text = ’Python strings are sliceable.’
+>>> text[0]
+’P’
+>>> text[10]
+’i’
+>>> L = len(text)
+>>> text[L] # Error
+IndexError: string index out of range
+>>> text[L-1]
+’.’
+>>> text[:10]
+’Python str’
+>>> text[10:]
+’ings are sliceable.’
+2.4	Lists (list)
+Lists are a built-in data type which require other data types to be useful. A list is a collection of other objects– ﬂoats, integers, complex numbers, strings or even other lists. Lists are essential to Python programming and are used to store collections of other values. For example, a list of ﬂoats can be used to express a vector (although the NumPy data types arrayand matrixare better suited). Lists also support slicing to retrieve one or more elements. Basic lists are constructed using square braces, [], and values are separated using commas.
+>>> x = []
+>>> type(x)
+builtins.list
+>>> x=[1,2,3,4]
+>>> x
+[1,2,3,4]
+# 2-dimensional list (list of lists)
+>>> x = [[1,2,3,4], [5,6,7,8]]
+>>> x
+[[1, 2, 3, 4], [5, 6, 7, 8]]
+# Jagged list, not rectangular
+>>> x = [[1,2,3,4] , [5,6,7]]
+>>> x
+[[1, 2, 3, 4], [5, 6, 7]]
+# Mixed data types
+>>> x = [1,1.0,1+0j,’one’,None,True]
+>>> x
+[1, 1.0, (1+0j), ’one’, None, True]
+These examples show that lists can be regular, nested and can contain any mix of data types including other lists.
+Slicing Lists
+Lists, like strings, can be sliced. Slicing is similar, although lists can be sliced in more ways than strings. The difference arises since lists can be multi-dimensional while strings are always 1 × n. Basic list slicing is identical to slicing strings, and operations such as x[:], x[1:], x[:1] and x[-3:] can all be used. To understand slicing, assume x is a 1-dimensional list with n elements and i ≥ 0, j > 0, i < j ,m ≥ 1. Python uses 0-based indices, and so the n elements of xcan be thought of as x0, x1, . . . , xn−1.
+ 
+The default list slice uses a unit stride (step size of one) . It is possible to use other strides using a third input in the slice so that the slice takes the form x[i:j:m]where iis the index to start, jis the index to end (exclusive) and mis the stride length. For example x[::2]will select every second element of a list and is equivalent to x[0:n:2]where n = len(x). The stride can also be negative which can be used to select the elements of a list in reverse order. For example, x[::-1]will reverse a list and is equivalent to x[0:n:-1].
+Examples of accessing elements of 1-dimensional lists are presented below.
+>>> x = [0,1,2,3,4,5,6,7,8,9]
+>>> x[0]
+0
+>>> x[5]
+5
+>>> x[10] # Error
+IndexError: list index out of range
+>>> x[4:]
+[4, 5, 6, 7, 8, 9]
+>>> x[:4]
+[0, 1, 2, 3]
+>>> x[1:4]
+[1, 2, 3]
+>>> x[-0]
+0
+>>> x[-1]
+9
+>>> x[-10:-1]
+[0, 1, 2, 3, 4, 5, 6, 7, 8]
+List can be multidimensional, and slicing can be done directly in higher dimensions. For simplicity, consider slicing a 2-dimensional list x = [[1,2,3,4], [5,6,7,8]]. If single indexing is used, x[0]will return the ﬁrst (inner) list, and x[1]will return the second (inner) list. Since the list returned by x[0]is sliceable, the inner list can be directly sliced using x[0][0]or x[0][1:4].
+>>> x = [[1,2,3,4], [5,6,7,8]]
+>>> x[0]
+[1, 2, 3, 4]
+>>> x[1]
+[5, 6, 7, 8]
+>>> x[0][0]
+1
+>>> x[0][1:4]
+[2, 3, 4]
+>>> x[1][-4:-1]
+[5, 6, 7]
+List Functions
+A few functions are available for manipulating lists. The most useful are
+ 
+>>> x = [0,1,2,3,4,5,6,7,8,9]
+>>> x.append(0)
+>>> x
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+>>> len(x)
+11
+>>> x.extend([11,12,13])
+>>> x
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 11, 12, 13]
+>>> x.pop(1)
+1
+>>> x
+[0, 2, 3, 4, 5, 6, 7, 8, 9, 0, 11, 12, 13]
+>>> x.remove(0)
+>>> x
+[2, 3, 4, 5, 6, 7, 8, 9, 0, 11, 12, 13]
+
+Elements can also be deleted from lists using the keyword delin combination with a slice.
+>>> x = [0,1,2,3,4,5,6,7,8,9]
+>>> del x[0]
+>>> x
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> x[:3]
+[1, 2, 3]
+>>> del x[:3]
+>>> x
+[4, 5, 6, 7, 8, 9]
+>>> del x[1:3]
+>>> x
+[4, 7, 8, 9]
+>>> del x[:]
+>>> x
+[]
+
+2.5	Tuple (tuple)
+A tuple is in many ways like a list – tuple contain multiple pieces of data which may contain a mix of data types. Aside from using a different syntax to construct a tuple, they are close enough to lists to ignore the difference except that tuples are immutable. Immutability means that the elements the comprise a tuple cannot be changed. It is not possible to add or remove elements form a tuple. However, if a tuple contains a mutable data type, for example a tuple that contains a list, the contents mutable data type can change. Tuples are constructed using parentheses (()), rather than square braces ([]) of lists. Tuples can be sliced in an identical manner as lists. A list can be converted into a tuple using tuple() (Similarly, a tuple can be converted to list using list()).
+>>> x =(0,1,2,3,4,5,6,7,8,9)
+>>> type(x)
+tuple
+>>> x[0]
+0
+>>> x[-10:-5]
+(0, 1, 2, 3, 4)
+>>> x = list(x)
+>>> type(x)
+list
+>>> x = tuple(x)
+>>> type(x)
+tuple
+>>> x= ([1,2],[3,4])
+>>> x[0][1] = -10
+>>> x # Contents can change, elements cannot
+([1, -10], [3, 4])
+
+Note that tuples containing a single element must contain a comma when created, so that x = (2,) is
+assign a tuple to x, while x=(2)will assign 2 to x. The latter interprets the parentheses as if they are part of
+a mathematical formula rather than being used to construct a tuple. x = tuple([2])can also be used to create
+a single element tuple. Lists do not have this issue since square brackets do not have this ambiguity.
+>>> x =(2)
+>>> type(x)
+int
+>>> x = (2,)
+>>> type(x)
+tuple
+>>> x = tuple([2])
+>>> type(x)
+tuple
+Tuple Functions
+Tuples are immutable, and so only have the methods indexand count, which behave in an identical manner to their list counterparts.
+
+2.6	Xrange (xrange)
+A xrange is a useful data type which is most commonly encountered when using a forloop. xrange(a,b,i) creates the sequences that follows the pattern a, a +i, a +2i, . . . , a +(m −1)i where m = ⌈b −ia ⌉. In other words, it ﬁnd all integers x starting with a such a ≤ x < b and where two consecutive values are separated by i. xrange can be called with 1 or two parameters – xrange(a,b) is the same as xrange(a,b,1) and xrange(b) is the same as xrange(0,b,1).
+>>> x = xrange(10)
+>>> type(x)
+xrange
+>>> print(x)
+xrange(0, 10)
+>>> list(x)
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+>>> x = xrange(3,10)
+>>> list(x)
+[3, 4, 5, 6, 7, 8, 9]
+>>> x = xrange(3,10,3)
+>>> list(x)
+[3, 6, 9]
+>>> y = range(10)
+>>> type(y)
+list
+>>> y
+[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+Xrange is not technically a list, which is why the statement print(x)returns xrange(0,10). Explicitly converting with list produces a list which allows the values to be printed. Technically xrange is an iterator which does not actually require the storage space of a list. This can be seen in the differences between using y = range(10), which returns a list and y=xrange(10)which returns an xrange object. Best practice is to use xrange instead of range.
+
+2.7	Dictionary (dict)
+Dictionaries are encountered far less frequently than then any of the previously described data types in numerical Python. They are, however, commonly used to pass options into other functions such as optimizers, and so familiarity with dictionaries is important. Dictionaries in Python are composed of keys (words) and values (deﬁnitions). Dictionaries keys must be unique primitive data types (e.g. strings, the most common key), and values can contain any valid Python data type.4 Values are accessed using keys.
+>>> data = {’age’: 34, ’children’ : [1,2], 1: ’apple’}
+>>> type(data)
+dict
+>>> data[’age’]
+34
+Values associated with an existing key can be updated by making an assignment to the key in the dictionary.
+>>> data[’age’] = ’xyz’
+>>> data[’age’]
+’xyz’
+New key-value pairs can be added by deﬁning a new key and assigning a value to it.
+>>> data[’name’] = ’abc’
+>>> data
+{1: ’apple’, ’age’: ’xyz’, ’children’: [1, 2], ’name’: ’abc’}
+Key-value pairs can be deleted using the reserved keyword del.
+>>> del data[’age’]
+>>> data
+{1: ’apple’, ’children’: [1, 2], ’name’: ’abc’}
+
+2.8	Sets (set, frozenset)
+Sets are collections which contain all unique elements of a collection. set and frozenset only differ in that the latter is immutable (and so has higher performance), and so set is similar to a unique list while frozenset is similar to a unique tuple. While sets are generally not important in numerical analysis, they can be very useful when working with messy data – for example, ﬁnding the set of unique tickers in a long list of tickers.
+Set Functions
+A few methods are available for manipulating sets. The most useful are
+ 
+The code below demonstrates the use of set. Note that ’MSFT’ is repeated in the list used to initialize the set, but only appears once in the set since all elements must be unique.
+>>> x = set([’MSFT’,’GOOG’,’AAPL’,’HPQ’,’MSFT’])
+>>> x
+{’AAPL’, ’GOOG’, ’HPQ’, ’MSFT’}
+>>> x.add(’CSCO’)
+>>> x
+{’AAPL’, ’CSCO’, ’GOOG’, ’HPQ’, ’MSFT’}
+>>> y = set([’XOM’, ’GOOG’])
+>>> x.intersection(y)
+{’GOOG’}
+>>> x = x.union(y)
+>>> x
+{’AAPL’, ’CSCO’, ’GOOG’, ’HPQ’, ’MSFT’, ’XOM’}
+>>> x.remove(’XOM’)
+{’AAPL’, ’CSCO’, ’GOOG’, ’HPQ’, ’MSFT’}
+A frozenset supports the same methods except add and remove.
