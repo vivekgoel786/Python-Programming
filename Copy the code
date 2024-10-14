@@ -1,0 +1,57 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Sample data: Generate a skewed dataset
+# Here, we create a skewed distribution using exponential distribution
+np.random.seed(0)
+data = np.random.exponential(scale=100, size=1000)
+
+# Create a pandas DataFrame
+df = pd.DataFrame(data, columns=['value'])
+
+# Visualize the distribution
+plt.figure(figsize=(10, 6))
+plt.hist(df['value'], bins=50, color='skyblue', edgecolor='black')
+plt.title('Histogram of Skewed Data')
+plt.xlabel('Value')
+plt.ylabel('Frequency')
+plt.show()
+
+# 1. **Equal Frequency Binning (Quantile Binning)**
+
+# Define the number of bins
+num_bins = 10
+
+# Create quantile bins
+df['quantile_bin'] = pd.qcut(df['value'], q=num_bins, labels=False)
+
+# Count the frequency of each bin
+quantile_bin_counts = df['quantile_bin'].value_counts().sort_index()
+
+print("\nEqual Frequency Binning Counts:")
+print(quantile_bin_counts)
+
+# 2. **Custom Binning**
+
+# Define custom bins (for skewed data)
+custom_bins = [0, 10, 20, 50, 100, 500, 1000, 5000]  # Adjust based on your data
+custom_labels = ['0-10', '10-20', '20-50', '50-100', '100-500', '500-1000', '1000+']
+
+# Create custom bins
+df['custom_bin'] = pd.cut(df['value'], bins=custom_bins, labels=custom_labels, right=False)
+
+# Count the frequency of each custom bin
+custom_bin_counts = df['custom_bin'].value_counts().sort_index()
+
+print("\nCustom Binning Counts:")
+print(custom_bin_counts)
+
+# Visualize Custom Bins
+plt.figure(figsize=(10, 6))
+custom_bin_counts.plot(kind='bar', color='lightgreen', edgecolor='black')
+plt.title('Custom Binning Counts')
+plt.xlabel('Bins')
+plt.ylabel('Frequency')
+plt.xticks(rotation=45)
+plt.show()
