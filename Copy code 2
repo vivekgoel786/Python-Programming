@@ -1,24 +1,21 @@
 import pandas as pd
 
-def equal_binning(df, column, num_bins):
+def equal_quantile_binning(df, column, num_bins):
     """
-    Perform equal binning on a continuous variable and store the binned variable in the original DataFrame.
+    Perform equal quantile binning on a continuous variable and store the binned variable in the original DataFrame.
 
     Parameters:
     - df: pd.DataFrame - The original DataFrame.
     - column: str - The name of the continuous variable to bin.
-    - num_bins: int - The number of bins to create.
+    - num_bins: int - The number of quantile bins to create.
 
     Returns:
     - pd.DataFrame - The DataFrame with an additional column for binned values.
     """
     
-    # Create bins
-    bin_edges = pd.cut(df[column], bins=num_bins, labels=False, retbins=True)[1]
-    
-    # Assign the bin number to a new column
+    # Perform quantile binning
     bin_column_name = f'{column}_binned'
-    df[bin_column_name] = pd.cut(df[column], bins=bin_edges, labels=False)
+    df[bin_column_name] = pd.qcut(df[column], q=num_bins, labels=False)
 
     return df
 
@@ -31,6 +28,6 @@ if __name__ == "__main__":
     
     df = pd.DataFrame(data)
 
-    # Perform equal binning
-    binned_df = equal_binning(df, 'value', 3)
+    # Perform equal quantile binning
+    binned_df = equal_quantile_binning(df, 'value', 4)  # 4 quantile bins
     print(binned_df)
