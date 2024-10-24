@@ -1,54 +1,26 @@
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
-
-# Sample data
-data = {
-    'category': ['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'],
-    'target': [0, 1, 0, 1, 1, 0, 0, 1]
-}
-
-df = pd.DataFrame(data)
-
-# One-hot encode the categorical variable
-X = pd.get_dummies(df['category'], drop_first=True)
-y = df['target']
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-# Fit the model
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-# Predict probabilities
-y_prob = model.predict_proba(X_test)[:, 1]
-
-# Calculate AUC ROC
-auc_roc = roc_auc_score(y_test, y_prob)
-print(f"AUC ROC: {auc_roc:.4f}")
-
-# Calculate Gini coefficient using the sorted method
 def gini_coefficient(y_true, y_prob):
-    # Sort the predictions
+    # Sort the predicted probabilities and the actual values
     sorted_indices = np.argsort(y_prob)
-    y_true_sorted = y_true.iloc[sorted_indices]
+    y_true_sorted = y_true[sorted_indices]
     
-    # Calculate cumulative sums
+    # Calculate the cumulative sums
     cumulative_true = np.cumsum(y_true_sorted)
-    cumulative_total = np.arange(1, len(y_true_sorted) + 1)  # 1, 2, ..., n
-    total_positive = cumulative_true[-1]
     
-    # Calculate the Gini coefficient
-    # Gini = 1 - 2 * (Area under the Lorenz curve)
-    # Area under the Lorenz curve = cumulative_true.sum() / total_positive
-    # Normalized area = (cumulative_true / total_positive) / (n)
-    area_under_lorenz_curve = cumulative_true.sum() / (total_positive * len(y_true_sorted))
-    gini = 1 - 2 * area_under_lorenz_curve
+    # Total positive instances
+    total_positive = np.sum(y_true_sorted)
+    
+    # Avoid division by zero
+    if total_positive == 0:
+        return 0.0
+    
+    # Normalize cumulative sums
+    cumulative_true_normalized = cumulative_true / total_positive
+    cumulative_total = np.arange(1, len(y_true_sorted) + 1) / len(y_true_sorted)
+    
+    # Calculate Gini coefficient
+    gini = 2 * np.trapz(cumulative_true_normalized, cumulative_total) - 1
     return gini
 
 # Calculate Gini coefficient
-gini_coef = gini_coefficient(pd.Series(y_test), pd.Series(y_prob))
-print(f"Gini Coefficient: {gini_coef:.4f}")
+gini = gini_coefficient(y_test.values, y_prob)
+print(f"Gini Coefficient: {gini:.4f}")
