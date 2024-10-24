@@ -1,36 +1,54 @@
 import pandas as pd
 import numpy as np
-from scipy.stats import entropy
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 
-def calculate_entropy(column, num_bins=10):
-    # Check if the column is numeric
-    if pd.api.types.is_numeric_dtype(column):
-        # Bin the continuous variable
-        binned_values = pd.cut(column, bins=num_bins, labels=False)
-        # Get value counts for the binned variable
-        value_counts = np.bincount(binned_values)
-    else:
-        # For categorical variables, get value counts directly
-        value_counts = column.value_counts().values
-    
-    # Calculate probabilities
-    probabilities = value_counts / value_counts.sum()
-    
-    # Filter out zero probabilities for entropy calculation
-    probabilities = probabilities[probabilities > 0]
-    
-    # Calculate entropy
-    return -np.sum(probabilities * np.log2(probabilities))
-
-# Example DataFrame
+# Sample data
 data = {
-    'A': [1, 1, 2, 2, 2, 3],
-    'B': ['cat', 'cat', 'dog', 'dog', 'dog', 'mouse'],
-    'C': [1, 2, 3, 4, 5, 6]
+    'category': ['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'],
+    'target': [0, 1, 0, 1, 1, 0, 0, 1]
 }
+
 df = pd.DataFrame(data)
 
-# Calculate entropy for each column
-entropy_values = df.apply(calculate_entropy)
+# One-hot encode the categorical variable
+X = pd.get_dummies(df['category'], drop_first=True)
+y = df['target']
 
-print(entropy_values)
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Fit the model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predict probabilities
+y_prob = model.predict_proba(X_test)[:, 1]
+
+# Calculate AUC ROC
+auc_roc = roc_auc_score(y_test, y_prob)
+print(f"AUC ROC: {auc_roc:.4f}")
+
+# Calculate Gini coefficient using the sorted method
+def gini_coefficient(y_true, y_prob):
+    # Sort the predictions
+    sorted_indices = np.argsort(y_prob)
+    y_true_sorted = y_true.iloc[sorted_indices]
+    
+    # Calculate cumulative sums
+    cumulative_true = np.cumsum(y_true_sorted)
+    cumulative_total = np.arange(1, len(y_true_sorted) + 1)  # 1, 2, ..., n
+    total_positive = cumulative_true[-1]
+    
+    # Calculate the Gini coefficient
+    # Gini = 1 - 2 * (Area under the Lorenz curve)
+    # Area under the Lorenz curve = cumulative_true.sum() / total_positive
+    # Normalized area = (cumulative_true / total_positive) / (n)
+    area_under_lorenz_curve = cumulative_true.sum() / (total_positive * len(y_true_sorted))
+    gini = 1 - 2 * area_under_lorenz_curve
+    return gini
+
+# Calculate Gini coefficient
+gini_coef = gini_coefficient(pd.Series(y_test), pd.Series(y_prob))
+print(f"Gini Coefficient: {gini_coef:.4f}")
