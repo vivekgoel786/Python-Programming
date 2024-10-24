@@ -1,33 +1,57 @@
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
 
-def equal_quantile_binning(df, column, num_bins):
-    """
-    Perform equal quantile binning on a continuous variable and store the binned variable in the original DataFrame.
+# Sample data
+data = {
+    'category': ['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'],
+    'target': [0, 1, 0, 1, 1, 0, 0, 1]
+}
 
-    Parameters:
-    - df: pd.DataFrame - The original DataFrame.
-    - column: str - The name of the continuous variable to bin.
-    - num_bins: int - The number of quantile bins to create.
+df = pd.DataFrame(data)
 
-    Returns:
-    - pd.DataFrame - The DataFrame with an additional column for binned values.
-    """
+# One-hot encode the categorical variable
+X = pd.get_dummies(df['category'], drop_first=True)
+y = df['target']
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Fit the model
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+# Predict probabilities
+y_prob = model.predict_proba(X_test)[:, 1]
+
+# Calculate AUC ROC
+auc_roc = roc_auc_score(y_test, y_prob)
+print(f"AUC ROC: {auc_roc:.4f}")
+
+# Function to calculate Gini Coefficient
+def gini_coefficient(y_true, y_prob):
+    # Sort the predicted probabilities and the actual values
+    sorted_indices = np.argsort(y_prob)
+    y_true_sorted = y_true[sorted_indices]
+    cumulative_true = np.cumsum(y_true_sorted)
     
-    # Perform quantile binning
-    bin_column_name = f'{column}_binned'
-    df[bin_column_name] = pd.qcut(df[column], q=num_bins, labels=False)
-
-    return df
-
-# Example usage:
-if __name__ == "__main__":
-    # Sample DataFrame
-    data = {
-        'value': [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]
-    }
+    # Calculate the Gini coefficient
+    total_positive = np.sum(y_true_sorted)
+    total_negative = len(y_true_sorted) - total_positive
     
-    df = pd.DataFrame(data)
+    if total_positive == 0:
+        return 0.0
+    
+    # Normalize cumulative sums
+    cumulative_true_normalized = cumulative_true / total_positive
+    cumulative_total = np.arange(1, len(y_true_sorted) + 1) / len(y_true_sorted)
+    
+    # Calculate Gini coefficient
+    gini = 2 * np.trapz(cumulative_true_normalized, cumulative_total) - 1
+    return gini
 
-    # Perform equal quantile binning
-    binned_df = equal_quantile_binning(df, 'value', 4)  # 4 quantile bins
-    print(binned_df)
+# Calculate Gini coefficient
+gini = gini_coefficient(y_test.values, y_prob)
+print(f"Gini Coefficient: {gini:.4f}")
