@@ -1,16 +1,63 @@
-# Sort the predicted probabilities and actual values
-sorted_indices = np.argsort(y_prob)
-y_true_sorted = y_test.values[sorted_indices]
-y_prob_sorted = y_prob[sorted_indices]
 
-# Calculate the false positive rate and true positive rate
-fpr, tpr, thresholds = roc_curve(y_true_sorted, y_prob_sorted)
+Here's a Python script to:
 
-# Calculate AUC ROC
-auc_roc = roc_auc_score(y_test, y_prob)
-print(f"AUC ROC: {auc_roc:.4f}")
+1. Plot histograms and KDE curves for both Lombard and Property-backed scores.
 
-# Alternatively, you can calculate AUC using the sorted values
-from sklearn.metrics import auc
-sorted_auc = auc(fpr, tpr)
-print(f"Sorted AUC ROC: {sorted_auc:.4f}")
+
+2. Perform Min-Max Normalization on the scores.
+
+
+
+Code
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import MinMaxScaler
+
+# Sample Data (Replace with your actual score data)
+np.random.seed(42)
+lombard_scores = np.random.normal(loc=600, scale=50, size=1000)  # Mean=600, Std=50
+property_scores = np.random.normal(loc=610, scale=60, size=1000)  # Mean=610, Std=60
+
+# Create DataFrame
+df = pd.DataFrame({'Lombard': lombard_scores, 'Property': property_scores})
+
+# Plot Histograms and KDE
+plt.figure(figsize=(12, 6))
+sns.histplot(df['Lombard'], kde=True, color='blue', label='Lombard', bins=30, alpha=0.6)
+sns.histplot(df['Property'], kde=True, color='red', label='Property-backed', bins=30, alpha=0.6)
+
+plt.title("Histogram & KDE Curve of Lombard vs Property-backed Scores")
+plt.xlabel("Score")
+plt.ylabel("Density")
+plt.legend()
+plt.show()
+
+# Min-Max Normalization
+scaler = MinMaxScaler()
+df_normalized = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
+
+# Plot Normalized Histograms and KDE
+plt.figure(figsize=(12, 6))
+sns.histplot(df_normalized['Lombard'], kde=True, color='blue', label='Lombard (Normalized)', bins=30, alpha=0.6)
+sns.histplot(df_normalized['Property'], kde=True, color='red', label='Property-backed (Normalized)', bins=30, alpha=0.6)
+
+plt.title("Histogram & KDE of Normalized Scores")
+plt.xlabel("Normalized Score")
+plt.ylabel("Density")
+plt.legend()
+plt.show()
+
+Explanation
+
+Histograms & KDE Plots: Helps visualize the distribution of both score sets.
+
+Min-Max Normalization: Scales values between 0 and 1.
+
+Plot Normalized Data: Ensures normalization worked as expected.
+
+
+Let me know if you need modifications!
+
