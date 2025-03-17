@@ -1,0 +1,119 @@
+Comparison of Calibration Techniques for Master Scale Alignment
+
+When calibrating a Probability of Default (PD) model to a master scale, we aim to adjust the predicted probabilities to align with observed default rates while maintaining ranking consistency. The three techniques you mentioned—Pluto-Tasche, Quantile Mapping Method (QMM), and Platt Scaling—are commonly used in credit risk modeling.
+
+
+---
+
+1. Pluto-Tasche Method
+
+Concept:
+
+Uses Bayesian updating to adjust estimated PDs.
+
+Incorporates prior information about default rates and adjusts PDs accordingly.
+
+Ensures PD calibration aligns with observed defaults.
+
+
+Pros:
+
+✔ Well-suited for regulatory models (Basel, IFRS9).
+✔ Works well even for small datasets.
+✔ Helps correct over- or under-estimated PDs conservatively.
+
+Cons:
+
+✘ Computationally complex.
+✘ Requires a reliable prior default rate.
+
+Best Use Case:
+
+Regulatory PD calibration for credit portfolios.
+
+When historical default rates are available for Bayesian adjustment.
+
+
+
+---
+
+2. Quantile Mapping Method (QMM)
+
+Concept:
+
+Maps model-predicted PDs to empirical default rates at different quantiles.
+
+Works well when PDs are grouped into risk buckets (e.g., AAA, AA, A, etc.).
+
+Adjusts the distribution of predicted PDs while keeping ranking intact.
+
+
+Pros:
+
+✔ Simple to implement for bucket-based PDs.
+✔ Aligns empirical default rates with model predictions.
+✔ Effective for large datasets.
+
+Cons:
+
+✘ Struggles with small datasets (like our 27 observations).
+✘ Needs enough defaults per bucket to provide meaningful adjustments.
+
+Best Use Case:
+
+Retail/Corporate credit ratings where PDs are bucketed (e.g., risk grades).
+
+Works well in large datasets where PDs need empirical adjustments.
+
+
+
+---
+
+3. Platt Scaling
+
+Concept:
+
+A logistic regression-based approach to recalibrate probability estimates.
+
+Adjusts PDs using a sigmoid transformation, originally designed for classification models.
+
+Fine-tunes the mapping of PD scores to probabilities while keeping rankings intact.
+
+
+Pros:
+
+✔ Works well for small datasets (like our 27 observations).
+✔ Retains relative ranking of scores.
+✔ Simple logistic function transformation.
+
+Cons:
+
+✘ Assumes logistic distribution of PD scores.
+✘ Can be sensitive to imbalanced datasets (which we have: 5 defaults, 22 non-defaults).
+
+Best Use Case:
+
+Machine learning models where we need a probability recalibration.
+
+Small datasets with imbalanced classes (like ours).
+
+
+
+---
+
+Best Technique for Our Case?
+
+Given our scenario:
+
+✅ Small dataset (27 observations).
+✅ Imbalanced defaults (5 out of 27).
+✅ PDs already aligned to CT of 0.4%.
+✅ Need smooth recalibration without distorting rankings.
+
+Best Choice → Platt Scaling ✅
+
+Since we are already using a logistic regression model, Platt Scaling is natural and simple.
+
+It will recalibrate our predicted PDs without overfitting.
+
+Works better for small datasets than QMM or Pluto-Tasche.
