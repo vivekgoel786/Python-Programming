@@ -35,23 +35,36 @@ platt_model.fit(raw_probabilities_reshaped, y)
 
 # Step 4: Get calibrated probabilities
 calibrated_probabilities = platt_model.predict_proba(raw_probabilities_reshaped)[:, 1]
+initial_avg_prob = np.mean(calibrated_probabilities)
 
-# Step 5: Calculate averages
-initial_avg_prob = np.mean(raw_probabilities)
-calibrated_avg_prob = np.mean(calibrated_probabilities)
+# Step 5: Adjust the intercept to align with target CT value (0.4%)
+target_avg_prob = 0.004  # 0.4%
+logit_target = np.log(target_avg_prob / (1 - target_avg_prob))
+logit_initial_avg = np.log(initial_avg_prob / (1 - initial_avg_prob))
+intercept_adjustment = logit_target - logit_initial_avg
 
-# Visualization: Compare Raw vs. Calibrated Probabilities
+# Apply adjustment to intercept
+adjusted_intercept = platt_model.intercept_ + intercept_adjustment
+adjusted_logits = platt_model.coef_ * raw_probabilities_reshaped + adjusted_intercept
+adjusted_probabilities = 1 / (1 + np.exp(-adjusted_logits))
+
+# Step 6: Calculate new average probability
+final_avg_probability = np.mean(adjusted_probabilities)
+
+# Visualization: Compare Before and After Calibration
 plt.figure(figsize=(8, 5))
 plt.scatter(pd_scores, raw_probabilities, color='blue', label="Raw Probabilities", alpha=0.6)
-plt.scatter(pd_scores, calibrated_probabilities, color='red', label="Calibrated Probabilities", alpha=0.6)
-plt.axhline(y=initial_avg_prob, color='blue', linestyle="--", label=f"Initial Avg Prob: {initial_avg_prob:.4f}")
-plt.axhline(y=calibrated_avg_prob, color='red', linestyle="--", label=f"Calibrated Avg Prob: {calibrated_avg_prob:.4f}")
+plt.scatter(pd_scores, calibrated_probabilities, color='orange', label="Platt-Scaled Probabilities", alpha=0.6)
+plt.scatter(pd_scores, adjusted_probabilities, color='red', label="Final Adjusted Probabilities", alpha=0.6)
+plt.axhline(y=initial_avg_prob, color='orange', linestyle="--", label=f"Platt-Scaled Avg Prob: {initial_avg_prob:.6f}")
+plt.axhline(y=final_avg_probability, color='red', linestyle="--", label=f"Final Adjusted Avg Prob: {final_avg_probability:.6f}")
+plt.axhline(y=target_avg_prob, color='green', linestyle="--", label=f"Target Avg Prob (CT=0.4%): {target_avg_prob:.6f}")
 plt.xlabel("PD Score")
 plt.ylabel("Probability of Default")
-plt.title("Platt Scaling: Probability of Default Before and After Calibration")
+plt.title("Platt Scaling with CT Adjustment (Target 0.4%)")
 plt.legend()
 plt.show()
 
 # Print results
-print(f"Initial Avg Probability: {initial_avg_prob:.6f}")
-print(f"Calibrated Avg Probability: {calibrated_avg_prob:.6f}")
+print(f"Initial Platt-Scaled Avg Probability: {initial_avg_prob:.6f}")
+print(f"Final Adjusted Avg Probability (Aligned to 0.4% CT): {final_avg_probability:.6f}")
