@@ -1,0 +1,60 @@
+import numpy as np
+import pandas as pd
+import scipy.optimize as opt
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+
+# User-provided PD scores and observed defaults
+pd_scores = np.array([6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5, 
+                      6.2, 4.8, 8.2, 6.8, 5.2, 6, 3.6, 7.7, 6.2, 6.3, 
+                      8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7])
+
+observed_defaults = np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+                              0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+                              0, 0, 0, 0, 0, 0, 0])
+
+# Ensure higher scores indicate lower risk by reversing the score order
+pd_scores = 10 - pd_scores  # Reverse scoring direction
+
+# Fit logistic regression
+log_reg = LogisticRegression()
+log_reg.fit(pd_scores.reshape(-1, 1), observed_defaults)
+logistic_pd = log_reg.predict_proba(pd_scores.reshape(-1, 1))[:, 1]  # PD estimates
+
+# Quasi-Moment Matching (QMM) adjustment
+def qmm_adjustment(pd_estimates, target_mean_pd):
+    """
+    Adjusts PD estimates using Quasi-Moment Matching (QMM) to align with a target mean PD.
+    """
+    def objective(scale):
+        return np.mean(scale * pd_estimates) - target_mean_pd
+
+    scale_factor = opt.root_scalar(objective, bracket=[0.1, 10], method='brentq').root
+    return np.clip(scale_factor * pd_estimates, 0.0001, 1)  # Ensure valid probabilities
+
+# Define target portfolio-wide PD (Central Tendency)
+target_pd = 0.50 / 100  # 0.50%
+
+# Apply QMM adjustment
+calibrated_pd = qmm_adjustment(logistic_pd, target_pd)
+
+# Sort for plotting
+sorted_indices = np.argsort(pd_scores)
+sorted_scores = pd_scores[sorted_indices]
+sorted_pd = calibrated_pd[sorted_indices]
+
+# Plot Results
+plt.figure(figsize=(8, 5))
+plt.scatter(pd_scores, logistic_pd * 100, color='r', label="Initial Logistic PD")
+plt.scatter(sorted_scores, sorted_pd * 100, color='b', label="Calibrated PD (QMM)")
+plt.axhline(y=target_pd * 100, color='g', linestyle="--", label="Target PD (0.50%)")
+plt.xlabel("Reversed PD Score (Higher = Riskier)")
+plt.ylabel("Probability of Default (%)")
+plt.title("Logistic Regression + Quasi-Moment Matching (QMM) PD Calibration")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Print final results
+print(f"Optimized QMM Scaling Factor: {np.mean(calibrated_pd) / np.mean(logistic_pd):.4f}")
+print("Calibrated PDs:", np.round(calibrated_pd * 100, 4))
