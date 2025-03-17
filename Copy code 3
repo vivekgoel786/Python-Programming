@@ -1,0 +1,72 @@
+import numpy as np
+import scipy.optimize as opt
+import matplotlib.pyplot as plt
+
+# User-provided PD scores
+pd_scores = np.array([6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5, 
+                      6.2, 4.8, 8.2, 6.8, 5.2, 6, 3.6, 7.7, 6.2, 6.3, 
+                      8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7])
+
+# Observed default outcomes (1 = default, 0 = no default)
+observed_defaults = np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+                              0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+                              0, 0, 0, 0, 0, 0, 0])
+
+# Small constant to avoid division errors
+eps = 1e-6
+
+# Reverse score order so higher scores mean lower PDs
+sorted_indices = np.argsort(pd_scores)  # Rank by risk level
+sorted_scores = pd_scores[sorted_indices]
+sorted_defaults = observed_defaults[sorted_indices]
+
+# Compute empirical PDs per score bucket
+unique_scores, counts = np.unique(sorted_scores, return_counts=True)
+default_counts = np.array([np.sum(sorted_defaults[sorted_scores == s]) for s in unique_scores])
+observed_pd = default_counts / counts  # Empirical PD estimate
+
+# Apply smoothing to prevent extreme zeros or ones
+observed_pd = np.clip(observed_pd, eps, 1 - eps)
+
+# Portfolio-wide target PD
+target_pd = 0.50 / 100  # 0.50%
+
+# Compute Likelihood Ratio
+prob_non_default = (1 - observed_pd)
+prob_default = observed_pd
+likelihood_ratio = prob_non_default / prob_default
+
+# Define function to solve for scaling factor c
+def likelihood_ratio_equation(c, pd_target, likelihood_ratio, counts):
+    return np.sum(counts / (pd_target + (1 - pd_target) * c * likelihood_ratio)) - np.sum(counts)
+
+# Adjust search bracket dynamically
+c_lower, c_upper = 0.01, 10
+while likelihood_ratio_equation(c_lower, target_pd, likelihood_ratio, counts) * \
+      likelihood_ratio_equation(c_upper, target_pd, likelihood_ratio, counts) > 0:
+    c_upper *= 2
+    if c_upper > 1e6:  # Prevent infinite loop
+        raise ValueError("Could not find a valid bracket for solving c.")
+
+# Solve for c using numerical optimization
+c_opt = opt.root_scalar(likelihood_ratio_equation, args=(target_pd, likelihood_ratio, counts),
+                        bracket=[c_lower, c_upper], method='brentq').root
+
+# Compute Calibrated PDs
+calibrated_pd = target_pd / (target_pd + (1 - target_pd) * c_opt * likelihood_ratio)
+
+# Plot Results
+plt.figure(figsize=(8, 5))
+plt.scatter(unique_scores, observed_pd * 100, color='r', label="Initial PD Curve (Observed)")
+plt.scatter(unique_scores, calibrated_pd * 100, color='b', label="Calibrated PD Curve (SLR)")
+plt.axhline(y=target_pd * 100, color='g', linestyle="--", label="Target Portfolio PD (0.50%)")
+plt.xlabel("PD Score")
+plt.ylabel("Probability of Default (%)")
+plt.title("Scaled Likelihood Ratio (SLR) PD Calibration")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Print final results
+print(f"Optimized Scaling Factor (c): {c_opt:.4f}")
+print("Calibrated PDs:", np.round(calibrated_pd * 100, 4))
