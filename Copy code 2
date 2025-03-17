@@ -1,57 +1,61 @@
-import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import roc_auc_score
+import scipy.optimize as opt
+import matplotlib.pyplot as plt
 
-# Sample data
-data = {
-    'category': ['A', 'B', 'A', 'B', 'A', 'B', 'A', 'B'],
-    'target': [0, 1, 0, 1, 1, 0, 0, 1]
-}
+# User-provided PD scores
+pd_scores = np.array([6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5, 
+                      6.2, 4.8, 8.2, 6.8, 5.2, 6, 3.6, 7.7, 6.2, 6.3, 
+                      8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7])
 
-df = pd.DataFrame(data)
+# Observed default outcomes (1 = default, 0 = no default)
+observed_defaults = np.array([0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+                              0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+                              0, 0, 0, 0, 0, 0, 0])
 
-# One-hot encode the categorical variable
-X = pd.get_dummies(df['category'], drop_first=True)
-y = df['target']
+# Reverse score order so higher scores mean lower PDs
+sorted_indices = np.argsort(pd_scores)  # Rank by risk level
+sorted_scores = pd_scores[sorted_indices]
+sorted_defaults = observed_defaults[sorted_indices]
 
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Compute empirical PDs per score bucket
+unique_scores, counts = np.unique(sorted_scores, return_counts=True)
+default_counts = np.array([np.sum(sorted_defaults[sorted_scores == s]) for s in unique_scores])
+observed_pd = default_counts / counts  # Empirical PD estimate
 
-# Fit the model
-model = LogisticRegression()
-model.fit(X_train, y_train)
+# Set a minimum PD to avoid zero probabilities
+observed_pd = np.clip(observed_pd, 0.0001, 1.0)
 
-# Predict probabilities
-y_prob = model.predict_proba(X_test)[:, 1]
+# Portfolio-wide target PD
+target_pd = 0.50 / 100  # 0.50%
 
-# Calculate AUC ROC
-auc_roc = roc_auc_score(y_test, y_prob)
-print(f"AUC ROC: {auc_roc:.4f}")
+# Compute Likelihood Ratio
+prob_non_default = (1 - observed_pd)
+prob_default = observed_pd
+likelihood_ratio = prob_non_default / prob_default
 
-# Function to calculate Gini Coefficient
-def gini_coefficient(y_true, y_prob):
-    # Sort the predicted probabilities and the actual values
-    sorted_indices = np.argsort(y_prob)
-    y_true_sorted = y_true[sorted_indices]
-    cumulative_true = np.cumsum(y_true_sorted)
-    
-    # Calculate the Gini coefficient
-    total_positive = np.sum(y_true_sorted)
-    total_negative = len(y_true_sorted) - total_positive
-    
-    if total_positive == 0:
-        return 0.0
-    
-    # Normalize cumulative sums
-    cumulative_true_normalized = cumulative_true / total_positive
-    cumulative_total = np.arange(1, len(y_true_sorted) + 1) / len(y_true_sorted)
-    
-    # Calculate Gini coefficient
-    gini = 2 * np.trapz(cumulative_true_normalized, cumulative_total) - 1
-    return gini
+# Function to solve for scaling factor c
+def likelihood_ratio_equation(c, pd_target, likelihood_ratio, counts):
+    return np.sum(counts / (pd_target + (1 - pd_target) * c * likelihood_ratio)) - np.sum(counts)
 
-# Calculate Gini coefficient
-gini = gini_coefficient(y_test.values, y_prob)
-print(f"Gini Coefficient: {gini:.4f}")
+# Solve for c using numerical optimization
+c_opt = opt.root_scalar(likelihood_ratio_equation, args=(target_pd, likelihood_ratio, counts),
+                        bracket=[0.01, 100], method='brentq').root
+
+# Compute Calibrated PDs
+calibrated_pd = target_pd / (target_pd + (1 - target_pd) * c_opt * likelihood_ratio)
+
+# Plot Results
+plt.figure(figsize=(8, 5))
+plt.scatter(unique_scores, observed_pd * 100, color='r', label="Initial PD Curve (Observed)")
+plt.scatter(unique_scores, calibrated_pd * 100, color='b', label="Calibrated PD Curve (SLR)")
+plt.axhline(y=target_pd * 100, color='g', linestyle="--", label="Target Portfolio PD (0.50%)")
+plt.xlabel("PD Score")
+plt.ylabel("Probability of Default (%)")
+plt.title("Scaled Likelihood Ratio (SLR) PD Calibration")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Print final results
+print(f"Optimized Scaling Factor (c): {c_opt:.4f}")
+print("Calibrated PDs:", np.round(calibrated_pd * 100, 4))
