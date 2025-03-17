@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import scipy.optimize as opt
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
@@ -21,6 +20,9 @@ log_reg = LogisticRegression()
 log_reg.fit(pd_scores.reshape(-1, 1), observed_defaults)
 logistic_pd = log_reg.predict_proba(pd_scores.reshape(-1, 1))[:, 1]  # PD estimates
 
+# Define target portfolio-wide PD (Central Tendency)
+target_pd = 0.50 / 100  # 0.50%
+
 # Quasi-Moment Matching (QMM) adjustment
 def qmm_adjustment(pd_estimates, target_mean_pd):
     """
@@ -29,11 +31,16 @@ def qmm_adjustment(pd_estimates, target_mean_pd):
     def objective(scale):
         return np.mean(scale * pd_estimates) - target_mean_pd
 
-    scale_factor = opt.root_scalar(objective, bracket=[0.1, 10], method='brentq').root
-    return np.clip(scale_factor * pd_estimates, 0.0001, 1)  # Ensure valid probabilities
+    # Determine an appropriate search range dynamically
+    scale_lower, scale_upper = 0.01, 10
+    while objective(scale_lower) * objective(scale_upper) > 0:
+        scale_upper *= 2
+        if scale_upper > 1e6:  # Prevent infinite loop
+            raise ValueError("Could not find a valid bracket for solving QMM scaling factor.")
 
-# Define target portfolio-wide PD (Central Tendency)
-target_pd = 0.50 / 100  # 0.50%
+    # Solve for optimal scaling factor
+    scale_factor = opt.root_scalar(objective, bracket=[scale_lower, scale_upper], method='brentq').root
+    return np.clip(scale_factor * pd_estimates, 0.0001, 1)  # Ensure valid probabilities
 
 # Apply QMM adjustment
 calibrated_pd = qmm_adjustment(logistic_pd, target_pd)
