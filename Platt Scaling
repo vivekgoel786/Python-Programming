@@ -1,0 +1,57 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+
+# Observed defaults (1 = default, 0 = no default)
+defaults = np.array([
+    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+    0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+    0, 0, 0, 0, 0, 0, 0
+])
+
+# PD scores (higher means lower risk)
+pd_scores = np.array([
+    6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5,
+    6.2, 4.8, 8.2, 6.8, 5.2, 6.0, 3.6, 7.7, 6.2, 6.3,
+    8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
+])
+
+# Reshape PD scores for sklearn
+X = pd_scores.reshape(-1, 1)
+y = defaults
+
+# Step 1: Fit the first logistic regression model
+model = LogisticRegression()
+model.fit(X, y)
+
+# Step 2: Get raw predicted probabilities
+raw_probabilities = model.predict_proba(X)[:, 1]  # Probability of default
+
+# Step 3: Fit Platt Scaling (second logistic regression on raw probabilities)
+platt_model = LogisticRegression()
+raw_probabilities_reshaped = raw_probabilities.reshape(-1, 1)
+platt_model.fit(raw_probabilities_reshaped, y)
+
+# Step 4: Get calibrated probabilities
+calibrated_probabilities = platt_model.predict_proba(raw_probabilities_reshaped)[:, 1]
+
+# Step 5: Calculate averages
+initial_avg_prob = np.mean(raw_probabilities)
+calibrated_avg_prob = np.mean(calibrated_probabilities)
+
+# Visualization: Compare Raw vs. Calibrated Probabilities
+plt.figure(figsize=(8, 5))
+plt.scatter(pd_scores, raw_probabilities, color='blue', label="Raw Probabilities", alpha=0.6)
+plt.scatter(pd_scores, calibrated_probabilities, color='red', label="Calibrated Probabilities", alpha=0.6)
+plt.axhline(y=initial_avg_prob, color='blue', linestyle="--", label=f"Initial Avg Prob: {initial_avg_prob:.4f}")
+plt.axhline(y=calibrated_avg_prob, color='red', linestyle="--", label=f"Calibrated Avg Prob: {calibrated_avg_prob:.4f}")
+plt.xlabel("PD Score")
+plt.ylabel("Probability of Default")
+plt.title("Platt Scaling: Probability of Default Before and After Calibration")
+plt.legend()
+plt.show()
+
+# Print results
+print(f"Initial Avg Probability: {initial_avg_prob:.6f}")
+print(f"Calibrated Avg Probability: {calibrated_avg_prob:.6f}")
