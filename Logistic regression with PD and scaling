@@ -1,0 +1,62 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+
+# Observed defaults (1 = default, 0 = no default)
+defaults = np.array([
+    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+    0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+    0, 0, 0, 0, 0, 0, 0
+])
+
+# PD scores (higher means lower risk)
+pd_scores = np.array([
+    6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5,
+    6.2, 4.8, 8.2, 6.8, 5.2, 6.0, 3.6, 7.7, 6.2, 6.3,
+    8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
+])
+
+# Reshape PD scores for sklearn
+X = pd_scores.reshape(-1, 1)
+y = defaults
+
+# Fit logistic regression model
+model = LogisticRegression()
+model.fit(X, y)
+
+# Predict initial probabilities
+probabilities = model.predict_proba(X)[:, 1]
+initial_avg_prob = np.mean(probabilities)
+
+# Target CT value
+target_avg_prob = 0.004  # 0.4%
+
+# Adjust the intercept (scaling method)
+logit_target = np.log(target_avg_prob / (1 - target_avg_prob))
+logit_initial_avg = np.log(initial_avg_prob / (1 - initial_avg_prob))
+intercept_adjustment = logit_target - logit_initial_avg
+
+# Apply the intercept shift to adjust probabilities
+adjusted_intercept = model.intercept_ + intercept_adjustment
+adjusted_logits = model.coef_ * X + adjusted_intercept
+adjusted_probabilities = 1 / (1 + np.exp(-adjusted_logits))
+
+# Calculate new average probability
+new_avg_probability = np.mean(adjusted_probabilities)
+
+# Visualization
+plt.figure(figsize=(8, 5))
+plt.scatter(pd_scores, probabilities, color='blue', label="Original Probabilities", alpha=0.6)
+plt.scatter(pd_scores, adjusted_probabilities, color='red', label="Adjusted Probabilities", alpha=0.6)
+plt.axhline(y=initial_avg_prob, color='blue', linestyle="--", label=f"Original Avg Prob: {initial_avg_prob:.4f}")
+plt.axhline(y=new_avg_probability, color='red', linestyle="--", label=f"Adjusted Avg Prob: {new_avg_probability:.4f}")
+plt.xlabel("PD Score")
+plt.ylabel("Probability of Default")
+plt.title("Probability of Default Before and After Calibration")
+plt.legend()
+plt.show()
+
+# Print results
+print(f"Initial Avg Probability: {initial_avg_prob:.6f}")
+print(f"New Avg Probability (Aligned to CT=0.4%): {new_avg_probability:.6f}")
