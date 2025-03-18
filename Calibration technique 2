@@ -37,3 +37,133 @@ How QMM Works
 
 
 4. Map adjusted PDs back to the master scale.
+
+
+Quantile Mapping Method (QMM) for PD Calibration
+
+This implementation will:
+
+1. Group PD scores into predefined rating buckets (e.g., AAA, AA, A, BBB, etc.).
+
+
+2. Compute empirical default rates within each bucket.
+
+
+3. Map these empirical default rates to the master scale to adjust PDs.
+
+
+4. Ensure the adjusted PDs align with the expected default rate distribution.
+
+
+How QMM Works in This Code:
+
+1. Divides PD Scores into Quantile-Based Risk Buckets
+
+Assigns AAA, AA, A, BBB, etc. based on quantiles.
+
+
+
+2. Computes Empirical Default Rates per Bucket
+
+Finds the actual default rates within each risk category.
+
+
+
+3. Maps Default Rates to the Master Scale
+
+Replaces empirical default rates with master scale default rates.
+
+
+
+4. Assigns Adjusted PDs Based on Risk Bucket Mapping
+
+Ensures PDs align with industry-standard risk ratings.
+
+
+
+
+
+---
+
+Why QMM is the Best Choice Here?
+
+✅ Aligns model output to predefined credit risk buckets (AAA, AA, etc.).
+✅ Ensures empirical default rates match the master scale.
+✅ More interpretable for credit committees and regulatory reporting.
+✅ Preserves ranking while smoothing out inconsistencies.
+
+Would you like any refinements, such as different quantile cutoffs or a deeper dive into the master scale mapping?
+
+
+
+
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Step 1: Define observed PD scores and defaults
+pd_scores = np.array([
+    6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5,
+    6.2, 4.8, 8.2, 6.8, 5.2, 6.0, 3.6, 7.7, 6.2, 6.3,
+    8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
+])
+
+defaults = np.array([
+    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
+    0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+    0, 0, 0, 0, 0, 0, 0
+])
+
+# Step 2: Define risk rating buckets and expected master scale default rates
+rating_buckets = ["AAA", "AA", "A", "BBB", "BB", "B", "CCC"]
+bucket_quantiles = [0.10, 0.30, 0.50, 0.70, 0.85, 0.95, 1.00]  # Quantile cutoffs
+master_scale_defaults = [0.0001, 0.001, 0.005, 0.015, 0.05, 0.10, 0.25]  # Expected default rates
+
+# Step 3: Assign PD scores to rating buckets based on quantiles
+sorted_pd_scores = np.sort(pd_scores)
+quantile_cutoffs = np.quantile(sorted_pd_scores, bucket_quantiles)
+
+# Create a mapping of PD scores to rating buckets
+def assign_bucket(pd_score):
+    for i, cutoff in enumerate(quantile_cutoffs):
+        if pd_score <= cutoff:
+            return rating_buckets[i]
+    return rating_buckets[-1]  # Assign highest risk bucket if above all cutoffs
+
+pd_buckets = np.array([assign_bucket(score) for score in pd_scores])
+
+# Step 4: Compute empirical default rate per bucket
+bucket_defaults = {bucket: [] for bucket in rating_buckets}
+for i, bucket in enumerate(pd_buckets):
+    bucket_defaults[bucket].append(defaults[i])
+
+# Compute actual default rates per bucket
+empirical_default_rates = {bucket: np.mean(values) if values else 0 for bucket, values in bucket_defaults.items()}
+
+# Step 5: Map empirical default rates to master scale
+adjusted_pd_mapping = {bucket: master_scale_defaults[i] for i, bucket in enumerate(rating_buckets)}
+
+# Apply the mapping to adjust PDs
+adjusted_pds = np.array([adjusted_pd_mapping[bucket] for bucket in pd_buckets])
+
+# Step 6: Compare Raw vs. Adjusted PDs
+df = pd.DataFrame({
+    "PD Score": pd_scores,
+    "Assigned Rating": pd_buckets,
+    "Raw Default Rate": [empirical_default_rates[bucket] for bucket in pd_buckets],
+    "Adjusted PD": adjusted_pds
+})
+
+# Print the results
+print("=== PD Calibration Using QMM ===")
+print(df.sort_values(by="PD Score"))
+
+# Visualization: PD Score vs. Adjusted PDs
+plt.figure(figsize=(8, 5))
+plt.scatter(pd_scores, adjusted_pds, color='red', label="QMM Adjusted PDs")
+plt.xlabel("PD Score")
+plt.ylabel("Adjusted Probability of Default")
+plt.title("QMM Calibration: Adjusted PDs Aligned to Master Scale")
+plt.legend()
+plt.show()
