@@ -1,0 +1,39 @@
+Why QMM Over Platt Scaling?
+
+✅ Preserves empirical default rates across different PD quantiles.
+✅ Directly maps model PDs to real-world risk buckets, ensuring consistency.
+✅ Works well when PDs need to be assigned to fixed rating categories (AAA, AA, A, etc.).
+✅ More interpretable for credit risk teams, as it assigns borrowers to discrete risk groups.
+
+When to Use QMM?
+
+If the goal is to align PDs with a credit rating scale rather than just smoothing probabilities.
+
+If historical default rates for each rating bucket (AAA, AA, A, etc.) are available.
+
+When PD scores need to be classified into discrete risk levels instead of being left as continuous probabilities.
+
+When to Use QMM?
+
+If the goal is to align PDs with a credit rating scale rather than just smoothing probabilities.
+
+If historical default rates for each rating bucket (AAA, AA, A, etc.) are available.
+
+When PD scores need to be classified into discrete risk levels instead of being left as continuous probabilities.
+
+
+
+---
+
+How QMM Works
+
+1. Sort borrowers into quantiles based on their PD scores.
+
+
+2. Assign each quantile to a predefined rating category (AAA, AA, A, etc.).
+
+
+3. Calculate empirical default rates per quantile and adjust PDs accordingly.
+
+
+4. Map adjusted PDs back to the master scale.
