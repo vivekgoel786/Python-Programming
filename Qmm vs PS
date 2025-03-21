@@ -1,0 +1,94 @@
+QMM (Quantile Mean Matching) vs. Platt Scaling
+
+Both Quantile Mean Matching (QMM) and Platt Scaling are techniques used for calibrating probabilistic models, but they serve different purposes and are used in different contexts.
+
+
+---
+
+1. Platt Scaling
+
+Platt Scaling is a logistic regression-based method for calibrating probabilistic outputs of classification models. It takes the raw model scores and maps them to calibrated probabilities.
+
+How It Works
+
+Fits a logistic regression model on the output scores from the classifier.
+
+The new probability is given by:
+
+
+P(y = 1 | x) = \frac{1}{1 + e^{(Ax + B)}}
+
+where A and B are parameters learned from validation data.
+
+Use Cases
+
+Used primarily for binary classification tasks.
+
+Works well when the classifier outputs scores that are monotonically related to the true probabilities (e.g., SVMs, neural networks).
+
+
+Pros
+
+Simple and effective for binary classifiers.
+
+Works well when the classifier already produces well-ordered scores.
+
+
+Cons
+
+Limited to binary classification (for multi-class, needs extensions like one-vs-rest).
+
+Assumes sigmoid shape, which may not always fit the data well.
+
+
+
+---
+
+2. Quantile Mean Matching (QMM)
+
+Quantile Mean Matching is a non-parametric calibration method often used in weather forecasting and climate modeling to adjust model outputs.
+
+How It Works
+
+Takes the empirical quantiles of the model’s predicted scores and matches them to observed values.
+
+Instead of fitting a parametric function (like Platt Scaling), it adjusts predictions based on the observed distribution.
+
+
+Use Cases
+
+Used in forecasting and regression models, where predicted distributions need to be aligned with real-world observations.
+
+Suitable for correcting biases in probabilistic forecasts.
+
+
+Pros
+
+Works for both regression and probabilistic classification models.
+
+Non-parametric (no assumptions about the shape of the probability distribution).
+
+Effective when the predicted and observed distributions differ in scale but have a consistent shape.
+
+
+Cons
+
+Computationally expensive, especially with large datasets.
+
+Less effective when there is little data for quantile estimation.
+
+
+
+---
+
+Comparison Table
+
+
+---
+
+Which One to Use?
+
+If you have a binary classification model with raw scores, use Platt Scaling.
+
+If you need to calibrate a regression model or probabilistic forecast, use QMM.
+
