@@ -1,11 +1,10 @@
 import numpy as np
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
+import scipy.stats as stats
 
-# Observed defaults (binary labels)
+# Observed Defaults (1 = default, 0 = no default)
 defaults = np.array([
-    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
-    0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
+    0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
+    0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
     0, 0, 0, 0, 0, 0, 0
 ])
 
@@ -16,35 +15,26 @@ pd_scores = np.array([
     8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
 ])
 
-# Reshape PD scores for logistic regression
-X = pd_scores.reshape(-1, 1)
+# Step 1: Convert PD scores to a normalized scale
+z_scores = stats.zscore(pd_scores)  # Standardize PD scores
 
-# Standardize the scores (optional but improves numerical stability)
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
+# Step 2: Calculate observed default rate
+default_rate = np.mean(defaults)
 
-# Fit logistic regression model for Platt Scaling
-platt_model = LogisticRegression(solver='lbfgs')
-platt_model.fit(X_scaled, defaults)
+# Step 3: Compute Target Z-score from Master Scale using target CT value (0.4%)
+target_ct = 0.004  # 0.4% in decimal
+target_z = stats.norm.ppf(target_ct)  # Convert CT to Z-score
 
-# Get initial calibrated probabilities
-calibrated_probs = platt_model.predict_proba(X_scaled)[:, 1]
+# Step 4: Adjust mean and variance using QMM
+mu_obs, sigma_obs = np.mean(z_scores), np.std(z_scores)
+mu_target, sigma_target = target_z, sigma_obs  # Maintain variance, shift mean
 
-# Adjust probabilities to match the target CT value (4%)
-target_default_rate = 0.04
-current_mean_prob = np.mean(calibrated_probs)
-bias_adjustment = target_default_rate / current_mean_prob
+# Apply transformation
+calibrated_z_scores = (z_scores - mu_obs) / sigma_obs * sigma_target + mu_target
 
-# Scale the probabilities to achieve the target CT value
-adjusted_probs = calibrated_probs * bias_adjustment
+# Step 5: Convert back to PD scale (rescaled scores)
+calibrated_pd_scores = stats.norm.cdf(calibrated_z_scores) * 10  # Rescale to 0-10
 
-# Ensure probabilities remain within valid range [0,1]
-adjusted_probs = np.clip(adjusted_probs, 0, 1)
-
-# Display results
-for score, prob in zip(pd_scores, adjusted_probs):
-    print(f"PD Score: {score:.2f} -> Adjusted Default Probability: {prob:.4f}")
-
-# Verify that the mean adjusted probability is ~4%
-final_ct_value = np.mean(adjusted_probs)
-print(f"\nFinal CT Value (Target: 4%): {final_ct_value:.4%}")
+# Print results
+print("Original PD Scores:\n", pd_scores)
+print("Calibrated PD Scores:\n", calibrated_pd_scores)
