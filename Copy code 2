@@ -1,40 +1,6 @@
-import numpy as np
-import scipy.stats as stats
+Why I Used 'lbfgs' (Limited-memory BFGS)
 
-# Observed Defaults (1 = default, 0 = no default)
-defaults = np.array([
-    0, 0, 0, 0, 0, 0, 1, 1, 0, 0,
-    0, 0, 0, 0, 1, 0, 1, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0
-])
-
-# PD scores (higher means lower risk)
-pd_scores = np.array([
-    6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5,
-    6.2, 4.8, 8.2, 6.8, 5.2, 6.0, 3.6, 7.7, 6.2, 6.3,
-    8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
-])
-
-# Step 1: Convert PD scores to a normalized scale
-z_scores = stats.zscore(pd_scores)  # Standardize PD scores
-
-# Step 2: Calculate observed default rate
-default_rate = np.mean(defaults)
-
-# Step 3: Compute Target Z-score from Master Scale using target CT value (0.4%)
-target_ct = 0.004  # 0.4% in decimal
-target_z = stats.norm.ppf(target_ct)  # Convert CT to Z-score
-
-# Step 4: Adjust mean and variance using QMM
-mu_obs, sigma_obs = np.mean(z_scores), np.std(z_scores)
-mu_target, sigma_target = target_z, sigma_obs  # Maintain variance, shift mean
-
-# Apply transformation
-calibrated_z_scores = (z_scores - mu_obs) / sigma_obs * sigma_target + mu_target
-
-# Step 5: Convert back to PD scale (rescaled scores)
-calibrated_pd_scores = stats.norm.cdf(calibrated_z_scores) * 10  # Rescale to 0-10
-
-# Print results
-print("Original PD Scores:\n", pd_scores)
-print("Calibrated PD Scores:\n", calibrated_pd_scores)
+✅ Handles Multiclass Problems Well: Even though we have a binary classification problem (default/no default), 'lbfgs' is more stable when working with probability calibration.
+✅ Works with CalibratedClassifierCV: 'lbfgs' optimizes the log-likelihood, which is crucial when calibrating probabilities using Platt Scaling.
+✅ Better for Small to Medium Datasets: 'lbfgs' works well with limited data points (like our 27 samples).
+✅ Handles Regularization Better: Supports L2 regularization, which prevents overfitting.
