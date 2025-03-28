@@ -1,91 +1,83 @@
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn.linear_model import LogisticRegression
-from sklearn.calibration import CalibratedClassifierCV
-from sklearn.metrics import brier_score_loss
+1. Use a Non-Linear Scaling (Power Transformation)
 
-# Sample PD Scores and Defaults (same as before, using your provided data)
-pd_scores = np.array([
-    7.9002,	6.5363,	5.1254,	6.2424,	6.0913,	6.5163,	5.0722,	7.7834,	4.9502,	6.2384,	6.0219,	5.0254,	6.5804,	6.1911,	7.1163,	5.9581,	7.3635,	5.0638,	5.2006,	6.2754,	8.1135,	7.0387,	4.7802,	6.7045,	7.3551,	7.5272,	4.1,	5.9581,	7.2137,	4.5258,	5.2274,	5.7049,	4.1422,	4.8884,	5.8283,	6.6606,	5.2613,	7.6918,	7.825,	6.1247,	5.475,	6.1276,	6.5697,	3.6136,	5.5356,	5.3174,	7.2752,	5.969
+Instead of scaling linearly, you can use a power transformation to stretch the probability distribution:
 
-])
+power = 1.2  # Experiment with values between 1.1 and 2
+adjusted_probs = np.power(calibrated_probabilities, power)
 
-defaults = np.array([
-    0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	
-    0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,	
-    0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
-    0,	0,	0,
+# Normalize to ensure the average remains at the target CT
+scaled_calibrated_probabilities = (adjusted_probs / np.mean(adjusted_probs)) * target_ct_value
 
-])
+This transformation makes lower probabilities smaller and higher probabilities larger, increasing spread.
 
-# Reshape PD scores to be a 2D array for the classifier
-X = pd_scores.reshape(-1, 1)
-y = defaults
 
-# Step 1: Train a logistic regression model on the entire dataset
-clf = LogisticRegression(solver='lbfgs')
-clf.fit(X, y)
+---
 
-# Step 2: Apply Platt Scaling (CalibratedClassifierCV)
-calibrated_clf = CalibratedClassifierCV(base_estimator=clf, method='sigmoid')
-calibrated_clf.fit(X, y)  # Fitting Platt scaling directly on the data
+2. Use Min-Max Scaling Instead of Direct Multiplication
 
-# Step 3: Get the raw predicted probabilities from the logistic regression model
-raw_probabilities = clf.predict_proba(X)[:, 1]  # Probabilities for class 1 (default)
+Instead of simply multiplying by a factor, normalize the probabilities across a wider range:
 
-# Step 4: Get the calibrated probabilities using Platt Scaling
-calibrated_probabilities = calibrated_clf.predict_proba(X)[:, 1]
+from sklearn.preprocessing import MinMaxScaler
 
-# Evaluate the results using Brier score loss (lower is better)
-raw_brier_score = brier_score_loss(y, raw_probabilities)
-calibrated_brier_score = brier_score_loss(y, calibrated_probabilities)
+# Stretch probabilities across a wider range (e.g., 0.001 to 0.02)
+scaler = MinMaxScaler(feature_range=(0.001, 0.02))
+scaled_calibrated_probabilities = scaler.fit_transform(calibrated_probabilities.reshape(-1, 1)).flatten()
 
-print(f"Brier Score Loss (Raw Probabilities): {raw_brier_score:.4f}")
-print(f"Brier Score Loss (Calibrated Probabilities with Platt Scaling): {calibrated_brier_score:.4f}")
+# Rescale to maintain average PD at the target level
+scaling_factor = target_ct_value / np.mean(scaled_calibrated_probabilities)
+scaled_calibrated_probabilities *= scaling_factor
 
-# Step 5: Calculate the current average calibrated PD
-actual_ct = np.mean(defaults)
-avg_calibrated_pd = np.mean(calibrated_probabilities)
+This ensures a wider spread while maintaining the desired target average.
 
-print(f"Original CT value: {actual_ct * 100:.2f}%")
-print(f"Calibrated CT value: {avg_calibrated_pd * 100:.2f}%")
 
-# Step 6: Define the target CT value (0.4% or 0.004)
-target_ct_value = 0.004
+---
 
-# Step 7: Calculate the scaling factor to achieve the target CT value
-scaling_factor = target_ct_value / avg_calibrated_pd if avg_calibrated_pd > 0 else 1
+3. Apply Log-Odds Transformation Before Scaling
 
-# Step 8: Scale the calibrated probabilities
-scaled_calibrated_probabilities = calibrated_probabilities * scaling_factor
-avg_scaled_calibrated_pd = np.mean(scaled_calibrated_probabilities)
+If probabilities are too concentrated, using log-odds (logit transformation) can help before applying scaling:
 
-# Step 9: Evaluate Brier score after scaling
-scaled_brier_score = brier_score_loss(y, scaled_calibrated_probabilities)
-print(f"Brier Score Loss (After Scaling to Target CT Value): {scaled_brier_score:.4f}")
+from scipy.special import logit, expit
 
-# Step 10: Visualization: Comparison between raw, calibrated, and scaled probabilities
-plt.figure(figsize=(8, 5))
-plt.scatter(X, raw_probabilities, color='blue', label="Raw Probabilities (Before Platt Scaling)")
-plt.scatter(X, calibrated_probabilities, color='orange', label="Calibrated Probabilities (Platt Scaling)")
-plt.scatter(X, scaled_calibrated_probabilities, color='green', label="Scaled Probabilities (Target CT 0.4%)")
-plt.axhline(y=avg_scaled_calibrated_pd, color='red', linestyle="--", label=f"Platt-Scaled Avg Prob: {avg_scaled_calibrated_pd:.6f}")
-plt.axhline(y=avg_calibrated_pd, color='orange', linestyle="--", label=f"Final Adjusted Avg Prob: {avg_calibrated_pd:.6f}")
-plt.axhline(y=target_ct_value, color='green', linestyle="--", label=f"Target Avg Prob (CT=0.4%): {target_ct_value:.6f}")
-plt.xlabel("PD Score")
-plt.ylabel("Probability of Default")
-plt.title("Platt Scaling with CT Target Adjustment")
-plt.legend()
-plt.show()
+# Convert to log-odds space
+log_odds = logit(np.clip(calibrated_probabilities, 1e-6, 1-1e-6))
 
-# Display final results
-df = pd.DataFrame({
-    "PD Score": pd_scores,
-    "Raw Probability": raw_probabilities,
-    "Calibrated Probability": calibrated_probabilities,
-    "Scaled Probability": scaled_calibrated_probabilities
-})
+# Scale log-odds to increase variation
+log_odds_scaled = log_odds * 1.2  # Adjust multiplier based on spread
 
-print("\nFinal Dataframe with Adjusted Probabilities:")
-print(df)
+# Convert back to probability space
+scaled_calibrated_probabilities = expit(log_odds_scaled)
+
+# Rescale to maintain target CT
+scaling_factor = target_ct_value / np.mean(scaled_calibrated_probabilities)
+scaled_calibrated_probabilities *= scaling_factor
+
+This method helps if your probabilities are too tightly packed around a small range.
+
+
+---
+
+4. Add Controlled Noise to Break Concentration
+
+If you still find too few unique probability buckets, adding small controlled noise can help:
+
+noise = np.random.normal(0, 0.002, size=calibrated_probabilities.shape)
+scaled_calibrated_probabilities = calibrated_probabilities * scaling_factor + noise
+
+# Ensure probabilities remain within valid bounds
+scaled_calibrated_probabilities = np.clip(scaled_calibrated_probabilities, 0, 1)
+
+This keeps the overall distribution intact but ensures finer granularity.
+
+
+---
+
+Conclusion
+
+If your probabilities are too compressed, power transformation or log-odds scaling helps.
+
+If they are concentrated within a narrow range, min-max scaling can help.
+
+If the final probabilities are still too discrete, adding small noise breaks ties.
+
+
+You can experiment with these approaches and visualize the distributions before and after applying them. Let me know if you need help tuning these transformations!
