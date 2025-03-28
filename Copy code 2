@@ -1,67 +1,91 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
 from sklearn.calibration import CalibratedClassifierCV
-from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import brier_score_loss
 
-# Observed defaults (binary labels)
-defaults = np.array([
-    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 
-    0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 
-    0, 0, 0, 0, 0, 0, 0
-])
-
-# PD scores (higher means lower risk)
+# Sample PD Scores and Defaults (same as before, using your provided data)
 pd_scores = np.array([
-    6.6, 5.9, 6.1, 7.4, 7.2, 7.9, 5.1, 4.6, 7.9, 7.5,
-    6.2, 4.8, 8.2, 6.8, 5.2, 6.0, 3.6, 7.7, 6.2, 6.3,
-    8.7, 6.1, 6.2, 6.9, 4.6, 8.2, 5.7
+    7.9002,	6.5363,	5.1254,	6.2424,	6.0913,	6.5163,	5.0722,	7.7834,	4.9502,	6.2384,	6.0219,	5.0254,	6.5804,	6.1911,	7.1163,	5.9581,	7.3635,	5.0638,	5.2006,	6.2754,	8.1135,	7.0387,	4.7802,	6.7045,	7.3551,	7.5272,	4.1,	5.9581,	7.2137,	4.5258,	5.2274,	5.7049,	4.1422,	4.8884,	5.8283,	6.6606,	5.2613,	7.6918,	7.825,	6.1247,	5.475,	6.1276,	6.5697,	3.6136,	5.5356,	5.3174,	7.2752,	5.969
+
 ])
 
-# Define master scale with probability ranges
-master_scale = {
-    "Very Low Risk": (0.00, 0.01),  # 0% - 1% default probability
-    "Low Risk": (0.01, 0.03),       # 1% - 3%
-    "Moderate Risk": (0.03, 0.07),  # 3% - 7%
-    "High Risk": (0.07, 0.15),      # 7% - 15%
-    "Very High Risk": (0.15, 0.30), # 15% - 30%
-    "Default Likely": (0.30, 1.00)  # 30% - 100%
-}
+defaults = np.array([
+    0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	0,	
+    0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	1,	0,	0,	1,	
+    0,	0,	0,	0,	1,	0,	0,	0,	0,	0,	0,	0,	0,	0,	0,	
+    0,	0,	0,
 
-# Standardize PD scores
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(pd_scores.reshape(-1, 1))
+])
 
-# Train Logistic Regression model
-base_model = LogisticRegression(solver='lbfgs')
+# Reshape PD scores to be a 2D array for the classifier
+X = pd_scores.reshape(-1, 1)
+y = defaults
 
-# Use CalibratedClassifierCV for Platt Scaling
-calibrated_model = CalibratedClassifierCV(base_model, method='sigmoid', cv='prefit')
-calibrated_model.fit(X_scaled, defaults)
+# Step 1: Train a logistic regression model on the entire dataset
+clf = LogisticRegression(solver='lbfgs')
+clf.fit(X, y)
 
-# Function to map probability range to PD score range
-def get_pd_score_range(calibrated_model, scaler, master_scale, pd_min=0, pd_max=10):
-    score_ranges = {}
+# Step 2: Apply Platt Scaling (CalibratedClassifierCV)
+calibrated_clf = CalibratedClassifierCV(base_estimator=clf, method='sigmoid')
+calibrated_clf.fit(X, y)  # Fitting Platt scaling directly on the data
 
-    for bucket, (p_min, p_max) in master_scale.items():
-        # Compute the inverse logistic function to get decision boundaries
-        logit_min = np.log(p_min / (1 - p_min)) if p_min > 0 else -np.inf
-        logit_max = np.log(p_max / (1 - p_max)) if p_max < 1 else np.inf
+# Step 3: Get the raw predicted probabilities from the logistic regression model
+raw_probabilities = clf.predict_proba(X)[:, 1]  # Probabilities for class 1 (default)
 
-        # Convert logit values back to PD scores using inverse transformation
-        min_pd_score = scaler.inverse_transform([[logit_min]])[0][0] if np.isfinite(logit_min) else pd_min
-        max_pd_score = scaler.inverse_transform([[logit_max]])[0][0] if np.isfinite(logit_max) else pd_max
+# Step 4: Get the calibrated probabilities using Platt Scaling
+calibrated_probabilities = calibrated_clf.predict_proba(X)[:, 1]
 
-        # Ensure PD scores are within range [0,10]
-        min_pd_score = max(pd_min, min_pd_score)
-        max_pd_score = min(pd_max, max_pd_score)
+# Evaluate the results using Brier score loss (lower is better)
+raw_brier_score = brier_score_loss(y, raw_probabilities)
+calibrated_brier_score = brier_score_loss(y, calibrated_probabilities)
 
-        score_ranges[bucket] = (round(min_pd_score, 2), round(max_pd_score, 2))
+print(f"Brier Score Loss (Raw Probabilities): {raw_brier_score:.4f}")
+print(f"Brier Score Loss (Calibrated Probabilities with Platt Scaling): {calibrated_brier_score:.4f}")
 
-    return score_ranges
+# Step 5: Calculate the current average calibrated PD
+actual_ct = np.mean(defaults)
+avg_calibrated_pd = np.mean(calibrated_probabilities)
 
-# Get PD score ranges for each master scale bucket
-score_ranges = get_pd_score_range(calibrated_model, scaler, master_scale)
+print(f"Original CT value: {actual_ct * 100:.2f}%")
+print(f"Calibrated CT value: {avg_calibrated_pd * 100:.2f}%")
 
-# Print results
-for bucket, (low, high) in score_ranges.items():
-    print(f"{bucket}: PD Score Range = {low} to {high}")
+# Step 6: Define the target CT value (0.4% or 0.004)
+target_ct_value = 0.004
+
+# Step 7: Calculate the scaling factor to achieve the target CT value
+scaling_factor = target_ct_value / avg_calibrated_pd if avg_calibrated_pd > 0 else 1
+
+# Step 8: Scale the calibrated probabilities
+scaled_calibrated_probabilities = calibrated_probabilities * scaling_factor
+avg_scaled_calibrated_pd = np.mean(scaled_calibrated_probabilities)
+
+# Step 9: Evaluate Brier score after scaling
+scaled_brier_score = brier_score_loss(y, scaled_calibrated_probabilities)
+print(f"Brier Score Loss (After Scaling to Target CT Value): {scaled_brier_score:.4f}")
+
+# Step 10: Visualization: Comparison between raw, calibrated, and scaled probabilities
+plt.figure(figsize=(8, 5))
+plt.scatter(X, raw_probabilities, color='blue', label="Raw Probabilities (Before Platt Scaling)")
+plt.scatter(X, calibrated_probabilities, color='orange', label="Calibrated Probabilities (Platt Scaling)")
+plt.scatter(X, scaled_calibrated_probabilities, color='green', label="Scaled Probabilities (Target CT 0.4%)")
+plt.axhline(y=avg_scaled_calibrated_pd, color='red', linestyle="--", label=f"Platt-Scaled Avg Prob: {avg_scaled_calibrated_pd:.6f}")
+plt.axhline(y=avg_calibrated_pd, color='orange', linestyle="--", label=f"Final Adjusted Avg Prob: {avg_calibrated_pd:.6f}")
+plt.axhline(y=target_ct_value, color='green', linestyle="--", label=f"Target Avg Prob (CT=0.4%): {target_ct_value:.6f}")
+plt.xlabel("PD Score")
+plt.ylabel("Probability of Default")
+plt.title("Platt Scaling with CT Target Adjustment")
+plt.legend()
+plt.show()
+
+# Display final results
+df = pd.DataFrame({
+    "PD Score": pd_scores,
+    "Raw Probability": raw_probabilities,
+    "Calibrated Probability": calibrated_probabilities,
+    "Scaled Probability": scaled_calibrated_probabilities
+})
+
+print("\nFinal Dataframe with Adjusted Probabilities:")
+print(df)
