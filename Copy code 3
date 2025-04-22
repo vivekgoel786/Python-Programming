@@ -1,70 +1,58 @@
-Why Scaling PD Scores to the Bank’s Master Scale is Necessary and Beneficial
-1. Ensuring Alignment with the Bank’s Risk Appetite and Policies
-Every bank operates with a defined Master Scale that assigns Probability of Default (PD) values to different risk grades. This ensures that credit risk assessments remain consistent with the bank’s internal capital requirements, risk appetite, and regulatory expectations.
-Without scaling, the model-derived PDs may not match the bank’s predefined PD buckets, leading to misalignment in credit decision-making.
-Scaling ensures that the final PDs reflect the bank’s expected default rate distributions rather than raw statistical outputs.
-2. Calibration Improves Probability Estimates for Decision-Making
-Statistical models often produce raw scores that are not well-calibrated, meaning the predicted probabilities may not represent the actual observed default rates.
-Platt scaling (sigmoid calibration) improves the probability estimates by adjusting them to match the true likelihood of default.
-However, even after calibration, the model’s average PD might not match the historical default rate in the bank’s portfolio.
-3. Scaling to Match the Target Default Rate (CT Adjustment)
-The bank may have a target default rate (e.g., 0.4%) based on historical data, regulatory constraints, or internal risk models.
-If the model’s calibrated PDs do not match the bank’s expected PD distribution, direct application can lead to incorrect capital allocation and risk assessment.
-Scaling ensures that the final probabilities align with the expected default rates, improving regulatory compliance and portfolio risk assessment.
+Here's a professional email you can send to your client:
+
+
+---
+
+Subject: Sharing "Model Prototype" Excel File with Sheet-wise Details
+
+Dear [Client's Name],
+
+I hope you're doing well.
+
+Please find attached the Excel file titled "Model Prototype" for your reference. The workbook has been structured and color-coded for clarity, with orange tabs representing LBL, blue for PBL, and green for the consolidated sheets. Below is a summary of each sheet for your convenience:
+
+1. Final Pds
+This sheet includes a consolidated list of 73 customers along with all relevant factor data.
+
+Each factor (e.g., Age) is represented with three columns: Age_factor, Age_score, and Age_risk_rank.
+
+Additionally, you will find the PBL and LBL model scores, MS Rating, and the final PDs.
+
+
+
+2. LBL_Prototype and PBL_Prototype
+These are interactive templates where you can select values for each factor. Based on the selections, the sheet auto-calculates the model score and the corresponding rating.
+
+
+3. factor_answers_LBL and factor_answers_PBL
+These sheets contain a detailed list of factors along with the possible answer options, associated scores, and risk rankings.
+
+
+4. LBL_WEIGHTS and PBL_WEIGHTS
+These sheets provide the final weights assigned to each factor. These weights were derived through a combination of optimization techniques and expert judgment from the Credit Officer (CO).
+
+
+5. lbl_MODELscore and PBL_MODELscore
+These contain the individual LBL and PBL customer data, with the respective model scores and the MS Rating derived from them.
+
+
+6. lbl_dist and PBL_DIST
+These are the manual calibration sheets mapping the model scores to the master rating scale.
+
+Includes the distribution, average PD, HHI values, and corresponding MS-Ratings.
 
 
 
 
+Please let us know if you have any questions or would like to discuss any part of the file in detail.
+
+Best regards,
+[Your Name]
+[Your Position]
+[Your Company]
 
 
+---
 
-
-
-Is Scaling Calibrated Probabilities to the Target CT Value and Mapping to the Master Scale an International Practice? 
-Yes, Scaling calibrated PD probabilities to a target default rate (CT value) and mapping them to a Master Scale is a common practice among banks globally. This approach aligns credit risk models with Basel regulations, IFRS 9 accounting standards, and internal risk frameworks used by financial institutions.
-Many global banks follow this method to ensure that their model-derived PDs match the historical or expected long-term default rates in their portfolios. This practice is particularly relevant for:
-
-Regulatory Capital Calculation (Basel III/IV)
-IFRS 9 Expected Credit Loss (ECL) models
-Internal Risk-Based (IRB) credit scoring models
-Loan underwriting and pricing models
-
-Is This a Good Approach?
-Yes, this approach is a best practice in probability calibration for credit risk models. However:
-Scaling should not distort the ranking order of PD scores (i.e., relative risk levels between customers must remain intact).
-The scaling factor should be reviewed periodically to adjust for market conditions, macroeconomic changes, and updated default data.
-This method assumes the model is well-calibrated before scaling—if the initial PD estimates are too far from reality, retraining the model might be necessary.
-
-Rationale Behind Scaling to a Target CT Value and Master Scale
-1. Aligning Model Outputs with the Bank’s Risk Framework
-Banks use a Master Scale to categorize obligors into risk grades based on historical default rates.
-Raw model probabilities might not align perfectly with these predefined PD bands.
-Scaling ensures that the average probability matches the bank’s long-term observed default rates.
-
-
-
-
-2. Managing Model Drift and Stability Over Time
-Credit risk models are trained on historical data, but economic conditions and portfolio compositions evolve. Without scaling, model PDs could drift away from actual default experience, leading to misclassification of risk.
-Scaling ensures the model remains stable and aligned with real-world performance.
-
-3. Regulatory and Compliance Alignment (Basel & IFRS 9)
-Basel IRB Approach: Banks using the Internal Ratings-Based (IRB) approach must demonstrate that their PDs are realistic and aligned with observed default rates.
-IFRS 9 Compliance: Expected Credit Loss (ECL) models require PDs that reflect historical, current, and forward-looking default expectations.
-Stress Testing & ICAAP: Risk-weighted assets (RWA) and capital adequacy depend on well-calibrated PDs.
-
-4. Ensuring Consistency Across Portfolios and Business Lines
-Large banks manage multiple portfolios (corporate, retail, SME, etc.) with different risk characteristics. Unadjusted PD models could lead to inconsistent risk assessment across segments, affecting loan pricing and capital allocation.
-Scaling PDs to a target CT value ensures uniformity across different portfolios.
-
-Benefits of This Approach
-1.	Better Risk Differentiation – Ensures that customers are correctly assigned to the bank’s risk grades.
-2.	Regulatory Compliance/ Acceptance – Ensures PDs align with IFRS 9, Basel III, and internal capital modeling requirements. Global regulators require PD estimates to be realistic and aligned with historical data.
-3.	Consistent Credit Decisions – Aligns model outputs with the bank’s internal rating scale, avoiding model-driven deviations.
-4.	Improved Risk-Based Pricing – Proper PD calibration allows for appropriate interest rate setting and credit pricing based on true credit risk.
-5.	More Reliable Risk Models – Ensures that credit scoring models remain stable across different customer segments and market conditions. Prevents sudden shifts in risk estimates, ensuring smooth decision-making for lending and risk management.
-6.	More Accurate Capital Allocation – Scaling ensures the bank does not overestimate or underestimate its capital requirements.
-
-Final Thoughts
-Applying Platt scaling + CT adjustment ensures that PD scores are both statistically sound and aligned with business needs. Scaling calibrated PD probabilities to match a target CT value and mapping them to a Master Scale is an internationally accepted best practice. It makes the model’s output usable for regulatory reporting, loan approvals, loan pricing and capital planning, ultimately improving risk assessment and decision-making.
+Let me know if you want to tweak the tone or add any specific names/details.
 
