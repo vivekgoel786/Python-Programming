@@ -1,58 +1,9 @@
-Here's a professional email you can send to your client:
+Please find attached the revised OOT data collection template that was presented during today’s meeting. This version incorporates the valuable feedback shared by the RMs and has been updated accordingly.
 
+We request you to kindly share this template with your wider team for expert input and data collection. Please note that this version is intended solely for review and discussion purposes at this stage.
 
----
+The template has been designed to be user-friendly and intuitive for RMs to complete. It ensures that their responses can be seamlessly used for scoring OOT data in the validation process.
 
-Subject: Sharing "Model Prototype" Excel File with Sheet-wise Details
+Should you or your team have any doubts, suggested modifications, or general feedback on the questions, please feel free to share them with us—we welcome and appreciate your insights.
 
-Dear [Client's Name],
-
-I hope you're doing well.
-
-Please find attached the Excel file titled "Model Prototype" for your reference. The workbook has been structured and color-coded for clarity, with orange tabs representing LBL, blue for PBL, and green for the consolidated sheets. Below is a summary of each sheet for your convenience:
-
-1. Final Pds
-This sheet includes a consolidated list of 73 customers along with all relevant factor data.
-
-Each factor (e.g., Age) is represented with three columns: Age_factor, Age_score, and Age_risk_rank.
-
-Additionally, you will find the PBL and LBL model scores, MS Rating, and the final PDs.
-
-
-
-2. LBL_Prototype and PBL_Prototype
-These are interactive templates where you can select values for each factor. Based on the selections, the sheet auto-calculates the model score and the corresponding rating.
-
-
-3. factor_answers_LBL and factor_answers_PBL
-These sheets contain a detailed list of factors along with the possible answer options, associated scores, and risk rankings.
-
-
-4. LBL_WEIGHTS and PBL_WEIGHTS
-These sheets provide the final weights assigned to each factor. These weights were derived through a combination of optimization techniques and expert judgment from the Credit Officer (CO).
-
-
-5. lbl_MODELscore and PBL_MODELscore
-These contain the individual LBL and PBL customer data, with the respective model scores and the MS Rating derived from them.
-
-
-6. lbl_dist and PBL_DIST
-These are the manual calibration sheets mapping the model scores to the master rating scale.
-
-Includes the distribution, average PD, HHI values, and corresponding MS-Ratings.
-
-
-
-
-Please let us know if you have any questions or would like to discuss any part of the file in detail.
-
-Best regards,
-[Your Name]
-[Your Position]
-[Your Company]
-
-
----
-
-Let me know if you want to tweak the tone or add any specific names/details.
-
+Looking forward to your feedback.
