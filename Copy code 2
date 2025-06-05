@@ -1,1 +1,27 @@
-=IF(A1=2, 2, IF(AND(A1=1, B1=2), 2, IF(OR(AND(A1=1, B1<=1), AND(A1=0, B1=2)), 1, 0)))
+Subject: OOT Validation Results for PD Model – Analysis and PSI Observations
+
+Dear [Client's Name],
+
+As discussed in our previous meeting, please find attached the detailed analysis of the Out-of-Time (OOT) validation conducted for the PD model across both Lombard and Property-Backed Loan (PBL) portfolios.
+
+We performed the Population Stability Index (PSI) test to assess the stability of the model inputs over time:
+
+The model continues to perform well on the PBL portfolio, with PSI values within acceptable thresholds.
+
+However, for the Lombard portfolio, we observed a significant shift in data distribution, with PSI exceeding 0.35.
+
+
+Despite this shift, the model’s performance remains robust. Upon investigation, the shift in the Lombard portfolio is primarily attributed to the following factors:
+
+AUM excluding loan proceeds
+
+AUM buffer ratio
+
+KWR (Key Wealth Ratio)
+
+LBL_PBL_relationship
+
+
+You can refer to the "LBL REASONING" sheet in the attached file for a detailed breakdown of the PSI contributions from these variables.
+
+Please feel free to reach out in case you'd like to discuss the insights or next steps in more detail.
