@@ -1,27 +1,5 @@
-Subject: OOT Validation Results for PD Model – Analysis and PSI Observations
+Although conventional statistical validation or back-testing was not applicable in this context due to the nature of the haircut model, a comprehensive benchmarking and review process was undertaken to ensure robustness and appropriateness of the recommended haircuts. Haircuts were derived based on an extensive analysis of available data across a wide range of asset and sub-asset classes. The data used for this exercise was sourced both from the client and publicly available free sources.
 
-Dear [Client's Name],
+To validate the reasonableness of the recommended haircuts, a detailed benchmarking exercise was carried out. This involved comparing our recommendations against industry standards, available market references, and expert judgment. Several rounds of discussions were held between our modelling team, the client’s market risk team, and their modelling team to assess and refine the haircut levels. These discussions helped incorporate both internal analysis and market perspectives, leading to a set of haircut values that reflect a conservative stance suitable for downstream LGD estimation.
 
-As discussed in our previous meeting, please find attached the detailed analysis of the Out-of-Time (OOT) validation conducted for the PD model across both Lombard and Property-Backed Loan (PBL) portfolios.
-
-We performed the Population Stability Index (PSI) test to assess the stability of the model inputs over time:
-
-The model continues to perform well on the PBL portfolio, with PSI values within acceptable thresholds.
-
-However, for the Lombard portfolio, we observed a significant shift in data distribution, with PSI exceeding 0.35.
-
-
-Despite this shift, the model’s performance remains robust. Upon investigation, the shift in the Lombard portfolio is primarily attributed to the following factors:
-
-AUM excluding loan proceeds
-
-AUM buffer ratio
-
-KWR (Key Wealth Ratio)
-
-LBL_PBL_relationship
-
-
-You can refer to the "LBL REASONING" sheet in the attached file for a detailed breakdown of the PSI contributions from these variables.
-
-Please feel free to reach out in case you'd like to discuss the insights or next steps in more detail.
+The finalised haircuts represent a blend of data-driven insights, expert judgment from both our team and the client's domain experts, and practical experience from international markets. This collaborative and iterative process served as a key form of model validation, ensuring the outputs are both risk-sensitive and aligned with prudent credit risk management practices.
