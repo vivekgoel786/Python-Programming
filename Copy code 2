@@ -1,1 +1,12 @@
-This master file serves as a centralized repository for all finalized haircut calculations across various asset and sub-asset classes. It consolidates information from individual working Excel files, incorporating both our initially suggested haircuts and client comments for each asset class. Crucially, the master file also presents the finalized haircuts, which have been determined through a benchmarking process that refined our original recommendations. This comprehensive document provides a complete overview of the haircut methodology and its evolution for each asset class.
+As requested, we conducted a sensitivity check to isolate the impact of the "Length of Relationship" factor on the model output. Specifically, we retained the 2024 values for this factor while updating all other factors to reflect the 2025 Out-of-Time (OOT) data. This allowed us to assess how changes in the lending relationship duration affect the model's risk assessment.
+
+Among the cases analyzed, 12 customers had a "less than 1 year" lending relationship in the 2024 data. Upon recalculating their model scores and corresponding ratings under the adjusted inputs:
+
+4 customers showed an improvement in their rating,
+
+while the remaining 8 customers retained the same rating as before.
+
+
+This indicates that increased lending tenure alone does not have a significant or consistent influence on the model rating, especially when other factors remain unchanged or dominate the risk profile. This outcome is aligned with the design of the scorecard, where "Length of Relationship" carries a relatively smaller weight compared to other factors such as AUM or KWR.
+
+In summary, while longer client relationships may add incremental confidence from a business perspective, their isolated impact on the scorecard output is limited, reflecting the factor's calibrated role in the overall risk assessment framework.
