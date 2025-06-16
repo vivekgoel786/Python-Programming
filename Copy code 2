@@ -1,12 +1,6 @@
-As requested, we conducted a sensitivity check to isolate the impact of the "Length of Relationship" factor on the model output. Specifically, we retained the 2024 values for this factor while updating all other factors to reflect the 2025 Out-of-Time (OOT) data. This allowed us to assess how changes in the lending relationship duration affect the model's risk assessment.
-
-Among the cases analyzed, 12 customers had a "less than 1 year" lending relationship in the 2024 data. Upon recalculating their model scores and corresponding ratings under the adjusted inputs:
-
-4 customers showed an improvement in their rating,
-
-while the remaining 8 customers retained the same rating as before.
-
-
-This indicates that increased lending tenure alone does not have a significant or consistent influence on the model rating, especially when other factors remain unchanged or dominate the risk profile. This outcome is aligned with the design of the scorecard, where "Length of Relationship" carries a relatively smaller weight compared to other factors such as AUM or KWR.
-
-In summary, while longer client relationships may add incremental confidence from a business perspective, their isolated impact on the scorecard output is limited, reflecting the factor's calibrated role in the overall risk assessment framework.
+Long list of variables
+Received a few variables..quantitative dataset EDA .. SFA, MFA
+Dimension, factor, variable
+PM
+Questionnaire..
+Qualitative dataset Statistical model, N models Bucketing of variables based on KT, AR, IE Assigning scores to each option based on risk, Created new variables as well AUM buffer ratio BU assigned ranking 1 to 8...A, B1, B2, C1, C2, D1, D2,E D2 and E as Bad xpert Judgement based model, Weight optimisation, Model development, CT analysis 0.4% Calibration..platt scaling .. manual calibtratio. ot testing, Mockup cases, Escalation criterion
