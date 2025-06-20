@@ -2,7 +2,6 @@ import pandas as pd
 import statsmodels.api as sm
 
 def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
-    # Ensure categorical and base category is set
     data[target] = pd.Categorical(data[target])
     data[target] = data[target].cat.reorder_categories(
         [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
@@ -21,26 +20,26 @@ def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
 
             model = sm.MNLogit(y, X).fit(disp=False)
 
-            # Loop over each outcome class (excluding base)
-            for outcome in model.params.index.levels[0]:
-                const_beta = model.params.loc[(outcome, 'const')]
-                var_beta = model.params.loc[(outcome, var)]
+            # Handle both flat and MultiIndex
+            index = model.params.index
+            if isinstance(index, pd.MultiIndex):
+                outcomes = index.levels[0]
+            else:
+                outcomes = sorted(set([idx[0] for idx in index]))
 
-                const_p = model.pvalues.loc[(outcome, 'const')]
-                var_p = model.pvalues.loc[(outcome, var)]
-
-                const_t = model.tvalues.loc[(outcome, 'const')]
-                var_t = model.tvalues.loc[(outcome, var)]
+            for outcome in outcomes:
+                const_idx = (outcome, 'const') if isinstance(index, pd.MultiIndex) else f'{outcome}_const'
+                var_idx = (outcome, var) if isinstance(index, pd.MultiIndex) else f'{outcome}_{var}'
 
                 results_list.append({
                     'Level': outcome,
                     'Independent_Var': var,
-                    'Const_Beta': const_beta,
-                    'Const_P': const_p,
-                    'Const_T': const_t,
-                    'Var_Beta': var_beta,
-                    'Var_P': var_p,
-                    'Var_T': var_t,
+                    'Const_Beta': model.params.loc[const_idx],
+                    'Const_P': model.pvalues.loc[const_idx],
+                    'Const_T': model.tvalues.loc[const_idx],
+                    'Var_Beta': model.params.loc[var_idx],
+                    'Var_P': model.pvalues.loc[var_idx],
+                    'Var_T': model.tvalues.loc[var_idx],
                     'Pseudo_R2': model.prsquared,
                     'AIC': model.aic,
                     'BIC': model.bic
