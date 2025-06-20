@@ -1,44 +1,52 @@
+from pyspark.ml.classification import LogisticRegression
+from pyspark.ml.feature import VectorAssembler, StringIndexer
+from pyspark.ml.evaluation import MulticlassClassificationEvaluator
+from pyspark.sql import SparkSession
 import pandas as pd
-import statsmodels.api as sm
-import numpy as np
 
-def fit_mnl_models(df, dep_var='Economy_state_dummy', base_category='Normal'):
-    results_list = []
+def fit_mnl_models_spark(spark_df, dep_var="Economy_state_dummy", base_category="Normal"):
+    from pyspark.sql.functions import col, when
 
-    # Step 1: Convert dependent variable to categorical with base category first
-    unique_cats = sorted(df[dep_var].dropna().unique())
-    categories = [base_category] + [cat for cat in unique_cats if cat != base_category]
-    df[dep_var] = pd.Categorical(df[dep_var], categories=categories, ordered=True)
-    y_encoded = df[dep_var].cat.codes
+    result_rows = []
 
-    # Step 2: Identify independent variables
-    independent_vars = [col for col in df.columns if col not in [dep_var, 'Date']]
+    # Step 1: Index the dependent variable (Normal as base = 0)
+    label_indexer = StringIndexer(inputCol=dep_var, outputCol="label").fit(spark_df)
+    labels = label_indexer.labels  # store original categories
+    spark_df = label_indexer.transform(spark_df)
+
+    # Step 2: Get independent variables
+    independent_vars = [col for col in spark_df.columns if col not in [dep_var, 'Date', 'label']]
 
     for var in independent_vars:
         try:
-            # Step 3: Prepare X and fit model
-            X = df[[var]].copy()
-            X = sm.add_constant(X)
-            model = sm.MNLogit(y_encoded, X)
-            result = model.fit(disp=0)
+            # Step 3: Assemble single feature
+            assembler = VectorAssembler(inputCols=[var], outputCol="features")
+            df_model = assembler.transform(spark_df).select("features", "label")
 
-            # Step 4: Extract results
-            for cat in result.params.index.levels[0]:
-                for beta in result.params.columns:
-                    results_list.append({
-                        'Variable': var,
-                        'Compared_to_Base': cat,
-                        'Coefficient': beta,
-                        'Beta': result.params.loc[cat, beta],
-                        'P-value': result.pvalues.loc[cat, beta],
-                        'T-stat': result.tvalues.loc[cat, beta],
-                        'Pseudo_R2': result.prsquared,
-                        'AIC': result.aic,
-                        'BIC': result.bic
-                    })
+            # Step 4: Fit multinomial logistic regression
+            lr = LogisticRegression(featuresCol="features", labelCol="label", family="multinomial")
+            lr_model = lr.fit(df_model)
+            summary = lr_model.summary
+
+            # Step 5: Extract coefficients for each class
+            coefficients = lr_model.coefficientMatrix.toArray()
+            intercepts = lr_model.interceptVector.toArray()
+
+            for i, cls in enumerate(labels):
+                result_rows.append({
+                    'Variable': var,
+                    'Category': cls,
+                    'Intercept': intercepts[i],
+                    'Coefficient': coefficients[i][0],
+                    'StdErr': summary.coefficientStandardErrors[i][0] if summary.coefficientStandardErrors else None,
+                    'T-stat': (coefficients[i][0] / summary.coefficientStandardErrors[i][0]) if summary.coefficientStandardErrors else None,
+                    'Accuracy': summary.accuracy,
+                    'F1 Score': summary.fMeasureByLabel()[i],
+                    'LogLoss': summary.logLoss
+                })
 
         except Exception as e:
-            print(f"❌ Model fitting failed for variable '{var}': {e}")
+            print(f"❌ Model failed for variable {var}: {e}")
             continue
 
-    return pd.DataFrame(results_list)
+    return pd.DataFrame(result_rows)
