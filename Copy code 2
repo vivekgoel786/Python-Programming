@@ -2,7 +2,7 @@ import pandas as pd
 import statsmodels.api as sm
 
 def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
-    # Ensure dependent variable is categorical and base is first
+    # Ensure categorical and base category is set
     data[target] = pd.Categorical(data[target])
     data[target] = data[target].cat.reorder_categories(
         [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
@@ -16,20 +16,31 @@ def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
     for var in independent_vars:
         try:
             sub_data = data[[target, var]].dropna()
-
             X = sm.add_constant(sub_data[[var]])
             y = sub_data[target]
 
             model = sm.MNLogit(y, X).fit(disp=False)
 
-            # Direct extraction
-            for label in model.params.index:
+            # Loop over each outcome class (excluding base)
+            for outcome in model.params.index.levels[0]:
+                const_beta = model.params.loc[(outcome, 'const')]
+                var_beta = model.params.loc[(outcome, var)]
+
+                const_p = model.pvalues.loc[(outcome, 'const')]
+                var_p = model.pvalues.loc[(outcome, var)]
+
+                const_t = model.tvalues.loc[(outcome, 'const')]
+                var_t = model.tvalues.loc[(outcome, var)]
+
                 results_list.append({
+                    'Level': outcome,
                     'Independent_Var': var,
-                    'Coefficient': str(label),
-                    'Beta': model.params.loc[label],
-                    'P-Value': model.pvalues.loc[label],
-                    'T-Stat': model.tvalues.loc[label],
+                    'Const_Beta': const_beta,
+                    'Const_P': const_p,
+                    'Const_T': const_t,
+                    'Var_Beta': var_beta,
+                    'Var_P': var_p,
+                    'Var_T': var_t,
                     'Pseudo_R2': model.prsquared,
                     'AIC': model.aic,
                     'BIC': model.bic
