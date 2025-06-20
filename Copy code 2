@@ -23,6 +23,28 @@ def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
 
             model = sm.MNLogit(y, X).fit(disp=False)
             summary = model.summary2().tables[1]
+            # Get summary table
+summary = model.summary2().tables[1]
+
+# Print to see column names (optional debug step)
+# print(summary.columns)
+
+# Determine actual column names to avoid KeyErrors
+coef_col = next((c for c in summary.columns if 'Coef' in c), 'coef')
+pval_col = next((c for c in summary.columns if 'P' in c), 'P-value')
+z_col = next((c for c in summary.columns if 'z' in c or 'Z' in c), 'z')
+
+for coef_label in summary.index:
+    results_list.append({
+        'Independent_Var': var,
+        'Coefficient': coef_label,
+        'Beta': summary.loc[coef_label, coef_col],
+        'P-Value': summary.loc[coef_label, pval_col],
+        'T-Stat': summary.loc[coef_label, z_col],
+        'Pseudo_R2': model.prsquared,
+        'AIC': model.aic,
+        'BIC': model.bic
+    })
 
             for coef_label in summary.index:
                 results_list.append({
