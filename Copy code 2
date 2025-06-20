@@ -5,30 +5,29 @@ import numpy as np
 def fit_mnl_models(df, dep_var='Economy_state_dummy', base_category='Normal'):
     results_list = []
 
-    # Step 1: Encode dependent variable with base category first
-    y = df[dep_var].astype('category')
-    y = y.cat.reorder_categories([base_category] + [cat for cat in y.cat.categories if cat != base_category], ordered=True)
+    # Step 1: Convert dependent variable to categorical with base category first
+    unique_cats = sorted(df[dep_var].dropna().unique())
+    categories = [base_category] + [cat for cat in unique_cats if cat != base_category]
+    df[dep_var] = pd.Categorical(df[dep_var], categories=categories, ordered=True)
+    y_encoded = df[dep_var].cat.codes
 
-    # Independent variables: exclude date and dependent variable
+    # Step 2: Identify independent variables
     independent_vars = [col for col in df.columns if col not in [dep_var, 'Date']]
 
     for var in independent_vars:
-        # Prepare X and y
-        X = df[[var]].copy()
-        X = sm.add_constant(X)  # Add intercept
-        y_encoded = y.cat.codes  # Convert to numeric categories
-
         try:
-            # Fit the model
+            # Step 3: Prepare X and fit model
+            X = df[[var]].copy()
+            X = sm.add_constant(X)
             model = sm.MNLogit(y_encoded, X)
             result = model.fit(disp=0)
 
-            # Extract metrics
-            for cat in result.params.index.levels[0]:  # For each outcome category
+            # Step 4: Extract results
+            for cat in result.params.index.levels[0]:
                 for beta in result.params.columns:
                     results_list.append({
                         'Variable': var,
-                        'Category_vs_Base': cat,
+                        'Compared_to_Base': cat,
                         'Coefficient': beta,
                         'Beta': result.params.loc[cat, beta],
                         'P-value': result.pvalues.loc[cat, beta],
@@ -39,7 +38,7 @@ def fit_mnl_models(df, dep_var='Economy_state_dummy', base_category='Normal'):
                     })
 
         except Exception as e:
-            print(f"Model fitting failed for variable '{var}': {e}")
+            print(f"❌ Model fitting failed for variable '{var}': {e}")
             continue
 
     return pd.DataFrame(results_list)
