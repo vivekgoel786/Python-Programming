@@ -1,46 +1,39 @@
-def fit_mnl_models_spark(spark_df, dep_var="Economy_state_dummy", base_category="Normal"):
-    from pyspark.ml.feature import StringIndexer, VectorAssembler
-    from pyspark.ml.classification import LogisticRegression
-    import pandas as pd
+import pandas as pd
+import statsmodels.api as sm
+import statsmodels.formula.api as smf
 
-    result_rows = []
+def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
+    # Ensure target is categorical with correct base
+    data[target] = pd.Categorical(data[target], categories=[base_category, 'good', 'poor'])
+    
+    results_list = []
 
-    # Step 1: Encode the label (target) with base category first
-    label_indexer = StringIndexer(inputCol=dep_var, outputCol="label").fit(spark_df)
-    labels = label_indexer.labels
-    spark_df = label_indexer.transform(spark_df)
-
-    # Step 2: Independent variables (exclude Date and target columns)
-    independent_vars = [col for col in spark_df.columns if col not in [dep_var, "Date", "label"]]
+    # Define independent variables (excluding date and target)
+    exclude_cols = ['Date', target]
+    independent_vars = [col for col in data.columns if col not in exclude_cols]
 
     for var in independent_vars:
         try:
-            # Step 3: Assemble features
-            assembler = VectorAssembler(inputCols=[var], outputCol="features")
-            df_model = assembler.transform(spark_df).select("features", "label")
+            formula = f"{target} ~ {var}"
+            model = smf.mnlogit(formula, data=data).fit(disp=False)
 
-            # Step 4: Fit multinomial logistic regression
-            lr = LogisticRegression(featuresCol="features", labelCol="label", family="multinomial")
-            lr_model = lr.fit(df_model)
-            summary = lr_model.summary
+            summary = model.summary2().tables[1]
+            for level in model.model.endog_names[1:]:  # excluding base
+                level_label = f"{target}_{level}"
 
-            # Step 5: Extract coefficients
-            coefficients = lr_model.coefficientMatrix.toArray()
-            intercepts = lr_model.interceptVector.toArray()
-
-            for i, cls in enumerate(labels):
-                result_rows.append({
-                    'Variable': var,
-                    'Category': cls,
-                    'Intercept': intercepts[i],
-                    'Coefficient': coefficients[i][0],
-                    'Accuracy': summary.accuracy,
-                    'F1 Score': summary.fMeasureByLabel()[i],
-                    'LogLoss': summary.logLoss
-                })
-
+                for coef_label in summary.index:
+                    if level in coef_label:
+                        results_list.append({
+                            'Independent_Var': var,
+                            'Level': coef_label.split('[')[-1].replace(']', ''),
+                            'Beta': summary.loc[coef_label, 'Coef.'],
+                            'P-Value': summary.loc[coef_label, 'P>|z|'],
+                            'T-Stat': summary.loc[coef_label, 'z'],
+                            'Pseudo_R2': model.prsquared,
+                            'AIC': model.aic,
+                            'BIC': model.bic
+                        })
         except Exception as e:
-            print(f"Model failed for variable '{var}': {e}")
-            continue
+            print(f"Model failed for variable {var}: {e}")
 
-    return pd.DataFrame(result_rows)
+    return pd.DataFrame(results_list)
