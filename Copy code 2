@@ -1,6 +1,45 @@
-Long list of variables
-Received a few variables..quantitative dataset EDA .. SFA, MFA
-Dimension, factor, variable
-PM
-Questionnaire..
-Qualitative dataset Statistical model, N models Bucketing of variables based on KT, AR, IE Assigning scores to each option based on risk, Created new variables as well AUM buffer ratio BU assigned ranking 1 to 8...A, B1, B2, C1, C2, D1, D2,E D2 and E as Bad xpert Judgement based model, Weight optimisation, Model development, CT analysis 0.4% Calibration..platt scaling .. manual calibtratio. ot testing, Mockup cases, Escalation criterion
+import pandas as pd
+import statsmodels.api as sm
+import numpy as np
+
+def fit_mnl_models(df, dep_var='Economy_state_dummy', base_category='Normal'):
+    results_list = []
+
+    # Step 1: Encode dependent variable with base category first
+    y = df[dep_var].astype('category')
+    y = y.cat.reorder_categories([base_category] + [cat for cat in y.cat.categories if cat != base_category], ordered=True)
+
+    # Independent variables: exclude date and dependent variable
+    independent_vars = [col for col in df.columns if col not in [dep_var, 'Date']]
+
+    for var in independent_vars:
+        # Prepare X and y
+        X = df[[var]].copy()
+        X = sm.add_constant(X)  # Add intercept
+        y_encoded = y.cat.codes  # Convert to numeric categories
+
+        try:
+            # Fit the model
+            model = sm.MNLogit(y_encoded, X)
+            result = model.fit(disp=0)
+
+            # Extract metrics
+            for cat in result.params.index.levels[0]:  # For each outcome category
+                for beta in result.params.columns:
+                    results_list.append({
+                        'Variable': var,
+                        'Category_vs_Base': cat,
+                        'Coefficient': beta,
+                        'Beta': result.params.loc[cat, beta],
+                        'P-value': result.pvalues.loc[cat, beta],
+                        'T-stat': result.tvalues.loc[cat, beta],
+                        'Pseudo_R2': result.prsquared,
+                        'AIC': result.aic,
+                        'BIC': result.bic
+                    })
+
+        except Exception as e:
+            print(f"Model fitting failed for variable '{var}': {e}")
+            continue
+
+    return pd.DataFrame(results_list)
