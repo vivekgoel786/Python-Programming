@@ -1,38 +1,41 @@
 import pandas as pd
 import statsmodels.api as sm
-import statsmodels.formula.api as smf
 
 def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
-    # Ensure target is categorical with correct base
-    data[target] = pd.Categorical(data[target], categories=[base_category, 'good', 'poor'])
-    
-    results_list = []
+    # Ensure dependent variable is categorical and set the base category
+    data[target] = pd.Categorical(data[target])
+    data[target] = data[target].cat.reorder_categories([base_category] + 
+                              [cat for cat in data[target].cat.categories if cat != base_category],
+                              ordered=False)
 
-    # Define independent variables (excluding date and target)
+    results_list = []
     exclude_cols = ['Date', target]
     independent_vars = [col for col in data.columns if col not in exclude_cols]
 
     for var in independent_vars:
         try:
-            formula = f"{target} ~ {var}"
-            model = smf.mnlogit(formula, data=data).fit(disp=False)
+            # Drop NA rows for this variable
+            sub_data = data[[target, var]].dropna()
 
+            # Design X matrix with intercept
+            X = sm.add_constant(sub_data[[var]])
+            y = sub_data[target]
+
+            model = sm.MNLogit(y, X).fit(disp=False)
             summary = model.summary2().tables[1]
-            for level in model.model.endog_names[1:]:  # excluding base
-                level_label = f"{target}_{level}"
 
-                for coef_label in summary.index:
-                    if level in coef_label:
-                        results_list.append({
-                            'Independent_Var': var,
-                            'Level': coef_label.split('[')[-1].replace(']', ''),
-                            'Beta': summary.loc[coef_label, 'Coef.'],
-                            'P-Value': summary.loc[coef_label, 'P>|z|'],
-                            'T-Stat': summary.loc[coef_label, 'z'],
-                            'Pseudo_R2': model.prsquared,
-                            'AIC': model.aic,
-                            'BIC': model.bic
-                        })
+            for coef_label in summary.index:
+                results_list.append({
+                    'Independent_Var': var,
+                    'Coefficient': coef_label,
+                    'Beta': summary.loc[coef_label, 'Coef.'],
+                    'P-Value': summary.loc[coef_label, 'P>|z|'],
+                    'T-Stat': summary.loc[coef_label, 'z'],
+                    'Pseudo_R2': model.prsquared,
+                    'AIC': model.aic,
+                    'BIC': model.bic
+                })
+
         except Exception as e:
             print(f"Model failed for variable {var}: {e}")
 
