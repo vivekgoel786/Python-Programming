@@ -2,11 +2,12 @@ import pandas as pd
 import statsmodels.api as sm
 
 def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
-    # Ensure dependent variable is categorical and set the base category
+    # Ensure dependent variable is categorical and base is first
     data[target] = pd.Categorical(data[target])
-    data[target] = data[target].cat.reorder_categories([base_category] + 
-                              [cat for cat in data[target].cat.categories if cat != base_category],
-                              ordered=False)
+    data[target] = data[target].cat.reorder_categories(
+        [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
+        ordered=False
+    )
 
     results_list = []
     exclude_cols = ['Date', target]
@@ -14,45 +15,21 @@ def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
 
     for var in independent_vars:
         try:
-            # Drop NA rows for this variable
             sub_data = data[[target, var]].dropna()
 
-            # Design X matrix with intercept
             X = sm.add_constant(sub_data[[var]])
             y = sub_data[target]
 
             model = sm.MNLogit(y, X).fit(disp=False)
-            summary = model.summary2().tables[1]
-            # Get summary table
-summary = model.summary2().tables[1]
 
-# Print to see column names (optional debug step)
-# print(summary.columns)
-
-# Determine actual column names to avoid KeyErrors
-coef_col = next((c for c in summary.columns if 'Coef' in c), 'coef')
-pval_col = next((c for c in summary.columns if 'P' in c), 'P-value')
-z_col = next((c for c in summary.columns if 'z' in c or 'Z' in c), 'z')
-
-for coef_label in summary.index:
-    results_list.append({
-        'Independent_Var': var,
-        'Coefficient': coef_label,
-        'Beta': summary.loc[coef_label, coef_col],
-        'P-Value': summary.loc[coef_label, pval_col],
-        'T-Stat': summary.loc[coef_label, z_col],
-        'Pseudo_R2': model.prsquared,
-        'AIC': model.aic,
-        'BIC': model.bic
-    })
-
-            for coef_label in summary.index:
+            # Direct extraction
+            for label in model.params.index:
                 results_list.append({
                     'Independent_Var': var,
-                    'Coefficient': coef_label,
-                    'Beta': summary.loc[coef_label, 'Coef.'],
-                    'P-Value': summary.loc[coef_label, 'P>|z|'],
-                    'T-Stat': summary.loc[coef_label, 'z'],
+                    'Coefficient': str(label),
+                    'Beta': model.params.loc[label],
+                    'P-Value': model.pvalues.loc[label],
+                    'T-Stat': model.tvalues.loc[label],
                     'Pseudo_R2': model.prsquared,
                     'AIC': model.aic,
                     'BIC': model.bic
