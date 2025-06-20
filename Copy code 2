@@ -1,25 +1,21 @@
-from pyspark.ml.classification import LogisticRegression
-from pyspark.ml.feature import VectorAssembler, StringIndexer
-from pyspark.ml.evaluation import MulticlassClassificationEvaluator
-from pyspark.sql import SparkSession
-import pandas as pd
-
 def fit_mnl_models_spark(spark_df, dep_var="Economy_state_dummy", base_category="Normal"):
-    from pyspark.sql.functions import col, when
+    from pyspark.ml.feature import StringIndexer, VectorAssembler
+    from pyspark.ml.classification import LogisticRegression
+    import pandas as pd
 
     result_rows = []
 
-    # Step 1: Index the dependent variable (Normal as base = 0)
+    # Step 1: Encode the label (target) with base category first
     label_indexer = StringIndexer(inputCol=dep_var, outputCol="label").fit(spark_df)
-    labels = label_indexer.labels  # store original categories
+    labels = label_indexer.labels
     spark_df = label_indexer.transform(spark_df)
 
-    # Step 2: Get independent variables
-    independent_vars = [col for col in spark_df.columns if col not in [dep_var, 'Date', 'label']]
+    # Step 2: Independent variables (exclude Date and target columns)
+    independent_vars = [col for col in spark_df.columns if col not in [dep_var, "Date", "label"]]
 
     for var in independent_vars:
         try:
-            # Step 3: Assemble single feature
+            # Step 3: Assemble features
             assembler = VectorAssembler(inputCols=[var], outputCol="features")
             df_model = assembler.transform(spark_df).select("features", "label")
 
@@ -28,7 +24,7 @@ def fit_mnl_models_spark(spark_df, dep_var="Economy_state_dummy", base_category=
             lr_model = lr.fit(df_model)
             summary = lr_model.summary
 
-            # Step 5: Extract coefficients for each class
+            # Step 5: Extract coefficients
             coefficients = lr_model.coefficientMatrix.toArray()
             intercepts = lr_model.interceptVector.toArray()
 
@@ -38,15 +34,13 @@ def fit_mnl_models_spark(spark_df, dep_var="Economy_state_dummy", base_category=
                     'Category': cls,
                     'Intercept': intercepts[i],
                     'Coefficient': coefficients[i][0],
-                    'StdErr': summary.coefficientStandardErrors[i][0] if summary.coefficientStandardErrors else None,
-                    'T-stat': (coefficients[i][0] / summary.coefficientStandardErrors[i][0]) if summary.coefficientStandardErrors else None,
                     'Accuracy': summary.accuracy,
                     'F1 Score': summary.fMeasureByLabel()[i],
                     'LogLoss': summary.logLoss
                 })
 
         except Exception as e:
-            print(f"❌ Model failed for variable {var}: {e}")
+            print(f"Model failed for variable '{var}': {e}")
             continue
 
     return pd.DataFrame(result_rows)
