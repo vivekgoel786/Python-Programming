@@ -1,18 +1,14 @@
-import io
 import js
-from js import Blob, URL, Uint8Array
+from js import Blob, URL
 
-# Step 1: Convert results_df to CSV as bytes
-csv_bytes = results_df.to_csv(index=False).encode('utf-8')
+# Step 1: Convert DataFrame to CSV string
+csv_text = results_df.to_csv(index=False)
 
-# Step 2: Convert Python bytes to JavaScript Uint8Array
-uint8_array = Uint8Array.new(csv_bytes)
-
-# Step 3: Create Blob from Uint8Array
-blob = Blob.new([uint8_array], { "type": "text/csv" })
+# Step 2: Create JS Blob with CSV text (NOT bytes)
+blob = Blob.new([csv_text], { "type": "text/csv" })
 url = URL.createObjectURL(blob)
 
-# Step 4: Trigger file download
+# Step 3: Trigger file download in browser
 link = js.document.createElement("a")
 link.href = url
 link.download = "multinomial_model_results.csv"
