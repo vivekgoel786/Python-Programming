@@ -1,9 +1,21 @@
-Please find attached the revised OOT data collection template that was presented during today’s meeting. This version incorporates the valuable feedback shared by the RMs and has been updated accordingly.
+import io
+import js
+import pyodide
+from js import Blob, URL
 
-We request you to kindly share this template with your wider team for expert input and data collection. Please note that this version is intended solely for review and discussion purposes at this stage.
+# Step 1: Convert results_df to Excel in memory
+excel_buffer = io.BytesIO()
+results_df.to_excel(excel_buffer, index=False)
+excel_buffer.seek(0)
 
-The template has been designed to be user-friendly and intuitive for RMs to complete. It ensures that their responses can be seamlessly used for scoring OOT data in the validation process.
+# Step 2: Convert buffer to JS Blob and create a URL
+blob = Blob.new([pyodide.to_js(excel_buffer.getvalue())], { "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+url = URL.createObjectURL(blob)
 
-Should you or your team have any doubts, suggested modifications, or general feedback on the questions, please feel free to share them with us—we welcome and appreciate your insights.
-
-Looking forward to your feedback.
+# Step 3: Trigger browser download
+link = js.document.createElement("a")
+link.href = url
+link.download = "multinomial_model_results.xlsx"
+js.document.body.appendChild(link)
+link.click()
+js.document.body.removeChild(link)
