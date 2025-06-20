@@ -1,17 +1,18 @@
 import io
 import js
-import pyodide
-from js import Blob, URL
+from js import Blob, URL, Uint8Array
 
-# Step 1: Convert results_df to CSV in memory
-csv_data = results_df.to_csv(index=False)
-csv_bytes = csv_data.encode('utf-8')
+# Step 1: Convert results_df to CSV as bytes
+csv_bytes = results_df.to_csv(index=False).encode('utf-8')
 
-# Step 2: Create a Blob and download link
-blob = Blob.new([pyodide.to_js(csv_bytes)], { "type": "text/csv" })
+# Step 2: Convert Python bytes to JavaScript Uint8Array
+uint8_array = Uint8Array.new(csv_bytes)
+
+# Step 3: Create Blob from Uint8Array
+blob = Blob.new([uint8_array], { "type": "text/csv" })
 url = URL.createObjectURL(blob)
 
-# Step 3: Trigger the download
+# Step 4: Trigger file download
 link = js.document.createElement("a")
 link.href = url
 link.download = "multinomial_model_results.csv"
