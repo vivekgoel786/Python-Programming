@@ -1,4 +1,25 @@
-there are random numbers in sheet 1 column B -> 1,2,2.5,3,4,4.4,5,6,6.8,7,8,9.9....
-then in sheet 2 there is a column G -> 10,8,6,4,2 and H->8,6,4,2,0 and for each value in columns G and H there is a value in column B ->MS-i, MS-ii, MS-iii, MS-iv....
+import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import LabelEncoder
 
-we want to fill column C in sheet 1, corresponding to column B such that it checks each value of column B in range of G and H to see if that value falls in that bucket and pick the corresponding value in column B of sheet 2
+# Assume your DataFrame is already loaded as 'data'
+# Set base category 'normal' by reordering and encoding
+data['Economy_State_dummy'] = pd.Categorical(data['Economy_State_dummy'], categories=['normal', 'good', 'poor'], ordered=False)
+le = LabelEncoder()
+y = le.fit_transform(data['Economy_State_dummy'])  # 'normal' will be 1st
+
+# Only using GDP as independent variable
+X = data[['GDP']]
+
+# Fit the Multinomial Logistic Regression model
+model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
+model.fit(X, y)
+
+# Get coefficients
+import numpy as np
+coef_df = pd.DataFrame(model.coef_, columns=['GDP'])
+coef_df['Intercept'] = model.intercept_
+coef_df['Target Class'] = le.inverse_transform(np.arange(len(model.classes_)))
+coef_df = coef_df[['Target Class', 'Intercept', 'GDP']]
+
+coef_df
