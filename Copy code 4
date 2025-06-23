@@ -1,25 +1,46 @@
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import LabelEncoder
 
-# Assume your DataFrame is already loaded as 'data'
-# Set base category 'normal' by reordering and encoding
-data['Economy_State_dummy'] = pd.Categorical(data['Economy_State_dummy'], categories=['normal', 'good', 'poor'], ordered=False)
-le = LabelEncoder()
-y = le.fit_transform(data['Economy_State_dummy'])  # 'normal' will be 1st
+# Sample data
+data = pd.DataFrame({
+    'Date': ['Mar06', 'Jun06', 'Sep06'],
+    'Economy_state_dummy': ['Poor', 'Good', 'Normal'],
+    'GDP': [200, 1000, 500],
+    'CPI': [5, 10, 15],
+    'Avg_Monthly_Wage': [40000, 42000, 45000]
+})
 
-# Only using GDP as independent variable
-X = data[['GDP']]
+# Convert Date to datetime and sort
+data['Date'] = pd.to_datetime(data['Date'], format='%b%y')
+data = data.sort_values('Date').reset_index(drop=True)
 
-# Fit the Multinomial Logistic Regression model
-model = LogisticRegression(multi_class='multinomial', solver='lbfgs')
-model.fit(X, y)
+# Create derived columns (optional, based on your example)
+data['sqrt_GDP'] = data['GDP'] ** 0.5
+data['sqrt_CPI'] = data['CPI'] ** 0.5
+data['sqrt_Avg_Monthly_Wage'] = data['Avg_Monthly_Wage'] ** 0.5
+data['log_GDP'] = np.log(data['GDP'])
+data['log_CPI'] = np.log(data['CPI'])
+data['log_Avg_Monthly_Wage'] = np.log(data['Avg_Monthly_Wage'])
 
-# Get coefficients
-import numpy as np
-coef_df = pd.DataFrame(model.coef_, columns=['GDP'])
-coef_df['Intercept'] = model.intercept_
-coef_df['Target Class'] = le.inverse_transform(np.arange(len(model.classes_)))
-coef_df = coef_df[['Target Class', 'Intercept', 'GDP']]
+# Automatically get variables to lag/lead
+exclude_cols = ['Date', 'Economy_state_dummy']
+variables_to_lag_lead = [col for col in data.columns if col not in exclude_cols]
 
-coef_df
+# Create lag and lead variables (correctly using f-strings inside the loop)
+for var in variables_to_lag_lead:
+    data[f'{var}_lag1'] = data[var].shift(1)
+    data[f'{var}_lead1'] = data[var].shift(-1)
+
+# Now safely extract just the lag and lead columns (if needed)
+lag_cols = [f'{col}_lag1' for col in variables_to_lag_lead]
+lead_cols = [f'{col}_lead1' for col in variables_to_lag_lead]
+
+# Optional separate lag/lead datasets
+data_lags = data[['Date', 'Economy_state_dummy'] + lag_cols]
+data_leads = data[['Date', 'Economy_state_dummy'] + lead_cols]
+
+# Display preview
+print("Lagged Data:")
+print(data_lags.head())
+
+print("\nLead Data:")
+print(data_leads.head())
