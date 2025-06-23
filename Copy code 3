@@ -1,17 +1,51 @@
-import js
-from js import Blob, URL
+import pandas as pd
+import statsmodels.api as sm
 
-# Step 1: Convert DataFrame to CSV string
-csv_text = results_df.to_csv(index=False)
+def fit_mnl_models(data, target='Economy_State_dummy', base_category='Normal'):
+    # Ensure dependent variable is categorical and base is first
+    data[target] = pd.Categorical(data[target])
+    data[target] = data[target].cat.reorder_categories(
+        [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
+        ordered=False
+    )
+    
+    # Get the categories after reordering
+    categories = data[target].cat.categories.tolist()
+    # The baseline category is categories[0], the rest are non-baseline
+    non_baseline_cats = categories[1:]  # e.g. ['Boom', 'Recession']
+    print(non_baseline_cats)
+    
+    results_list = []
+    exclude_cols = ['Date', target]
+    independent_vars = [col for col in data.columns if col not in exclude_cols]
 
-# Step 2: Create JS Blob with CSV text (NOT bytes)
-blob = Blob.new([csv_text], { "type": "text/csv" })
-url = URL.createObjectURL(blob)
+    for var in independent_vars:
+        try:
+            sub_data = data[[target, var]].dropna()
+            X = sm.add_constant(sub_data[[var]])
+            y = sub_data[target]
 
-# Step 3: Trigger file download in browser
-link = js.document.createElement("a")
-link.href = url
-link.download = "multinomial_model_results.csv"
-js.document.body.appendChild(link)
-link.click()
-js.document.body.removeChild(link)
+            model = sm.MNLogit(y, X).fit(disp=False)
+            
+            # The model.params DataFrame has a MultiIndex like:
+            #    index: categories (non-baseline categories)
+            #    columns: ['const', var]
+            # We'll iterate over rows (categories) and columns (coefficients)
+            for cat in model.params.index:
+                for coef_name in model.params.columns:
+                    coef_label = f"{cat}.{coef_name}"  # e.g. Boom.const or Boom.Income
+                    results_list.append({
+                        'Independent_Var': var,
+                        'Coefficient': coef_label,
+                        'Beta': model.params.loc[cat, coef_name],
+                        'P-Value': model.pvalues.loc[cat, coef_name],
+                        'T-Stat': model.tvalues.loc[cat, coef_name],
+                        'Pseudo_R2': model.prsquared,
+                        'AIC': model.aic,
+                        'BIC': model.bic
+                    })
+
+        except Exception as e:
+            print(f"Model failed for variable {var}: {e}")
+
+    return pd.DataFrame(results_list)
