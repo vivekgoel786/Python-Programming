@@ -1,46 +1,52 @@
 import pandas as pd
+import numpy as np
 
 # Sample data
 data = pd.DataFrame({
-    'Date': ['Mar06', 'Jun06', 'Sep06'],
-    'Economy_state_dummy': ['Poor', 'Good', 'Normal'],
-    'GDP': [200, 1000, 500],
-    'CPI': [5, 10, 15],
-    'Avg_Monthly_Wage': [40000, 42000, 45000]
+    'Date': ['Mar06', 'Jun06', 'Sep06', 'Dec06', 'Mar07', 'Jun07', 'Sep07', 'Dec07'],
+    'Economy_state_dummy': ['Poor', 'Good', 'Normal', 'Good', 'Poor', 'Normal', 'Good', 'Poor'],
+    'GDP': [200, 1000, 500, 800, 600, 900, 1200, 700],
+    'CPI': [5, 10, 15, 12, 13, 9, 11, 10],
+    'Avg_Monthly_Wage': [40000, 42000, 45000, 47000, 48000, 49000, 51000, 53000]
 })
 
 # Convert Date to datetime and sort
 data['Date'] = pd.to_datetime(data['Date'], format='%b%y')
 data = data.sort_values('Date').reset_index(drop=True)
 
-# Create derived columns (optional, based on your example)
-data['sqrt_GDP'] = data['GDP'] ** 0.5
-data['sqrt_CPI'] = data['CPI'] ** 0.5
-data['sqrt_Avg_Monthly_Wage'] = data['Avg_Monthly_Wage'] ** 0.5
+# Add derived variables (optional)
+data['sqrt_GDP'] = np.sqrt(data['GDP'])
+data['sqrt_CPI'] = np.sqrt(data['CPI'])
+data['sqrt_Avg_Monthly_Wage'] = np.sqrt(data['Avg_Monthly_Wage'])
 data['log_GDP'] = np.log(data['GDP'])
 data['log_CPI'] = np.log(data['CPI'])
 data['log_Avg_Monthly_Wage'] = np.log(data['Avg_Monthly_Wage'])
 
-# Automatically get variables to lag/lead
+# Identify variables for lag/lead
 exclude_cols = ['Date', 'Economy_state_dummy']
 variables_to_lag_lead = [col for col in data.columns if col not in exclude_cols]
 
-# Create lag and lead variables (correctly using f-strings inside the loop)
+# Set number of lags/leads
+num_lags = 4
+num_leads = 4
+
+# Create lag and lead columns
 for var in variables_to_lag_lead:
-    data[f'{var}_lag1'] = data[var].shift(1)
-    data[f'{var}_lead1'] = data[var].shift(-1)
+    for i in range(1, num_lags + 1):
+        data[f'{var}_lag{i}'] = data[var].shift(i)
+    for i in range(1, num_leads + 1):
+        data[f'{var}_lead{i}'] = data[var].shift(-i)
 
-# Now safely extract just the lag and lead columns (if needed)
-lag_cols = [f'{col}_lag1' for col in variables_to_lag_lead]
-lead_cols = [f'{col}_lead1' for col in variables_to_lag_lead]
+# Optional: Separate datasets
+lag_cols = [f'{var}_lag{i}' for var in variables_to_lag_lead for i in range(1, num_lags + 1)]
+lead_cols = [f'{var}_lead{i}' for var in variables_to_lag_lead for i in range(1, num_leads + 1)]
 
-# Optional separate lag/lead datasets
 data_lags = data[['Date', 'Economy_state_dummy'] + lag_cols]
 data_leads = data[['Date', 'Economy_state_dummy'] + lead_cols]
 
-# Display preview
-print("Lagged Data:")
+# Display result
+print("Lagged Data (First few rows):")
 print(data_lags.head())
 
-print("\nLead Data:")
+print("\nLead Data (First few rows):")
 print(data_leads.head())
