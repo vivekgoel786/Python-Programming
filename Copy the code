@@ -69,8 +69,18 @@ df <- data.frame(Date, Economy_State_dummy, GDP, CPI, UNEMP_RATE, MLR)
 # View the first few rows
 head(df)
 
-install.packages("VGAM")
-
+# Load the VGAM package (make sure it's installed)
 library(VGAM)
-gen_ord_logit <- vglm(Economy_State_dummy ~ UNEMP_RATE, family=genetic(vglm), data=df)
+
+# Convert the dependent variable to an ordered factor
+df$Economy_State_dummy <- ordered(df$Economy_State_dummy, levels = c("Poor", "Normal", "Good"))
+
+# Fit a generalized ordered logit model (partial proportional odds)
+gen_ord_logit <- vglm(
+  Economy_State_dummy ~ UNEMP_RATE,
+  family = cumulative(parallel = FALSE, link = "logit"),
+  data = df
+)
+
+# Show the summary
 summary(gen_ord_logit)
