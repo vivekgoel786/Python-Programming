@@ -1,63 +1,76 @@
+# Create vectors
+Date <- c("Mar-06","Jun-06","Sep-06","Dec-06",
+          "Mar-07","Jun-07","Sep-07","Dec-07",
+          "Mar-08","Jun-08","Sep-08","Dec-08",
+          "Mar-09","Jun-09","Sep-09","Dec-09",
+          "Mar-10","Jun-10","Sep-10","Dec-10",
+          "Mar-11","Jun-11","Sep-11","Dec-11",
+          "Mar-12","Jun-12","Sep-12","Dec-12",
+          "Mar-13","Jun-13","Sep-13","Dec-13",
+          "Mar-14","Jun-14","Sep-14","Dec-14",
+          "Mar-15","Jun-15","Sep-15","Dec-15",
+          "Mar-16","Jun-16","Sep-16","Dec-16",
+          "Mar-17","Jun-17","Sep-17","Dec-17",
+          "Mar-18","Jun-18","Sep-18","Dec-18",
+          "Mar-19","Jun-19","Sep-19","Dec-19",
+          "Mar-20","Jun-20","Sep-20","Dec-20",
+          "Mar-21","Jun-21","Sep-21","Dec-21",
+          "Mar-22","Jun-22","Sep-22","Dec-22",
+          "Mar-23","Jun-23","Sep-23","Dec-23",
+          "Mar-24")
 
-Here's a Python script to:
+Economy_State_dummy <- c("Good", "Normal", "Normal", "Normal", "Normal", "Good", "Good", "Normal", "Normal", "Normal", "Poor", "Poor",	
+ "Poor", "Poor", "Good", "Normal", "Normal", "Normal", "Good", "Good", "Normal", "Good", "Normal", "Normal",
+ "Good", "Normal", "Normal", "Good", "Good", "Normal", "Normal", "Normal", "Normal", "Good", "Good", "Normal", 
+ "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Good", "Normal", "Normal", "Normal", "Normal",	
+ "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Poor", "Poor",	
+ "Poor", "Poor", "Poor", "Poor", "Poor", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal",
+ "Normal", "Normal", "Normal")
 
-1. Plot histograms and KDE curves for both Lombard and Property-backed scores.
+GDP <- c(1810063,	1738304, 1746759, 1893689, 1928792,	1829463, 1842192, 1979091, 1992940,	1893939, 1883585, 1939874, 1907673,	1836030, 1874133,
+       2039253,	2139668, 2000920, 1982245, 2109563,	2209743, 2037494, 2029932, 2024390,	2272805, 2160308, 2132192, 2337519,	2395328, 2219187,	
+       2185277,	2342295, 2386444.03397803, 2237767.96956094, 2208911.95705845, 2398964.03940259, 2459674.64994883, 2303095.35393988, 2285060.31984513,
+       2473595.67626616, 2541549, 2390876, 2357971,	2558106, 2638918, 2494793, 2463648,	2662582, 2772274, 2610783, 2543414,	2766734, 2845657,
+       2668902,	2605929, 2798831, 2785733, 2343919,	2442517, 2686527, 2715941, 2524347,	2439023, 2738617, 2776120, 2585625,	2548065, 2776940,	
+       2851124,	2634713, 2588398, 2828147, 2899023)
 
+CPI <- c(72.71,	74.5033333333333, 74.7866666666667,	74.91, 74.5666666666667, 75.8633333333333, 75.9266666666667, 76.9766666666667, 78.3066666666667,
+       81.5566666666667, 81.4633333333333, 78.6466666666667, 78.0933333333333, 79.2966666666667, 79.67,	80.1333333333333, 81.0066666666667,	
+       81.8633333333333, 82.2966666666667, 82.4933333333333, 83.4566666666667, 85.22, 85.6966666666667,	85.7733333333333, 86.2766666666667,
+       87.3666666666667, 88.2033333333333, 88.5366666666667, 88.95,	89.38, 89.6833333333333, 90.03,	90.73, 91.5933333333333, 91.4733333333333,	
+       91.03, 90.28, 90.5633333333333, 90.4666666666667, 90.24,	89.8233333333333, 90.84, 90.7, 90.86, 90.9533333333333,	90.9233333333333,
+       91.1033333333333, 91.65,	91.5233333333334, 92.1233333333333,	92.45, 92.4233333333333, 92.2033333333333, 93.12, 93.0066666666667,	92.79,	
+       92.5866666666667, 90.6366666666667, 92.3366666666667, 92.42,	92.0933333333333, 92.77, 92.9866666666667, 94.66, 96.4633333333333,	
+       98.7633333333333, 99.76,	100.156666666667, 100.203333333333,	99.89, 100.28, 99.6266666666667, 99.4166666666667)
 
-2. Perform Min-Max Normalization on the scores.
+UNEMP_RATE <- c(1.87, 1.67, 1.22, 1.31, 1.63, 1.61, 1.18, 1.11, 1.65, 1.39, 1.18, 1.33, 2.08, 1.75, 1.17,  
+               0.98, 1.13, 1.32, 0.87, 0.85, 0.83, 0.6, 0.66, 0.63, 0.72, 0.86, 0.58, 0.47, 0.72, 0.74,  
+               0.77, 0.65, 0.89, 1, 0.84, 0.61, 0.94, 0.88, 0.92, 0.8, 0.97, 1.08, 0.94, 0.97, 1.21,  
+               1.22, 1.19, 1.12, 1.24, 1.07, 0.96, 0.93, 0.92, 0.98, 1.04, 0.98, 1.03, 1.95, 1.9, 1.86,  
+               1.96, 1.89, 2.25, 1.64, 1.53, 1.37, 1.23, 1.15, 1.05, 1.06, 0.99, 0.81, 1.01)
 
+MLR <- c(7.04166666666667,	7.625,	7.70833333333333,	7.75,	7.70833333333333,	7.16666666666667,	6.99,	6.99,	6.99,
+7.11833333333333,	7.375,	7.20833333333333,	6.45833333333333,	6.11666666666667,	6.05,	6.05,	6.05,	6.05,	6.19,	6.23,
+6.64333333333333,	6.98,	7.35333333333333,	7.44,	7.33666666666667,	7.315,	7.315,	7.19,	7.19,	7.19,	7.19,	7.085,
+7.02333333333333,	6.94,	6.94,	6.94,	6.895,	6.74,	6.675,	6.675,	6.675,	6.425,	6.425,	6.425,	6.425,	6.35166666666667,
+6.315,	6.315,	6.315,	6.315,	6.315,	6.315,	6.315,	6.315,	6.315,	6.22166666666667,	6.08166666666667,	5.47833333333333,
+5.415,	5.415,	5.415,	5.415,	5.415,	5.415,	5.415,	5.415,	5.42666666666667,	5.74833333333333,	6.44666666666667,
+6.78166666666667,	6.92666666666667,	7.165,	7.165)
+length(Date)             # Should be 73
+length(Economy_State_dummy)  # 76
+length(GDP)              # 76
+length(CPI)              # 76
+length(UNEMP_RATE)       # 73
+length(MLR)              # 73
 
+# Combine into data frame
+df <- data.frame(Date, Economy_State_dummy, GDP, CPI, UNEMP_RATE, MLR)
 
-Code
+# View the first few rows
+head(df)
 
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.preprocessing import MinMaxScaler
+install.packages("VGAM")
 
-# Sample Data (Replace with your actual score data)
-np.random.seed(42)
-lombard_scores = np.random.normal(loc=600, scale=50, size=1000)  # Mean=600, Std=50
-property_scores = np.random.normal(loc=610, scale=60, size=1000)  # Mean=610, Std=60
-
-# Create DataFrame
-df = pd.DataFrame({'Lombard': lombard_scores, 'Property': property_scores})
-
-# Plot Histograms and KDE
-plt.figure(figsize=(12, 6))
-sns.histplot(df['Lombard'], kde=True, color='blue', label='Lombard', bins=30, alpha=0.6)
-sns.histplot(df['Property'], kde=True, color='red', label='Property-backed', bins=30, alpha=0.6)
-
-plt.title("Histogram & KDE Curve of Lombard vs Property-backed Scores")
-plt.xlabel("Score")
-plt.ylabel("Density")
-plt.legend()
-plt.show()
-
-# Min-Max Normalization
-scaler = MinMaxScaler()
-df_normalized = pd.DataFrame(scaler.fit_transform(df), columns=df.columns)
-
-# Plot Normalized Histograms and KDE
-plt.figure(figsize=(12, 6))
-sns.histplot(df_normalized['Lombard'], kde=True, color='blue', label='Lombard (Normalized)', bins=30, alpha=0.6)
-sns.histplot(df_normalized['Property'], kde=True, color='red', label='Property-backed (Normalized)', bins=30, alpha=0.6)
-
-plt.title("Histogram & KDE of Normalized Scores")
-plt.xlabel("Normalized Score")
-plt.ylabel("Density")
-plt.legend()
-plt.show()
-
-Explanation
-
-Histograms & KDE Plots: Helps visualize the distribution of both score sets.
-
-Min-Max Normalization: Scales values between 0 and 1.
-
-Plot Normalized Data: Ensures normalization worked as expected.
-
-
-Let me know if you need modifications!
-
+library(VGAM)
+gen_ord_logit <- vglm(Economy_State_dummy ~ UNEMP_RATE, family=genetic(vglm), data=df)
+summary(gen_ord_logit)
