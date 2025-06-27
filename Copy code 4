@@ -49,4 +49,25 @@ def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', d
             p_value = chi2.sf(lr_stat, df_diff)
 
             # Inference
-            inference = 'Assumption Holds' if p_value > 0.05 else 'Vi
+            inference = 'Assumption Holds' if p_value > 0.05 else 'Violated'
+
+            results.append({
+                'Variable': var,
+                'PO_beta': round(res_po.params[var], 4),
+                'Beta_range_across_thresholds': round(beta_diff, 4),
+                'LR_statistic': round(lr_stat, 4),
+                'p_value': round(p_value, 4),
+                'Inference': inference
+            })
+
+        except Exception as e:
+            results.append({
+                'Variable': var,
+                'PO_beta': None,
+                'Beta_range_across_thresholds': None,
+                'LR_statistic': None,
+                'p_value': None,
+                'Inference': f'Error: {str(e)}'
+            })
+
+    return pd.DataFrame(results)
