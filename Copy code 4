@@ -1,26 +1,71 @@
 import pandas as pd
+import numpy as np
 import statsmodels.api as sm
 from statsmodels.miscmodels.ordinal_model import OrderedModel
+from scipy.stats import chi2
 
-# Example setup
-# y = ordered categorical target variable
-# X = one independent variable
+def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', date_var='Date'):
+    # Drop date and NA rows
+    df = df.drop(columns=[date_var], errors='ignore').dropna()
+    
+    # Ensure dependent variable is ordered categorical
+    df[dependent_var] = pd.Categorical(df[dependent_var], ordered=True)
+    
+    results = []
 
-# Ensure y is properly ordered
-df['Economy_state_dummy'] = pd.Categorical(
-    df['Economy_state_dummy'],
-    categories=['Poor', 'Normal', 'Good'],  # from lowest to highest
-    ordered=True
-)
+    predictors = [col for col in df.columns if col != dependent_var]
 
-# Set up independent variable (for example, 'GDP_log')
-X = df[['GDP_log']]
-X = sm.add_constant(X)  # optional, add if you want intercept
-y = df['Economy_state_dummy']
+    for var in predictors:
+        try:
+            # Fit proportional odds model
+            model_po = OrderedModel(df[dependent_var], sm.add_constant(df[[var]]),
+                                    distr='logit')
+            res_po = model_po.fit(method='bfgs', disp=False)
 
-# Fit Ordered Logit model
-model = OrderedModel(endog=y, exog=X, distr='logit')
-res = model.fit(method='bfgs', disp=True)
+            # Fit non-proportional odds: estimate separate binary logits at each threshold
+            # We do this manually since Python lacks a built-in generalized ordered logit
+            thresholds = df[dependent_var].cat.categories
+            betas = []
+            for i in range(len(thresholds)-1):
+                y_binary = (df[dependent_var].cat.codes <= i).astype(int)
+                logit_model = sm.Logit(y_binary, sm.add_constant(df[[var]])).fit(disp=False)
+                beta = logit_model.params[var]
+                betas.append(beta)
+            
+            # Calculate difference across thresholds (max diff)
+            beta_diff = max(betas) - min(betas)
 
-# View results
-print(res.summary())
+            # Likelihood Ratio Test
+            ll_po = res_po.llf
+            ll_unconstrained = 0
+            for i in range(len(thresholds) - 1):
+                y_binary = (df[dependent_var].cat.codes <= i).astype(int)
+                logit_model = sm.Logit(y_binary, sm.add_constant(df[[var]])).fit(disp=False)
+                ll_unconstrained += logit_model.llf
+            lr_stat = 2 * (ll_unconstrained - ll_po)
+            df_diff = len(thresholds) - 2  # degrees of freedom
+            p_value = chi2.sf(lr_stat, df_diff)
+
+            # Inference
+            inference = 'Assumption Holds' if p_value > 0.05 else 'Violated'
+
+            results.append({
+                'Variable': var,
+                'PO_beta': res_po.params[var],
+                'Beta_range_across_thresholds': beta_diff,
+                'LR_statistic': round(lr_stat, 4),
+                'p_value': round(p_value, 4),
+                'Inference': inference
+            })
+
+        except Exception as e:
+            results.append({
+                'Variable': var,
+                'PO_beta': None,
+                'Beta_range_across_thresholds': None,
+                'LR_statistic': None,
+                'p_value': None,
+                'Inference': f'Error: {e}'
+            })
+
+    return pd.DataFrame(results)
