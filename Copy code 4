@@ -5,9 +5,9 @@ from statsmodels.miscmodels.ordinal_model import OrderedModel
 from scipy.stats import chi2
 
 def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', date_var='Date'):
-    # Drop date and NA rows
-    df = df.drop(columns=[date_var], errors='ignore').dropna()
-
+    # Drop Date column if present
+    df = df.drop(columns=[date_var], errors='ignore')
+    
     # Ensure dependent variable is ordered categorical
     df[dependent_var] = pd.Categorical(df[dependent_var], ordered=True)
 
@@ -17,54 +17,36 @@ def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', d
 
     for var in predictors:
         try:
-            # Fit proportional odds model without adding constant manually
-            model_po = OrderedModel(df[dependent_var], df[[var]],
+            # Drop NA for current variable and dependent variable
+            temp_df = df[[dependent_var, var]].dropna()
+
+            # Fit proportional odds model
+            model_po = OrderedModel(temp_df[dependent_var], temp_df[[var]],
                                     distr='logit')
             res_po = model_po.fit(method='bfgs', disp=False)
 
-            # Estimate separate binary logits for each threshold manually (non-PO model)
-            thresholds = df[dependent_var].cat.categories
+            # Estimate binary logits for each threshold
+            thresholds = temp_df[dependent_var].cat.categories
             betas = []
             for i in range(len(thresholds)-1):
-                y_binary = (df[dependent_var].cat.codes <= i).astype(int)
-                logit_model = sm.Logit(y_binary, sm.add_constant(df[[var]])).fit(disp=False)
+                y_binary = (temp_df[dependent_var].cat.codes <= i).astype(int)
+                logit_model = sm.Logit(y_binary, sm.add_constant(temp_df[[var]])).fit(disp=False)
                 beta = logit_model.params[var]
                 betas.append(beta)
 
-            # Calculate max difference in beta estimates
+            # Calculate beta range across thresholds
             beta_diff = max(betas) - min(betas)
 
             # Likelihood Ratio Test
             ll_po = res_po.llf
             ll_unconstrained = sum(
-                sm.Logit((df[dependent_var].cat.codes <= i).astype(int),
-                         sm.add_constant(df[[var]])).fit(disp=False).llf
+                sm.Logit((temp_df[dependent_var].cat.codes <= i).astype(int),
+                         sm.add_constant(temp_df[[var]])).fit(disp=False).llf
                 for i in range(len(thresholds) - 1)
             )
             lr_stat = 2 * (ll_unconstrained - ll_po)
-            df_diff = len(thresholds) - 2  # degrees of freedom
+            df_diff = len(thresholds) - 2
             p_value = chi2.sf(lr_stat, df_diff)
 
             # Inference
-            inference = 'Assumption Holds' if p_value > 0.05 else 'Violated'
-
-            results.append({
-                'Variable': var,
-                'PO_beta': round(res_po.params[var], 4),
-                'Beta_range_across_thresholds': round(beta_diff, 4),
-                'LR_statistic': round(lr_stat, 4),
-                'p_value': round(p_value, 4),
-                'Inference': inference
-            })
-
-        except Exception as e:
-            results.append({
-                'Variable': var,
-                'PO_beta': None,
-                'Beta_range_across_thresholds': None,
-                'LR_statistic': None,
-                'p_value': None,
-                'Inference': f'Error: {str(e)}'
-            })
-
-    return pd.DataFrame(results)
+            inference = 'Assumption Holds' if p_value > 0.05 else 'Vi
