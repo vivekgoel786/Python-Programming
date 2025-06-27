@@ -7,23 +7,22 @@ from scipy.stats import chi2
 def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', date_var='Date'):
     # Drop date and NA rows
     df = df.drop(columns=[date_var], errors='ignore').dropna()
-    
+
     # Ensure dependent variable is ordered categorical
     df[dependent_var] = pd.Categorical(df[dependent_var], ordered=True)
-    
+
     results = []
 
     predictors = [col for col in df.columns if col != dependent_var]
 
     for var in predictors:
         try:
-            # Fit proportional odds model
-            model_po = OrderedModel(df[dependent_var], sm.add_constant(df[[var]]),
+            # Fit proportional odds model without adding constant manually
+            model_po = OrderedModel(df[dependent_var], df[[var]],
                                     distr='logit')
             res_po = model_po.fit(method='bfgs', disp=False)
 
-            # Fit non-proportional odds: estimate separate binary logits at each threshold
-            # We do this manually since Python lacks a built-in generalized ordered logit
+            # Estimate separate binary logits for each threshold manually (non-PO model)
             thresholds = df[dependent_var].cat.categories
             betas = []
             for i in range(len(thresholds)-1):
@@ -31,17 +30,17 @@ def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', d
                 logit_model = sm.Logit(y_binary, sm.add_constant(df[[var]])).fit(disp=False)
                 beta = logit_model.params[var]
                 betas.append(beta)
-            
-            # Calculate difference across thresholds (max diff)
+
+            # Calculate max difference in beta estimates
             beta_diff = max(betas) - min(betas)
 
             # Likelihood Ratio Test
             ll_po = res_po.llf
-            ll_unconstrained = 0
-            for i in range(len(thresholds) - 1):
-                y_binary = (df[dependent_var].cat.codes <= i).astype(int)
-                logit_model = sm.Logit(y_binary, sm.add_constant(df[[var]])).fit(disp=False)
-                ll_unconstrained += logit_model.llf
+            ll_unconstrained = sum(
+                sm.Logit((df[dependent_var].cat.codes <= i).astype(int),
+                         sm.add_constant(df[[var]])).fit(disp=False).llf
+                for i in range(len(thresholds) - 1)
+            )
             lr_stat = 2 * (ll_unconstrained - ll_po)
             df_diff = len(thresholds) - 2  # degrees of freedom
             p_value = chi2.sf(lr_stat, df_diff)
@@ -51,8 +50,8 @@ def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', d
 
             results.append({
                 'Variable': var,
-                'PO_beta': res_po.params[var],
-                'Beta_range_across_thresholds': beta_diff,
+                'PO_beta': round(res_po.params[var], 4),
+                'Beta_range_across_thresholds': round(beta_diff, 4),
                 'LR_statistic': round(lr_stat, 4),
                 'p_value': round(p_value, 4),
                 'Inference': inference
@@ -65,7 +64,7 @@ def test_proportional_odds_assumption(df, dependent_var='Economy_state_dummy', d
                 'Beta_range_across_thresholds': None,
                 'LR_statistic': None,
                 'p_value': None,
-                'Inference': f'Error: {e}'
+                'Inference': f'Error: {str(e)}'
             })
 
     return pd.DataFrame(results)
