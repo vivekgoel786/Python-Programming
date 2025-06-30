@@ -1,69 +1,42 @@
 import pandas as pd
-import numpy as np
-from itertools import combinations
+import statsmodels.api as sm
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-def run_all_ordinal_models(df, dep_var, indep_vars, y_order=['Poor', 'Normal', 'Good']):
+def fit_ordered_logit_models(data, target='Economy_State_dummy'):
+    # Ensure the dependent variable is categorical and ordered
+    ordered_categories = ['Poor', 'Normal', 'Good']
+    data[target] = pd.Categorical(data[target], categories=ordered_categories, ordered=True)
+
     results_list = []
+    exclude_cols = ['Date', target]
+    independent_vars = [col for col in data.columns if col not in exclude_cols]
 
-    for k in range(1, len(indep_vars)+1):  # combinations of 1 to all vars
-        for vars_combo in combinations(indep_vars, k):
-            try:
-                # Subset and drop NA
-                df_sub = df[[dep_var] + list(vars_combo)].copy()
-                df_sub = df_sub.dropna()
+    for var in independent_vars:
+        try:
+            sub_data = data[[target, var]].dropna()
+            y = sub_data[target]
+            X = sub_data[[var]]
 
-                # Force numeric for X variables
-                for col in vars_combo:
-                    df_sub[col] = pd.to_numeric(df_sub[col], errors='coerce')
+            # Fit Ordered Logit model
+            model = OrderedModel(y, X, distr='logit')
+            res = model.fit(method='lbfgs', disp=False)
 
-                # Drop NA again after coercion
-                df_sub = df_sub.dropna()
-
-                if df_sub.shape[0] < 10:
-                    continue  # Skip if too few observations
-
-                # Create X and y
-                X = df_sub[list(vars_combo)].astype(float)
-                y = pd.Categorical(df_sub[dep_var], categories=y_order, ordered=True)
-
-                # Fit model
-                model = OrderedModel(y, X, distr='logit')
-                res = model.fit(method='bfgs', disp=False)
-
-                # Collect stats
-                coef = res.params
-                pvalues = res.pvalues
-                aic = res.aic
-                bic = res.bic
-                pseudo_r2 = res.prsquared
-                nobs = res.nobs
-
-                # Significance stars
-                stars = pvalues.apply(lambda p: '***' if p < 0.01 else '**' if p < 0.05 else '*' if p < 0.1 else '')
-                coefs_with_sign = [f"{coef[i]:.3f}{stars[i]}" for i in coef.index]
-
+            # Get coefficients (including thresholds)
+            for param_name, coef in res.params.items():
                 results_list.append({
-                    'Variables': ', '.join(vars_combo),
-                    'Coefficients': coefs_with_sign,
-                    'P-values': pvalues.values.round(4).tolist(),
-                    'AIC': round(aic, 2),
-                    'BIC': round(bic, 2),
-                    'Pseudo_R2': round(pseudo_r2, 4),
-                    'N_obs': int(nobs),
-                    'Error': ''
+                    'Independent_Var': var,
+                    'Coefficient': param_name,
+                    'Beta': coef,
+                    'P-Value': res.pvalues[param_name],
+                    'T-Stat': res.tvalues[param_name],
+                    'Pseudo_R2': res.prsquared if hasattr(res, 'prsquared') else None,
+                    'AIC': res.aic,
+                    'BIC': res.bic,
+                    "Log-Likelihood" : res.llf,
+                    "Nobs": res.nobs
                 })
 
-            except Exception as e:
-                results_list.append({
-                    'Variables': ', '.join(vars_combo),
-                    'Coefficients': ['Error'],
-                    'P-values': ['Error'],
-                    'AIC': None,
-                    'BIC': None,
-                    'Pseudo_R2': None,
-                    'N_obs': df[[dep_var] + list(vars_combo)].dropna().shape[0],
-                    'Error': str(e)
-                })
+        except Exception as e:
+            print(f"Model failed for variable {var}: {e}")
 
     return pd.DataFrame(results_list)
