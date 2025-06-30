@@ -1,54 +1,8 @@
-def run_all_ordinal_models(df, dep_var, indep_vars, y_order=['Poor', 'Normal', 'Good']):
-    results_list = []
+# Sample columns
+indep_vars = ['GDP', 'CPI', 'Unemployment', 'Exports']
 
-    for k in range(1, len(indep_vars)+1):  # For all combinations from 1 to all vars
-        for vars_combo in combinations(indep_vars, k):
-            # Drop NA rows for the current combo
-            df_sub = df[[dep_var] + list(vars_combo)].dropna()
-            if df_sub.shape[0] < 10:
-                continue  # Skip if too few observations
+# Assuming df is your DataFrame and 'Economy_State_dummy' is your dependent variable
+results_df = run_all_ordinal_models(df, 'Economy_State_dummy', indep_vars)
 
-            # Encode y as ordered categorical
-            y = pd.Categorical(df_sub[dep_var], categories=y_order, ordered=True)
-            X = df_sub[list(vars_combo)]
-
-            try:
-                model = OrderedModel(y, X, distr='logit')
-                res = model.fit(method='bfgs', disp=False)
-
-                # Collect results
-                coef = res.params
-                pvalues = res.pvalues
-                aic = res.aic
-                bic = res.bic
-                pseudo_r2 = res.prsquared
-                nobs = res.nobs
-
-                # Format coefficients with significance stars
-                stars = pvalues.apply(lambda p: '***' if p < 0.01 else '**' if p < 0.05 else '*' if p < 0.1 else '')
-                coefs_with_sign = [f"{coef[i]:.3f}{stars[i]}" for i in coef.index]
-
-                results_list.append({
-                    'Variables': ', '.join(vars_combo),
-                    'Coefficients': coefs_with_sign,
-                    'P-values': pvalues.values.round(4).tolist(),
-                    'AIC': round(aic, 2),
-                    'BIC': round(bic, 2),
-                    'Pseudo_R2': round(pseudo_r2, 4),
-                    'N_obs': int(nobs)
-                })
-
-            except Exception as e:
-                # In case of convergence or fitting error
-                results_list.append({
-                    'Variables': ', '.join(vars_combo),
-                    'Coefficients': ['Error'],
-                    'P-values': ['Error'],
-                    'AIC': None,
-                    'BIC': None,
-                    'Pseudo_R2': None,
-                    'N_obs': df_sub.shape[0],
-                    'Error': str(e)
-                })
-
-    return pd.DataFrame(results_list)
+# View top results
+results_df.head()
