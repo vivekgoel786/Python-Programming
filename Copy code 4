@@ -1,8 +1,69 @@
-# Sample columns
-indep_vars = ['GDP', 'CPI', 'Unemployment', 'Exports']
+import pandas as pd
+import numpy as np
+from itertools import combinations
+from statsmodels.miscmodels.ordinal_model import OrderedModel
 
-# Assuming df is your DataFrame and 'Economy_State_dummy' is your dependent variable
-results_df = run_all_ordinal_models(df, 'Economy_State_dummy', indep_vars)
+def run_all_ordinal_models(df, dep_var, indep_vars, y_order=['Poor', 'Normal', 'Good']):
+    results_list = []
 
-# View top results
-results_df.head()
+    for k in range(1, len(indep_vars)+1):  # combinations of 1 to all vars
+        for vars_combo in combinations(indep_vars, k):
+            try:
+                # Subset and drop NA
+                df_sub = df[[dep_var] + list(vars_combo)].copy()
+                df_sub = df_sub.dropna()
+
+                # Force numeric for X variables
+                for col in vars_combo:
+                    df_sub[col] = pd.to_numeric(df_sub[col], errors='coerce')
+
+                # Drop NA again after coercion
+                df_sub = df_sub.dropna()
+
+                if df_sub.shape[0] < 10:
+                    continue  # Skip if too few observations
+
+                # Create X and y
+                X = df_sub[list(vars_combo)].astype(float)
+                y = pd.Categorical(df_sub[dep_var], categories=y_order, ordered=True)
+
+                # Fit model
+                model = OrderedModel(y, X, distr='logit')
+                res = model.fit(method='bfgs', disp=False)
+
+                # Collect stats
+                coef = res.params
+                pvalues = res.pvalues
+                aic = res.aic
+                bic = res.bic
+                pseudo_r2 = res.prsquared
+                nobs = res.nobs
+
+                # Significance stars
+                stars = pvalues.apply(lambda p: '***' if p < 0.01 else '**' if p < 0.05 else '*' if p < 0.1 else '')
+                coefs_with_sign = [f"{coef[i]:.3f}{stars[i]}" for i in coef.index]
+
+                results_list.append({
+                    'Variables': ', '.join(vars_combo),
+                    'Coefficients': coefs_with_sign,
+                    'P-values': pvalues.values.round(4).tolist(),
+                    'AIC': round(aic, 2),
+                    'BIC': round(bic, 2),
+                    'Pseudo_R2': round(pseudo_r2, 4),
+                    'N_obs': int(nobs),
+                    'Error': ''
+                })
+
+            except Exception as e:
+                results_list.append({
+                    'Variables': ', '.join(vars_combo),
+                    'Coefficients': ['Error'],
+                    'P-values': ['Error'],
+                    'AIC': None,
+                    'BIC': None,
+                    'Pseudo_R2': None,
+                    'N_obs': df[[dep_var] + list(vars_combo)].dropna().shape[0],
+                    'Error': str(e)
+                })
+
+    return pd.DataFrame(results_list)
