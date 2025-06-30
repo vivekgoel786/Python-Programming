@@ -1,9 +1,9 @@
 import pandas as pd
 import statsmodels.api as sm
 from statsmodels.miscmodels.ordinal_model import OrderedModel
+from itertools import combinations
 
-def fit_ordered_logit_models(data, target='Economy_State_dummy'):
-    # Ensure the dependent variable is categorical and ordered
+def fit_all_combinations_ordered_logit_models(data, target='Economy_State_dummy'):
     ordered_categories = ['Poor', 'Normal', 'Good']
     data[target] = pd.Categorical(data[target], categories=ordered_categories, ordered=True)
 
@@ -11,32 +11,47 @@ def fit_ordered_logit_models(data, target='Economy_State_dummy'):
     exclude_cols = ['Date', target]
     independent_vars = [col for col in data.columns if col not in exclude_cols]
 
-    for var in independent_vars:
-        try:
-            sub_data = data[[target, var]].dropna()
-            y = sub_data[target]
-            X = sub_data[[var]]
+    # Iterate over all combinations (1 to len independent_vars)
+    for k in range(1, len(independent_vars)+1):
+        for var_combo in combinations(independent_vars, k):
+            try:
+                sub_data = data[[target] + list(var_combo)].dropna()
+                y = sub_data[target]
+                X = sub_data[list(var_combo)]
 
-            # Fit Ordered Logit model
-            model = OrderedModel(y, X, distr='logit')
-            res = model.fit(method='lbfgs', disp=False)
+                # Fit Ordered Logit model
+                model = OrderedModel(y, X, distr='logit')
+                res = model.fit(method='lbfgs', disp=False)
 
-            # Get coefficients (including thresholds)
-            for param_name, coef in res.params.items():
+                # Record results for each coefficient
+                for param_name, coef in res.params.items():
+                    results_list.append({
+                        'Variables': ', '.join(var_combo),
+                        'Coefficient': param_name,
+                        'Beta': coef,
+                        'P-Value': res.pvalues[param_name],
+                        'T-Stat': res.tvalues[param_name],
+                        'Pseudo_R2': res.prsquared if hasattr(res, 'prsquared') else None,
+                        'AIC': res.aic,
+                        'BIC': res.bic,
+                        'Log-Likelihood': res.llf,
+                        'Nobs': res.nobs
+                    })
+
+            except Exception as e:
+                print(f"Model failed for variables {var_combo}: {e}")
                 results_list.append({
-                    'Independent_Var': var,
-                    'Coefficient': param_name,
-                    'Beta': coef,
-                    'P-Value': res.pvalues[param_name],
-                    'T-Stat': res.tvalues[param_name],
-                    'Pseudo_R2': res.prsquared if hasattr(res, 'prsquared') else None,
-                    'AIC': res.aic,
-                    'BIC': res.bic,
-                    "Log-Likelihood" : res.llf,
-                    "Nobs": res.nobs
+                    'Variables': ', '.join(var_combo),
+                    'Coefficient': 'Error',
+                    'Beta': None,
+                    'P-Value': None,
+                    'T-Stat': None,
+                    'Pseudo_R2': None,
+                    'AIC': None,
+                    'BIC': None,
+                    'Log-Likelihood': None,
+                    'Nobs': data[[target] + list(var_combo)].dropna().shape[0],
+                    'Error': str(e)
                 })
-
-        except Exception as e:
-            print(f"Model failed for variable {var}: {e}")
 
     return pd.DataFrame(results_list)
