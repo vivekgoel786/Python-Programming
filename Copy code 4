@@ -1,90 +1,54 @@
-import pandas as pd
-import numpy as np
-import statsmodels.api as sm
-from statsmodels.miscmodels.ordinal_model import OrderedModel
-from scipy.stats import chi2, norm
+def run_all_ordinal_models(df, dep_var, indep_vars, y_order=['Poor', 'Normal', 'Good']):
+    results_list = []
 
-def test_proportional_odds_assumption(df, dependent_var='Economy_State_dummy', date_var='Date'):
-    # Drop Date column if present
-    df = df.drop(columns=[date_var], errors='ignore')
+    for k in range(1, len(indep_vars)+1):  # For all combinations from 1 to all vars
+        for vars_combo in combinations(indep_vars, k):
+            # Drop NA rows for the current combo
+            df_sub = df[[dep_var] + list(vars_combo)].dropna()
+            if df_sub.shape[0] < 10:
+                continue  # Skip if too few observations
 
-    # Ensure dependent variable is ordered categorical
-    df[dependent_var] = pd.Categorical(df[dependent_var], ordered=True)
+            # Encode y as ordered categorical
+            y = pd.Categorical(df_sub[dep_var], categories=y_order, ordered=True)
+            X = df_sub[list(vars_combo)]
 
-    results = []
-    predictors = [col for col in df.columns if col != dependent_var]
+            try:
+                model = OrderedModel(y, X, distr='logit')
+                res = model.fit(method='bfgs', disp=False)
 
-    for var in predictors:
-        try:
-            # Subset and drop NA
-            temp_df = df[[dependent_var, var]].dropna()
-            y_ord = temp_df[dependent_var]
-            X = temp_df[[var]]
+                # Collect results
+                coef = res.params
+                pvalues = res.pvalues
+                aic = res.aic
+                bic = res.bic
+                pseudo_r2 = res.prsquared
+                nobs = res.nobs
 
-            # Proportional odds model
-            model_po = OrderedModel(y_ord, X, distr='logit')
-            res_po = model_po.fit(method='bfgs', disp=False)
+                # Format coefficients with significance stars
+                stars = pvalues.apply(lambda p: '***' if p < 0.01 else '**' if p < 0.05 else '*' if p < 0.1 else '')
+                coefs_with_sign = [f"{coef[i]:.3f}{stars[i]}" for i in coef.index]
 
-            # Generalized logit across thresholds
-            thresholds = y_ord.cat.categories
-            betas = []
-            ses = []
-            for i in range(len(thresholds)-1):
-                y_binary = (y_ord.cat.codes <= i).astype(int)
-                logit_model = sm.Logit(y_binary, sm.add_constant(X)).fit(disp=False)
-                betas.append(logit_model.params[var])
-                ses.append(logit_model.bse[var])
+                results_list.append({
+                    'Variables': ', '.join(vars_combo),
+                    'Coefficients': coefs_with_sign,
+                    'P-values': pvalues.values.round(4).tolist(),
+                    'AIC': round(aic, 2),
+                    'BIC': round(bic, 2),
+                    'Pseudo_R2': round(pseudo_r2, 4),
+                    'N_obs': int(nobs)
+                })
 
-            # Wald-style Brant test
-            if len(betas) >= 2:
-                z_stat = (betas[0] - betas[1]) / np.sqrt(ses[0]**2 + ses[1]**2)
-                brant_p = 2 * (1 - norm.cdf(abs(z_stat)))
-            else:
-                z_stat = None
-                brant_p = None
+            except Exception as e:
+                # In case of convergence or fitting error
+                results_list.append({
+                    'Variables': ', '.join(vars_combo),
+                    'Coefficients': ['Error'],
+                    'P-values': ['Error'],
+                    'AIC': None,
+                    'BIC': None,
+                    'Pseudo_R2': None,
+                    'N_obs': df_sub.shape[0],
+                    'Error': str(e)
+                })
 
-            # LRT
-            ll_po = res_po.llf
-            ll_unconstrained = sum(
-                sm.Logit((y_ord.cat.codes <= i).astype(int),
-                         sm.add_constant(X)).fit(disp=False).llf
-                for i in range(len(thresholds) - 1)
-            )
-            lr_stat = 2 * (ll_unconstrained - ll_po)
-            df_diff = len(thresholds) - 2
-            p_value = chi2.sf(lr_stat, df_diff)
-
-            # Inference
-            po_inference = 'Assumption Holds' if p_value > 0.05 else 'Violated'
-            brant_inference = 'Assumption Holds' if brant_p is None or brant_p > 0.05 else 'Violated'
-
-            results.append({
-                'Variable': var,
-                'PO_beta': round(res_po.params[var], 4),
-                'Beta_1': round(betas[0], 4) if len(betas) > 0 else None,
-                'Beta_2': round(betas[1], 4) if len(betas) > 1 else None,
-                'Beta_range': round(max(betas) - min(betas), 4) if len(betas) > 1 else None,
-                'LRT_statistic': round(lr_stat, 4),
-                'LRT_p_value': round(p_value, 4),
-                'LRT_inference': po_inference,
-                'Brant_z': round(z_stat, 4) if z_stat is not None else None,
-                'Brant_p_value': round(brant_p, 4) if brant_p is not None else None,
-                'Brant_inference': brant_inference
-            })
-
-        except Exception as e:
-            results.append({
-                'Variable': var,
-                'PO_beta': None,
-                'Beta_1': None,
-                'Beta_2': None,
-                'Beta_range': None,
-                'LRT_statistic': None,
-                'LRT_p_value': None,
-                'LRT_inference': f'Error: {str(e)}',
-                'Brant_z': None,
-                'Brant_p_value': None,
-                'Brant_inference': None
-            })
-
-    return pd.DataFrame(results)
+    return pd.DataFrame(results_list)
