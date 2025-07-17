@@ -1,11 +1,25 @@
+library(caret)
+
+# Assuming 'predicted_class' and 'actual_class' are factors with same levels
 cm <- confusionMatrix(predicted_class, actual_class)
 
-precision <- cm$byClass["Pos Pred Value"]
-recall <- cm$byClass["Sensitivity"]
+# Extract precision and recall per class
+precision <- cm$byClass[, "Pos Pred Value"]
+recall <- cm$byClass[, "Sensitivity"]
 
-# Handle NA values by checking before calculation
-if (!is.na(precision) && !is.na(recall) && (precision + recall) > 0) {
-  f1_score <- 2 * precision * recall / (precision + recall)
-} else {
-  f1_score <- NA
-}
+# Compute F1 score per class, safely handling NA
+f1_score <- ifelse(
+  is.na(precision) | is.na(recall) | (precision + recall) == 0,
+  NA,
+  2 * precision * recall / (precision + recall)
+)
+
+# Combine results into a data frame for clarity
+f1_df <- data.frame(
+  Class = rownames(cm$byClass),
+  Precision = precision,
+  Recall = recall,
+  F1_Score = f1_score
+)
+
+print(f1_df)
