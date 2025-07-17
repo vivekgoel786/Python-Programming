@@ -1,51 +1,86 @@
-import pandas as pd
-import statsmodels.api as sm
+install.packages(c("car", "caret", "DescTools", "Kendall"))
 
-def fit_mnl_models(data, target='Economy_State_dummy', base_category='Normal'):
-    # Ensure dependent variable is categorical and base is first
-    data[target] = pd.Categorical(data[target])
-    data[target] = data[target].cat.reorder_categories(
-        [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
-        ordered=False
-    )
-    
-    # Get the categories after reordering
-    categories = data[target].cat.categories.tolist()
-    # The baseline category is categories[0], the rest are non-baseline
-    non_baseline_cats = categories[1:]  # e.g. ['Boom', 'Recession']
-    print(non_baseline_cats)
-    
-    results_list = []
-    exclude_cols = ['Date', target]
-    independent_vars = [col for col in data.columns if col not in exclude_cols]
 
-    for var in independent_vars:
-        try:
-            sub_data = data[[target, var]].dropna()
-            X = sm.add_constant(sub_data[[var]])
-            y = sub_data[target]
+library(car)
 
-            model = sm.MNLogit(y, X).fit(disp=False)
-            
-            # The model.params DataFrame has a MultiIndex like:
-            #    index: categories (non-baseline categories)
-            #    columns: ['const', var]
-            # We'll iterate over rows (categories) and columns (coefficients)
-            for cat in model.params.index:
-                for coef_name in model.params.columns:
-                    coef_label = f"{cat}.{coef_name}"  # e.g. Boom.const or Boom.Income
-                    results_list.append({
-                        'Independent_Var': var,
-                        'Coefficient': coef_label,
-                        'Beta': model.params.loc[cat, coef_name],
-                        'P-Value': model.pvalues.loc[cat, coef_name],
-                        'T-Stat': model.tvalues.loc[cat, coef_name],
-                        'Pseudo_R2': model.prsquared,
-                        'AIC': model.aic,
-                        'BIC': model.bic
-                    })
+# X_scaled is your standardized predictors dataframe (no intercept column)
+vif_values <- vif(lm(as.matrix(X_scaled) ~ 1))  # Fit linear model with all predictors to calculate VIF
 
-        except Exception as e:
-            print(f"Model failed for variable {var}: {e}")
+vif_df <- data.frame(
+  feature = colnames(X_scaled),
+  VIF = vif_values
+)
 
-    return pd.DataFrame(results_list)
+print(vif_df)
+
+
+
+
+cor_matrix <- cor(X_scaled)
+print(cor_matrix)
+
+
+
+library(caret)     # For confusionMatrix
+library(DescTools) # For Kendall’s tau-b
+
+# Assume: 
+# res = fitted ordinal model (clm or polr object)
+# X_scaled = scaled predictors used for prediction
+# y = ordered factor target variable
+
+# Predict probabilities (using your model)
+predicted_probs <- predict(res, newdata = as.data.frame(X_scaled), type = "prob")
+
+# Predicted category is category with max probability
+predicted_categories <- colnames(predicted_probs)[apply(predicted_probs, 1, which.max)]
+
+# Convert predicted categories and true categories to factors with same levels
+predicted_factor <- factor(predicted_categories, levels = levels(y))
+true_factor <- y
+
+# Accuracy
+accuracy <- mean(predicted_factor == true_factor)
+cat(sprintf("Accuracy ratio (overall accuracy): %.4f\n", accuracy))
+
+# Confusion matrix
+cm <- confusionMatrix(predicted_factor, true_factor)
+print(cm$table)   # confusion matrix table
+
+# Weighted accuracy: penalizing distant misclassifications
+levels_count <- length(levels(true_factor))
+distances <- abs(as.numeric(predicted_factor) - as.numeric(true_factor))
+weighted_accuracy <- 1 - mean(distances / (levels_count - 1))
+cat(sprintf("Weighted accuracy (penalizes distant misclassifications): %.4f\n", weighted_accuracy))
+
+# Kendall's Tau-b
+tau_b <- Kendall::Kendall(as.numeric(predicted_factor), as.numeric(true_factor))
+cat(sprintf("Kendall's Tau-b: %.4f (p-value: %.4g)\n", tau_b$tau, tau_b$sl))
+
+# Precision, Recall, F1 Score per class using caret package
+# Extract precision, recall, F1 from confusionMatrix
+precision <- cm$byClass[,"Precision"]
+recall <- cm$byClass[,"Recall"]
+f1 <- cm$byClass[,"F1"]
+
+cat("Precision per class:\n")
+print(round(precision, 4))
+cat("Recall per class:\n")
+print(round(recall, 4))
+cat("F1 Score per class:\n")
+print(round(f1, 4))
+
+# Macro averages (mean of per-class metrics)
+cat(sprintf("\nMacro Precision: %.4f\n", mean(precision, na.rm = TRUE)))
+cat(sprintf("Macro Recall:    %.4f\n", mean(recall, na.rm = TRUE)))
+cat(sprintf("Macro F1 Score:  %.4f\n", mean(f1, na.rm = TRUE)))
+
+# Weighted averages (weighted by support — class frequency)
+class_counts <- as.numeric(table(true_factor))
+weighted_precision <- sum(precision * class_counts / sum(class_counts), na.rm = TRUE)
+weighted_recall <- sum(recall * class_counts / sum(class_counts), na.rm = TRUE)
+weighted_f1 <- sum(f1 * class_counts / sum(class_counts), na.rm = TRUE)
+
+cat(sprintf("\nWeighted Precision: %.4f\n", weighted_precision))
+cat(sprintf("Weighted Recall:    %.4f\n", weighted_recall))
+cat(sprintf("Weighted F1 Score:  %.4f\n", weighted_f1))
