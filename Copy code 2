@@ -145,7 +145,7 @@ all_vars_df <- cbind(
 
 # Select subset for modeling and drop NA rows
 model_data <- all_vars_df %>%
-  select(Date, Economy_State_dummy, UNEMP_RATE_lead2, pct_change_GDP_lag1, pct_change_AVG_MONTHLY_WAGE_lead1) %>%
+  select(Date, Economy_State_dummy, UNEMP_RATE_lead2, pct_change_GDP_lag1, pct_change_AVG_MONTHLY_WAGE_lead1, MA_3mnth_GDPGR_lag1) %>%
   drop_na()
 
 # Standardize predictors
