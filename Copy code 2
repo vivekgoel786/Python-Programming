@@ -105,11 +105,12 @@ data <- data %>% arrange(Date)
 data <- data %>%
   mutate(
     pct_change_GDP = (GDP / lag(GDP, 4)) - 1,
-    pct_change_AVG_MONTHLY_WAGE = (AVG_MONTHLY_WAGE / lag(AVG_MONTHLY_WAGE, 4)) - 1
+    pct_change_AVG_MONTHLY_WAGE = (AVG_MONTHLY_WAGE / lag(AVG_MONTHLY_WAGE, 4)) - 1,
+    MA_3mnth_GDPGR = rollmean(GDPGR, 3, fill = NA, align = "right")
   )
 
 # Variables to lag/lead (excluding Date and Economy_State_dummy)
-vars_to_lag_lead <- c("GDP", "UNEMP_RATE", "AVG_MONTHLY_WAGE", "pct_change_GDP", "pct_change_AVG_MONTHLY_WAGE")
+vars_to_lag_lead <- c("GDP", "UNEMP_RATE", "AVG_MONTHLY_WAGE", "pct_change_GDP", "pct_change_AVG_MONTHLY_WAGE", GDPGR, MA_3mnth_GDPGR)
 
 # Create lag1, lag2, lead1, lead2 columns
 for (var in vars_to_lag_lead) {
