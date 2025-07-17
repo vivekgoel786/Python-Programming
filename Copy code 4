@@ -1,2 +1,11 @@
-results_df = fit_all_combinations_ordered_logit_models(df, target='Economy_State_dummy')
-results_df.head()
+# Log-likelihood of full model
+ll_full <- logLik(model)
+
+# Fit the null model (intercept only)
+model_null <- update(model, . ~ 1)
+ll_null <- logLik(model_null)
+
+# McFadden's R²
+mcfadden_r2 <- 1 - as.numeric(ll_full / ll_null)
+
+cat("McFadden's pseudo R²:", round(mcfadden_r2, 4), "\n")
