@@ -1,86 +1,103 @@
 install.packages(c("car", "caret", "DescTools", "Kendall"))
 
 
+
+cor(model_data_scaled[, scale_vars])
+
+
 library(car)
 
-# X_scaled is your standardized predictors dataframe (no intercept column)
-vif_values <- vif(lm(as.matrix(X_scaled) ~ 1))  # Fit linear model with all predictors to calculate VIF
+# Calculate VIF from linear model (no intercept)
+vif_model <- lm(as.matrix(model_data_scaled[, scale_vars]) ~ 1)
+vif_values <- vif(vif_model)
 
 vif_df <- data.frame(
-  feature = colnames(X_scaled),
+  feature = names(vif_values),
   VIF = vif_values
 )
 
 print(vif_df)
 
 
+library(caret)     # confusionMatrix
+library(DescTools) # KendallTauB
+library(dplyr)
 
+# 1. Predicted class probabilities
+predicted_probs <- predict(model, type = "prob")
 
-cor_matrix <- cor(X_scaled)
-print(cor_matrix)
+# 2. Predicted categories = class with highest probability
+predicted_class <- colnames(predicted_probs)[apply(predicted_probs, 1, which.max)]
 
+# 3. Convert to ordered factor (to match y)
+predicted_factor <- factor(predicted_class, levels = levels(model_data_scaled$Economy_State_dummy), ordered = TRUE)
+true_factor <- model_data_scaled$Economy_State_dummy
 
-
-library(caret)     # For confusionMatrix
-library(DescTools) # For Kendall’s tau-b
-
-# Assume: 
-# res = fitted ordinal model (clm or polr object)
-# X_scaled = scaled predictors used for prediction
-# y = ordered factor target variable
-
-# Predict probabilities (using your model)
-predicted_probs <- predict(res, newdata = as.data.frame(X_scaled), type = "prob")
-
-# Predicted category is category with max probability
-predicted_categories <- colnames(predicted_probs)[apply(predicted_probs, 1, which.max)]
-
-# Convert predicted categories and true categories to factors with same levels
-predicted_factor <- factor(predicted_categories, levels = levels(y))
-true_factor <- y
-
-# Accuracy
+# Accuracy ratio
 accuracy <- mean(predicted_factor == true_factor)
 cat(sprintf("Accuracy ratio (overall accuracy): %.4f\n", accuracy))
 
-# Confusion matrix
+
 cm <- confusionMatrix(predicted_factor, true_factor)
-print(cm$table)   # confusion matrix table
+cat("\nConfusion Matrix:\n")
+print(cm$table)
 
-# Weighted accuracy: penalizing distant misclassifications
-levels_count <- length(levels(true_factor))
+
+
 distances <- abs(as.numeric(predicted_factor) - as.numeric(true_factor))
-weighted_accuracy <- 1 - mean(distances / (levels_count - 1))
-cat(sprintf("Weighted accuracy (penalizes distant misclassifications): %.4f\n", weighted_accuracy))
+weighted_accuracy <- 1 - mean(distances / (length(levels(true_factor)) - 1))
+cat(sprintf("\nWeighted accuracy (penalizes distant misclassifications): %.4f\n", weighted_accuracy))
 
-# Kendall's Tau-b
-tau_b <- Kendall::Kendall(as.numeric(predicted_factor), as.numeric(true_factor))
-cat(sprintf("Kendall's Tau-b: %.4f (p-value: %.4g)\n", tau_b$tau, tau_b$sl))
 
-# Precision, Recall, F1 Score per class using caret package
-# Extract precision, recall, F1 from confusionMatrix
-precision <- cm$byClass[,"Precision"]
-recall <- cm$byClass[,"Recall"]
-f1 <- cm$byClass[,"F1"]
+tau_b <- KendallTauB(as.numeric(predicted_factor), as.numeric(true_factor))
+cat(sprintf("\nKendall's Tau-b: %.4f\n", tau_b))
 
-cat("Precision per class:\n")
+
+# Extract per-class metrics
+precision <- cm$byClass[, "Precision"]
+recall <- cm$byClass[, "Recall"]
+f1 <- cm$byClass[, "F1"]
+
+cat("\nPrecision per class:\n")
 print(round(precision, 4))
+
 cat("Recall per class:\n")
 print(round(recall, 4))
+
 cat("F1 Score per class:\n")
 print(round(f1, 4))
 
-# Macro averages (mean of per-class metrics)
+# Macro-averaged metrics
 cat(sprintf("\nMacro Precision: %.4f\n", mean(precision, na.rm = TRUE)))
 cat(sprintf("Macro Recall:    %.4f\n", mean(recall, na.rm = TRUE)))
 cat(sprintf("Macro F1 Score:  %.4f\n", mean(f1, na.rm = TRUE)))
 
-# Weighted averages (weighted by support — class frequency)
-class_counts <- as.numeric(table(true_factor))
-weighted_precision <- sum(precision * class_counts / sum(class_counts), na.rm = TRUE)
-weighted_recall <- sum(recall * class_counts / sum(class_counts), na.rm = TRUE)
-weighted_f1 <- sum(f1 * class_counts / sum(class_counts), na.rm = TRUE)
+# Weighted averages
+support <- as.numeric(table(true_factor))
+total <- sum(support)
 
-cat(sprintf("\nWeighted Precision: %.4f\n", weighted_precision))
-cat(sprintf("Weighted Recall:    %.4f\n", weighted_recall))
-cat(sprintf("Weighted F1 Score:  %.4f\n", weighted_f1))
+precision_weighted <- sum(precision * support / total, na.rm = TRUE)
+recall_weighted <- sum(recall * support / total, na.rm = TRUE)
+f1_weighted <- sum(f1 * support / total, na.rm = TRUE)
+
+cat(sprintf("\nWeighted Precision: %.4f\n", precision_weighted))
+cat(sprintf("Weighted Recall:    %.4f\n", recall_weighted))
+cat(sprintf("Weighted F1 Score:  %.4f\n", f1_weighted))
+
+
+# Expected scores = sum of (category index * probability)
+category_indices <- 1:length(levels(true_factor))
+expected_scores <- as.numeric(predicted_probs %*% category_indices)
+
+# Kendall tau approximation of concordance
+tau <- KendallTauB(expected_scores, as.numeric(true_factor))
+somers_d <- 2 * tau - 1
+cat(sprintf("\nSomers' D: %.4f (range: -1 to 1, higher is better)\n", somers_d))
+
+
+# Output predicted categories
+Pred_cat <- data.frame(Predicted = predicted_factor)
+print(Pred_cat)
+
+# Output predicted probabilities (first few rows)
+head(predicted_probs)
