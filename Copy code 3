@@ -23,3 +23,25 @@ lm_model_full <- lm(~ UNEMP_RATE_lead2 + pct_change_GDP_lag1 + pct_change_AVG_MO
                     data = model_data_scaled)
 
 vif(lm_model_full)
+
+
+# Predict class probabilities for each observation
+predicted_probs <- predict(model, type = "prob")
+
+# View the first few rows
+head(predicted_probs)
+
+# Add to original data
+model_data_with_probs <- cbind(model_data_scaled, predicted_probs)
+
+# View result
+head(model_data_with_probs)
+
+predicted_class <- predict(model, type = "class")
+
+# Add predicted class to data
+model_data_with_probs$predicted_class <- predicted_class
+
+# View actual vs predicted
+table(Actual = model_data_with_probs$Economy_State_dummy,
+      Predicted = model_data_with_probs$predicted_class)
