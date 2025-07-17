@@ -1,51 +1,157 @@
-import pandas as pd
-import statsmodels.api as sm
+# R code
 
-def fit_mnl_models(data, target='Economy_state_dummy', base_category='normal'):
-    data[target] = pd.Categorical(data[target])
-    data[target] = data[target].cat.reorder_categories(
-        [base_category] + [cat for cat in data[target].cat.categories if cat != base_category],
-        ordered=False
-    )
+# Install packages to your personal library
+install.packages(c("lubridate", "dplyr", "zoo", "ordinal", "scales"))
 
-    results_list = []
-    exclude_cols = ['Date', target]
-    independent_vars = [col for col in data.columns if col not in exclude_cols]
+# Required libraries
+library(dplyr)
+library(lubridate)
+library(zoo)
+library(ordinal)
+library(scales)
 
-    for var in independent_vars:
-        try:
-            sub_data = data[[target, var]].dropna()
-            X = sm.add_constant(sub_data[[var]])
-            y = sub_data[target]
+# Data input: vectors as given
+Date <- c(
+  "Mar-06","Jun-06","Sep-06","Dec-06",
+  "Mar-07","Jun-07","Sep-07","Dec-07",
+  "Mar-08","Jun-08","Sep-08","Dec-08",
+  "Mar-09","Jun-09","Sep-09","Dec-09",
+  "Mar-10","Jun-10","Sep-10","Dec-10",
+  "Mar-11","Jun-11","Sep-11","Dec-11",
+  "Mar-12","Jun-12","Sep-12","Dec-12",
+  "Mar-13","Jun-13","Sep-13","Dec-13",
+  "Mar-14","Jun-14","Sep-14","Dec-14",
+  "Mar-15","Jun-15","Sep-15","Dec-15",
+  "Mar-16","Jun-16","Sep-16","Dec-16",
+  "Mar-17","Jun-17","Sep-17","Dec-17",
+  "Mar-18","Jun-18","Sep-18","Dec-18",
+  "Mar-19","Jun-19","Sep-19","Dec-19",
+  "Mar-20","Jun-20","Sep-20","Dec-20",
+  "Mar-21","Jun-21","Sep-21","Dec-21",
+  "Mar-22","Jun-22","Sep-22","Dec-22",
+  "Mar-23","Jun-23","Sep-23","Dec-23",
+  "Mar-24"
+)
 
-            model = sm.MNLogit(y, X).fit(disp=False)
+Economy_State_dummy <- c(
+ "Good", "Normal", "Normal", "Normal", "Normal", "Good", "Good", "Normal", "Normal", "Normal", "Poor", "Poor",	
+ "Poor", "Poor", "Good", "Normal", "Normal", "Normal", "Good", "Good", "Normal", "Good", "Normal", "Normal",
+ "Good", "Normal", "Normal", "Good", "Good", "Normal", "Normal", "Normal", "Normal", "Good", "Good", "Normal", 
+ "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Good", "Normal", "Normal", "Normal", "Normal",	
+ "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Poor", "Poor",	
+ "Poor", "Poor", "Poor", "Poor", "Poor", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal", "Normal",
+ "Normal", "Normal", "Normal"
+)
 
-            # Handle both flat and MultiIndex
-            index = model.params.index
-            if isinstance(index, pd.MultiIndex):
-                outcomes = index.levels[0]
-            else:
-                outcomes = sorted(set([idx[0] for idx in index]))
+GDP <- c(
+  1810063,	1738304, 1746759, 1893689, 1928792,	1829463, 1842192, 1979091, 1992940,	1893939, 1883585, 1939874, 1907673,	1836030, 1874133,
+       2039253,	2139668, 2000920, 1982245, 2109563,	2209743, 2037494, 2029932, 2024390,	2272805, 2160308, 2132192, 2337519,	2395328, 2219187,	
+       2185277,	2342295, 2386444.03397803, 2237767.96956094, 2208911.95705845, 2398964.03940259, 2459674.64994883, 2303095.35393988, 2285060.31984513,
+       2473595.67626616, 2541549, 2390876, 2357971,	2558106, 2638918, 2494793, 2463648,	2662582, 2772274, 2610783, 2543414,	2766734, 2845657,
+       2668902,	2605929, 2798831, 2785733, 2343919,	2442517, 2686527, 2715941, 2524347,	2439023, 2738617, 2776120, 2585625,	2548065, 2776940,	
+       2851124,	2634713, 2588398, 2828147, 2899023
+)
 
-            for outcome in outcomes:
-                const_idx = (outcome, 'const') if isinstance(index, pd.MultiIndex) else f'{outcome}_const'
-                var_idx = (outcome, var) if isinstance(index, pd.MultiIndex) else f'{outcome}_{var}'
+UNEMP_RATE <- c(
+				1.87,	1.67,   1.22,	1.31,   1.63,	1.61,   1.18,	1.11,   1.65,	1.39,   1.18,	1.33,   2.08,	1.75,   1.17,	
+                0.98,   1.13,	1.32,   0.87,	0.85,	0.83,	0.6,	0.66,	0.63,	0.72,	0.86,	0.58,	0.47,	0.72,	0.74,	
+                0.77,	0.65,	0.89,	1,	    0.84,   0.61,	0.94,	0.88,	0.92,	0.8,	0.97,	1.08,	0.94,	0.97,	1.21,	
+                1.22,	1.19,	1.12,	1.24,	1.07,	0.96,	0.93,   0.92,	0.98,	1.04,	0.98,	1.03,	1.95,	1.9,	1.86,	
+                1.96,	1.89,	2.25,	1.64,	1.53,	1.37,	1.23,	1.15,	1.05,   1.06,	0.99,	0.81,	1.01
+)
 
-                results_list.append({
-                    'Level': outcome,
-                    'Independent_Var': var,
-                    'Const_Beta': model.params.loc[const_idx],
-                    'Const_P': model.pvalues.loc[const_idx],
-                    'Const_T': model.tvalues.loc[const_idx],
-                    'Var_Beta': model.params.loc[var_idx],
-                    'Var_P': model.pvalues.loc[var_idx],
-                    'Var_T': model.tvalues.loc[var_idx],
-                    'Pseudo_R2': model.prsquared,
-                    'AIC': model.aic,
-                    'BIC': model.bic
-                })
+AVG_MONTHLY_WAGE <- c(
+  7693.86333333333,	7918.66666666667, 7959.71333333333,	8042.84666666667, 7775.30333333333,	8038.00666666667, 8330.53,
+                  8411.83666666667,	9059.42666666667, 8779.17, 9143.08666666667, 8979.82666666667, 8580.71666666667, 8654.01333333333,	
+                  9087.13333333333,	8961.93, 8853.55, 9202.53333333333,	9518.52333333333, 9755.03, 9461.43,	9679.71666666667, 10400.3966666667,	
+                  10476.7966666667,	10647.9266666667, 11366.4333333333,	11315.67, 11441.4166666667,	11744.0033333333, 11978.55,	12341.9433333333,
+                  12262.9333333333,	12784.6066666667, 13250.48,	13398.49, 13599.8066666667,	13271.14, 13340.7166666667,	13596.24, 13765.2566666667,
+                  13495.8066666667,	13659.27, 13805.45,	13930.9166666667, 13402.0666666667,	13640.2133333333, 13850.97,	13946.7333333333, 
+                  13764.3733333333,	13816.3233333333, 14094.8433333333,	14076.29, 14020.7966666667,	14347.8766666667, 14297.0933333333,	
+                  14211.1966666667,	14399.2966666667, 14509.945, 14620.5933333333, 14579.7266666667, 14678.8292857143, 14777.9319047619,
+                  14877.0345238095,	14976.1371428571, 15075.2397619048,	15174.3423809524, 15273.445, 15451.55, 15144.3533333333, 15412.1233333333,
+                  15454.66,	15392.3133333333, 15029.3733333333
+)
 
-        except Exception as e:
-            print(f"Model failed for variable {var}: {e}")
+# Create data frame
+data <- data.frame(
+  Date = Date,
+  Economy_State_dummy = factor(Economy_State_dummy, levels = c("Poor", "Normal", "Good"), ordered = TRUE),
+  GDP = GDP,
+  UNEMP_RATE = UNEMP_RATE,
+  AVG_MONTHLY_WAGE = AVG_MONTHLY_WAGE
+)
 
-    return pd.DataFrame(results_list)
+# Convert Date to Date class (using lubridate)
+data$Date <- parse_date_time(data$Date, orders = "b-y")
+
+# Sort by Date and reset rownames
+data <- data %>% arrange(Date)
+
+# Calculate YoY % changes (4 periods ago = 1 year for quarterly data)
+data <- data %>%
+  mutate(
+    pct_change_GDP = (GDP / lag(GDP, 4)) - 1,
+    pct_change_AVG_MONTHLY_WAGE = (AVG_MONTHLY_WAGE / lag(AVG_MONTHLY_WAGE, 4)) - 1
+  )
+
+# Variables to lag/lead (excluding Date and Economy_State_dummy)
+vars_to_lag_lead <- c("GDP", "UNEMP_RATE", "AVG_MONTHLY_WAGE", "pct_change_GDP", "pct_change_AVG_MONTHLY_WAGE")
+
+# Create lag1, lag2, lead1, lead2 columns
+for (var in vars_to_lag_lead) {
+  data[[paste0(var, "_lag1")]] <- lag(data[[var]], 1)
+  data[[paste0(var, "_lag2")]] <- lag(data[[var]], 2)
+  data[[paste0(var, "_lead1")]] <- lead(data[[var]], 1)
+  data[[paste0(var, "_lead2")]] <- lead(data[[var]], 2)
+}
+
+# Create datasets with lagged and lead variables (optional)
+lag1_cols <- paste0(vars_to_lag_lead, "_lag1")
+lag2_cols <- paste0(vars_to_lag_lead, "_lag2")
+lead1_cols <- paste0(vars_to_lag_lead, "_lead1")
+lead2_cols <- paste0(vars_to_lag_lead, "_lead2")
+
+data_lags1 <- data %>% select(Date, Economy_State_dummy, all_of(lag1_cols))
+data_lags2 <- data %>% select(Date, Economy_State_dummy, all_of(lag2_cols))
+data_leads1 <- data %>% select(Date, Economy_State_dummy, all_of(lead1_cols))
+data_leads2 <- data %>% select(Date, Economy_State_dummy, all_of(lead2_cols))
+
+# Keep original variables (excluding Date, Economy_State_dummy)
+original_vars <- data %>% select(Date, Economy_State_dummy, all_of(vars_to_lag_lead))
+
+# Combine all variables for modeling
+all_vars_df <- cbind(
+  original_vars,
+  data_lags1 %>% select(-Date, -Economy_State_dummy),
+  data_lags2 %>% select(-Date, -Economy_State_dummy),
+  data_leads1 %>% select(-Date, -Economy_State_dummy),
+  data_leads2 %>% select(-Date, -Economy_State_dummy)
+)
+
+# Select subset for modeling and drop NA rows
+model_data <- all_vars_df %>%
+  select(Date, Economy_State_dummy, UNEMP_RATE_lead2, pct_change_GDP_lag1, pct_change_AVG_MONTHLY_WAGE_lead1) %>%
+  drop_na()
+
+# Standardize predictors
+scale_vars <- c("UNEMP_RATE_lead2", "pct_change_GDP_lag1", "pct_change_AVG_MONTHLY_WAGE_lead1")
+model_data_scaled <- model_data
+model_data_scaled[scale_vars] <- scale(model_data[scale_vars])
+
+# Fit ordered logistic regression using clm from ordinal package
+model <- clm(Economy_State_dummy ~ UNEMP_RATE_lead2 + pct_change_GDP_lag1 + pct_change_AVG_MONTHLY_WAGE_lead1,
+             data = model_data_scaled, link = "logit")
+
+# Summary of model
+summary(model)
+
+# Extract coefficients and thresholds
+betas <- coef(model)[scale_vars]
+thresholds <- model$alpha
+
+print("Coefficients:")
+print(betas)
+
+print("Thresholds (intercepts):")
+print(thresholds)
