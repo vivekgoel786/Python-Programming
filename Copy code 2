@@ -90,7 +90,7 @@ data <- data.frame(
   Date = Date,
   Economy_State_dummy = factor(Economy_State_dummy, levels = c("Poor", "Normal", "Good"), ordered = TRUE),
   GDP = GDP,
-  GDPGR = GDPGR
+  GDPGR = GDPGR,
   UNEMP_RATE = UNEMP_RATE,
   AVG_MONTHLY_WAGE = AVG_MONTHLY_WAGE
 )
@@ -110,7 +110,7 @@ data <- data %>%
   )
 
 # Variables to lag/lead (excluding Date and Economy_State_dummy)
-vars_to_lag_lead <- c("GDP", "UNEMP_RATE", "AVG_MONTHLY_WAGE", "pct_change_GDP", "pct_change_AVG_MONTHLY_WAGE", GDPGR, MA_3mnth_GDPGR)
+vars_to_lag_lead <- c("GDP", "UNEMP_RATE", "AVG_MONTHLY_WAGE", "pct_change_GDP", "pct_change_AVG_MONTHLY_WAGE", "GDPGR", "MA_3mnth_GDPGR")
 
 # Create lag1, lag2, lead1, lead2 columns
 for (var in vars_to_lag_lead) {
