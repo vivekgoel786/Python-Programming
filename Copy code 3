@@ -1,2 +1,25 @@
 cor_matrix <- cor(model_data_scaled[scale_vars], use = "complete.obs")
 print(cor_matrix)
+
+#try
+install.packages("corrplot")
+library(corrplot)
+corrplot(cor_matrix, method = "circle", type = "upper", tl.cex = 0.8)
+
+
+
+# Install if not installed
+install.packages("car")
+library(car)
+
+# Fit a linear model using the same predictors
+lm_model <- lm(UNEMP_RATE_lead2 ~ pct_change_GDP_lag1 + pct_change_AVG_MONTHLY_WAGE_lead1,
+               data = model_data_scaled)
+
+# Calculate VIFs
+vif(lm_model)
+
+lm_model_full <- lm(~ UNEMP_RATE_lead2 + pct_change_GDP_lag1 + pct_change_AVG_MONTHLY_WAGE_lead1,
+                    data = model_data_scaled)
+
+vif(lm_model_full)
