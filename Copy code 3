@@ -1,25 +1,121 @@
-library(caret)
+3. OVERALL METHODOLOGY
+3.1 Model Flow Diagram
+The PD model development follows a structured workflow, beginning with data acquisition from internal systems and RM questionnaires, proceeding through rigorous data preprocessing and factor screening, followed by bucketing of variables and assignment of risk scores. Factor weights are derived through a combination of stakeholder prioritization and statistical optimization. Final model scores are calculated as weighted aggregates of factor scores, then calibrated against the bank’s master scale PD targets. The output provides a risk-ranked list of HNWI customers with estimated probabilities of default.
 
-# Assuming 'predicted_class' and 'actual_class' are factors with same levels
-cm <- confusionMatrix(predicted_class, actual_class)
+(A detailed flowchart illustrating these steps — Data Collection → Factor Screening → Bucketing & Scoring → Weight Optimization → Scoring Aggregation → Calibration → Final Model Output — is included as Figure X.)
 
-# Extract precision and recall per class
-precision <- cm$byClass[, "Pos Pred Value"]
-recall <- cm$byClass[, "Sensitivity"]
+3.2 Model Theory
+The Probability of Default (PD) model for the High Net Worth Individual (HNWI) portfolios (Lombard Loan Book and Property-Backed Loan) addresses the unique challenge of no observed defaults in the sample. To overcome this, a proxy default approach was employed, whereby customers classified as D2 or E by Relationship Managers (RMs) were treated as defaults based on expert risk assessment.
 
-# Compute F1 score per class, safely handling NA
-f1_score <- ifelse(
-  is.na(precision) | is.na(recall) | (precision + recall) == 0,
-  NA,
-  2 * precision * recall / (precision + recall)
-)
+The model employs a multi-dimensional risk factor framework encompassing financial, behavioral, legal, and collateral-related characteristics. Each factor is discretized into buckets representing varying risk levels and assigned scores from 0 (highest risk) to 10 (lowest risk). These scores are combined using weighted aggregation to produce a continuous risk score per customer, inversely proportional to PD. The model’s calibration aligns predicted PDs to the bank’s internal benchmarks, ensuring consistency with regulatory and risk appetite standards.
 
-# Combine results into a data frame for clarity
-f1_df <- data.frame(
-  Class = rownames(cm$byClass),
-  Precision = precision,
-  Recall = recall,
-  F1_Score = f1_score
-)
+3.3 Methodology Selection
+Given the small dataset (73 customers) and absence of default events, conventional statistical default prediction methods (e.g., logistic regression) were impractical. The methodology leverages a hybrid approach combining expert judgment and statistical techniques:
 
-print(f1_df)
+Proxy defaults derived from RM risk rankings to generate a dependent variable
+
+Statistical Factor Analysis (SFA) to identify and validate relevant variables
+
+Bucketing and scoring for interpretability and handling qualitative data
+
+Weighting optimized via stakeholder input and statistical correlation (Kendall Tau)
+
+Manual calibration ensuring business relevance and alignment with risk appetite
+
+This approach balances quantitative rigor with practical constraints, producing a model that is both statistically sound and aligned with expert knowledge.
+
+3.4 Methodology Assumptions and Limitations
+Proxy Default Validity: The reliance on RM-assigned risk rankings assumes accurate and unbiased reflection of credit risk. This proxy may not capture all default dynamics.
+
+Portfolio Size: The small sample size limits statistical inference and may reduce model robustness. External validation is constrained.
+
+Static Risk Profile: The model assumes stability of risk drivers and relationships over the forecast horizon.
+
+Data Completeness: Not all variables are available across both portfolios (e.g., collateral quality only for PBL), potentially affecting comparability and completeness.
+
+Subjectivity in Weighting and Calibration: Manual adjustments introduce judgment-based variability and potential bias.
+
+Lack of Out-of-Sample Testing: Absence of historical default events precludes backtesting and predictive validation.
+
+4. MODEL INPUTS
+4.1 Data Source and Processing Overview
+Data was compiled from internal credit and relationship management systems supplemented by RM risk questionnaires for a total of 73 HNWI customers. The sample comprises 27 customers in the Lombard Loan Book (LBL) and 48 in the Property-Backed Loan (PBL) portfolio, with two customers appearing in both.
+
+Data preprocessing involved reconciliation of sources, validation for completeness and accuracy, and standardization of formats. Risk ranks assigned by RMs were used to construct the dependent variable. Factor variables underwent statistical factor analysis to assess relevance and prepare for bucketing and scoring.
+
+4.2 Data Inputs Definitions
+Dependent Variable: Proxy default status defined by RM risk ranks D2 and E, identifying 10 proxy defaults out of 73.
+
+Independent Variables (Factors):
+
+Credit History and Reputation: Length of relationship with bank (LBL and PBL lending), investing relationship, payment history
+
+Wealth Parameters and Income: Net worth, assets under management (AUM) excluding loan proceeds, AUM buffer ratio, income source (salary), Debt Service Coverage Ratio (DSCR, LBL only), Average Monthly Repayment (Avg MR, LBL only), Known Wealth Ratio (KWR)
+
+Legal Risk: Compliance risk status
+
+Financial Stability and Liquidity: Asset diversification metrics
+
+Personality: Suitability Test Risk Score, Personality Riskiness/Stability, Investment Style
+
+Customer Background: Age
+
+Collateral Quality: Quality of major properties pledged as collateral (PBL only)
+
+4.3 Data Analysis
+Extensive Statistical Factor Analysis (SFA) was conducted to identify significant correlations between variables and the dependent proxy default variable. Factors demonstrating strong discriminatory power (assessed via accuracy ratio) and informative concentration (assessed via relative information entropy) were prioritized. Business relevance was also considered, with select factors retained despite weaker statistical performance due to stakeholder input.
+
+4.4 Model Development Data
+The model development utilized the full dataset without a separate hold-out sample due to limited size. Proxy defaults provided the event indicator for risk modeling. Separate models were developed for LBL and PBL to reflect their differing factor sets and credit characteristics.
+
+4.5 Data Treatment and Transformations
+Variables were bucketed into discrete risk categories to improve interpretability and account for non-linear relationships.
+
+Bucket scores were assigned on a scale from 0 (highest risk) to 10 (lowest risk).
+
+Missing variables specific to portfolios (e.g., collateral quality for LBL) were excluded appropriately.
+
+Factor weights were optimized through a combined statistical and expert judgment approach.
+
+Data normalization and scaling were applied as necessary to ensure comparability of scores across variables.
+
+4.6 Data Input Assumptions and Limitations
+RM risk rankings are assumed to be unbiased and reflective of true credit risk.
+
+Variable availability differs across portfolios, limiting model consistency.
+
+Bucketing assumes monotonic risk progression which may not hold perfectly.
+
+Small sample size restricts granularity and statistical power.
+
+Potential for data entry or measurement errors in source data.
+
+5. MODEL DEVELOPMENT
+5.1 Model Development Process
+The development process began by defining the dependent proxy default variable based on RM risk rankings. Statistical Factor Analysis was used to screen and select relevant variables. Each selected variable was bucketed to capture risk differentiation, with bucket scores assigned from 0 to 10. Stakeholders ranked factors and dimensions to derive initial weights, which were statistically optimized by maximizing Kendall Tau correlation between model risk ranks and RM-assigned risk ranks. Final manual adjustments ensured business alignment. Model scores were then calibrated to the bank’s master PD scale, targeting an average PD (CDT) of 0.39%.
+
+5.2 Segmentation/Grouping
+Separate models were developed for Lombard Loan Book (LBL) and Property-Backed Loan (PBL) portfolios, reflecting different product characteristics and data availability. Customers appearing in both portfolios were scored independently within each model.
+
+5.3 Model Specification and Selection
+The PBL model incorporates 15 factors across 7 dimensions, while the LBL model includes 16 factors across 6 dimensions. Buckets for each factor were defined based on statistical analysis and expert judgment. Scores were assigned to each bucket on a risk scale from 0 to 10. Weighting of factors was guided by stakeholder rankings and optimized statistically to maximize alignment with RM risk rankings. The final models balance statistical rigor with practical interpretability.
+
+5.4 Model Estimations and Calibration
+5.4.1 Model Parameters Estimation
+Factor weights were estimated via a two-step approach: stakeholder ranking of dimension and factor importance followed by statistical optimization targeting maximum Kendall Tau correlation between model-derived risk ranks and RM-assigned ranks. Bucket scores were assigned considering statistical risk differentiation and business logic.
+
+5.4.2 Final Model Calibration
+Calibration involved adjusting model score thresholds to align predicted PD distributions with the bank’s master scale, using a target average PD (CDT) of 0.39%. Benchmarking against external banks (UBS, JB) informed this target. Calibration also ensured high discriminatory power, measured through the Herfindahl-Hirschman Index (HHI), and that portfolio-level average PDs were conservatively above the CDT.
+
+5.5 Final Model Selection
+The final models were selected based on:
+
+High concordance between model scores and RM risk rankings (high Kendall Tau)
+
+Satisfactory discriminatory power and concentration (HHI)
+
+Business relevance and interpretability of included factors
+
+Successful calibration to target average PD values
+
+Both the LBL and PBL models met these criteria and were approved by stakeholders for implementation.
