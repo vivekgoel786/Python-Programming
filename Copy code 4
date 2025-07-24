@@ -1,5 +1,18 @@
-After completing the Single Factor Analysis (SFA) and finalizing the list of relevant variables, each selected variable was carefully bucketed to ensure clear risk differentiation across its range of values. The objective was to translate qualitative and quantitative risk signals into a consistent and interpretable scoring framework. Each bucket within a factor was evaluated based on its associated risk level, supported by the default rate analysis and business judgment, and then assigned a score on a scale from 0 to 10—where 10 represents the least risky bucket and 0 indicates the riskiest.
+Following the bucketing and scoring of individual factors, the next critical step was to determine the relative importance—or weights—of each factor in contributing to the overall risk profile of a customer. To achieve this, S&P adopted a structured and iterative approach that combined expert-driven inputs with statistical optimization.
 
-This scoring scale was consistently applied across all factors to allow comparability and meaningful aggregation of risk scores across dimensions. For example, in the case of the Age variable, the bucket “50–60” was considered the least risky based on historical and expert inputs and hence assigned a score of 10, whereas the buckets “<30” and “≥75” were considered higher risk and assigned a score of 0. Similar scoring logic was applied to each bucket of other variables, with adjustments made based on statistical findings and expert validation.
+Initially, stakeholders were asked to rank the risk dimensions and the individual factors within each dimension based on their perceived importance in assessing customer creditworthiness. These inputs captured business intuition and domain expertise, which were essential in the absence of traditional model training data.
 
-This structured scoring methodology ensured that each variable contributed proportionately to the overall risk assessment, based not only on empirical evidence but also on sound business rationale. The scoring served as a foundation for computing the weighted model score used for ranking and PD calibration.
+Using these rankings as a foundation, S&P performed a statistical optimization to determine the final weights assigned to each factor and dimension. The optimization aimed to improve the agreement between the model-generated customer risk ranks and the Business Unit (BU)-assigned risk ranks. To evaluate the quality of this alignment, the Kendall Tau rank correlation coefficient was computed. A higher Kendall Tau value indicated stronger alignment between the model output and expert judgment.
+
+Each client’s model score was calculated as the weighted sum of the scores across all selected factors, where individual factor scores (ranging from 0 to 10) were multiplied by their respective optimized weights. Clients were then ranked based on these model scores, with higher scores indicating lower risk. The model's performance was then validated by comparing the resulting client ranks with BU-assigned ranks using Kendall Tau.
+
+To ensure interpretability and consistency, two key constraints were enforced on the final weights:
+
+1. The sum of all final factor weights across the model equals 100%.
+
+
+2. The sum of the final weights of all factors within a risk dimension equals the total weight assigned to that dimension.
+
+
+
+After statistical optimization, the final weights were subjected to manual review and adjustment by S&P and SCB stakeholders, ensuring the model incorporated business judgment and practical considerations not fully captured through quantitative analysis. This hybrid methodology ensured the final risk scoring framework was both statistically robust and operationally acceptable.
