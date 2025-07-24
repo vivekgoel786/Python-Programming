@@ -1,11 +1,1 @@
-# Log-likelihood of full model
-ll_full <- logLik(model)
-
-# Fit the null model (intercept only)
-model_null <- update(model, . ~ 1)
-ll_null <- logLik(model_null)
-
-# McFadden's R²
-mcfadden_r2 <- 1 - as.numeric(ll_full / ll_null)
-
-cat("McFadden's pseudo R²:", round(mcfadden_r2, 4), "\n")
+Due to the limited size of the portfolio (73 customers) and the absence of historical default data, it was essential to adopt a more granular, qualitative approach to accurately assess the credit risk of each individual customer. To achieve this, Standard & Poor’s (S&P) in collaboration with Standard Chartered Bank (SCB) designed a comprehensive risk assessment questionnaire to be completed by the Relationship Managers (RMs), who possess in-depth knowledge of their clients’ financial behavior and background. A total of 43 questions were developed, structured to capture information across seven key risk dimensions: Credit History and Reputation, Wealth Parameters and Income, Legal Risk, Financial Stability and Liquidity, Personality, Customer Background, and Collateral Quality. Each of these dimensions consisted of multiple risk factors that collectively provided a holistic view of the customer's creditworthiness. The objective of this exercise was to translate qualitative RM insights into structured, analyzable data that could be used for statistical factor analysis, bucketing, scoring, and ultimately for model development. This approach enabled the creation of a structured risk profile for each customer, which served as the foundation for model input construction in the absence of conventional data sources.
