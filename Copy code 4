@@ -1,1 +1,18 @@
-Following the calibration process, the final Probability of Default (PD) for each customer was derived based on their assigned model score and the corresponding mapping to SCB’s internal Master Scale. This calibration was conducted independently for both the LBL and PBL portfolios, ensuring that the PDs reflected segment-specific risk characteristics and calibration logic. For the two customers who appeared in both portfolios, separate PDs were generated—one from the LBL model and another from the PBL model. In line with conservative risk management practices, the higher of the two PDs was assigned as the final PD for these customers. This approach ensured prudence in risk estimation and consistency with internal credit policy standards, especially in cases of multi-product exposure.
+Given the small portfolio size, the absence of historical default data, and the qualitative nature of available information, a scorecard-based model framework was selected as the most appropriate approach for estimating Probability of Default (PD) for the HNWI Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios.
+
+The final model design is a weighted additive scorecard, where each customer is assigned a risk score based on the weighted combination of scores across multiple risk factors. The model specification was driven by several key considerations:
+
+Data Constraints: The limited number of customers (n=73) and lack of actual default observations made traditional statistical or machine learning models unsuitable. Instead, a structured scorecard model allowed for robust risk differentiation using expert-validated factors and scores.
+
+Expert-Driven Inputs: The model integrates relationship manager (RM) insights, structured through a detailed 43-question survey, and further validated through extensive discussions with SCB’s business and modeling teams.
+
+Custom Factor Design and Scoring: Each selected factor was bucketed and assigned scores on a 0–10 scale based on risk contribution. Factor weights were determined through a combination of stakeholder ranking and statistical optimization, maximizing alignment with business-assigned risk rankings using Kendall Tau correlation.
+
+Segmentation: Two separate models were developed for LBL and PBL portfolios, accounting for differences in available variables, business characteristics, and data granularity.
+
+Interpretability and Transparency: The scorecard model offers high transparency, which is essential for business acceptance, auditability, and regulatory review. The additive nature of the model allows for straightforward understanding of how each factor contributes to the overall risk profile.
+
+Calibration to Internal Master Scale: The final model scores were calibrated to SCB’s internal 20-point Master Scale to convert scores into PD estimates. Calibration ensured the model met risk differentiation, concentration (HHI), and alignment (Kendall Tau) criteria.
+
+
+This model specification was selected after careful evaluation of alternative approaches and was deemed the most effective and practical solution, balancing statistical rigor with business usability and governance standards.
