@@ -1,8 +1,21 @@
-Following the bucketing and scoring of individual factors, the next critical step was to determine the relative importance—or weights—of each factor in contributing to the overall risk profile of a customer. To achieve this, S&P adopted a structured and iterative approach that combined expert-driven inputs with statistical optimization.
+Once the final weights were determined—balancing both statistical optimization and expert judgment—the model score for each customer was calculated independently for the Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios. The model score represents a weighted aggregation of the client's responses across all selected risk factors.
 
-Initially, stakeholders were asked to rank the risk dimensions and the individual factors within each dimension based on their perceived importance in assessing customer creditworthiness. These inputs captured business intuition and domain expertise, which were essential in the absence of traditional model training data.
+The score for each customer was computed using the following formula:
 
-Using these rankings as a foundation, S&P performed a statistical optimization to determine the final weights assigned to each factor and dimension. The optimization aimed to improve the agreement between the model-generated customer risk ranks and the Business Unit (BU)-assigned risk ranks. To evaluate the quality of this alignment, the Kendall Tau rank correlation coefficient was computed. A higher Kendall Tau value indicated stronger alignment between the model output and expert judgment.
+> Model Score = Σ (Final Weight of Each Factor × Factor Bucket Score Based on Client Response)
+
+
+
+Each factor bucket score ranged from 0 to 10, with 10 indicating the least risky profile and 0 indicating the highest risk. These scores were then weighted according to the finalized factor weights to produce a composite model score for each customer.
+
+To assess the strength of alignment between the model-generated customer risk ranking and the BU-assigned risk ranking, the Kendall Tau (KT) rank correlation coefficient was computed. The results of this validation step were as follows:
+
+LBL Portfolio: Kendall Tau = 54.52%
+
+PBL Portfolio: Kendall Tau = 38.43%
+
+
+These KT values reflect a moderate-to-strong level of alignment, especially considering the qualitative nature of the input data and the small portfolio size. The scores provided a stable and interpretable basis for risk ranking, setting the foundation for subsequent PD calibration to the bank’s master scale. correlation coefficient was computed. A higher Kendall Tau value indicated stronger alignment between the model output and expert judgment.
 
 Each client’s model score was calculated as the weighted sum of the scores across all selected factors, where individual factor scores (ranging from 0 to 10) were multiplied by their respective optimized weights. Clients were then ranked based on these model scores, with higher scores indicating lower risk. The model's performance was then validated by comparing the resulting client ranks with BU-assigned ranks using Kendall Tau.
 
