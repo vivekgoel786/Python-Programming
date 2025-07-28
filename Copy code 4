@@ -1,31 +1,37 @@
-Once the final weights were determined—balancing both statistical optimization and expert judgment—the model score for each customer was calculated independently for the Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios. The model score represents a weighted aggregation of the client's responses across all selected risk factors.
+Following the computation of model scores for each customer, the next critical step was to calibrate the model output to SCB’s internal Master Scale (MS)—a standardized credit rating scale ranging from MS1 to MS20, where each rating bucket corresponds to a defined Probability of Default (PD) range. The purpose of calibration is to align the model-derived scores with a quantifiable and interpretable PD measure that is consistent with the bank’s internal risk management framework and capital allocation methodologies. Calibration ensures that the model not only discriminates well between risk levels but also produces PD estimates that are aligned with regulatory expectations and internal benchmarks.
 
-The score for each customer was computed using the following formula:
+To achieve this, the continuous model score (ranging from 0 to 10) was segmented into discrete PD buckets that map to appropriate master scale ratings. The calibration process aimed to satisfy the following key conditions:
 
-> Model Score = Σ (Final Weight of Each Factor × Factor Bucket Score Based on Client Response)
-
-
-
-Each factor bucket score ranged from 0 to 10, with 10 indicating the least risky profile and 0 indicating the highest risk. These scores were then weighted according to the finalized factor weights to produce a composite model score for each customer.
-
-To assess the strength of alignment between the model-generated customer risk ranking and the BU-assigned risk ranking, the Kendall Tau (KT) rank correlation coefficient was computed. The results of this validation step were as follows:
-
-LBL Portfolio: Kendall Tau = 54.52%
-
-PBL Portfolio: Kendall Tau = 38.43%
+1. Average PD Alignment: The overall average PD for each portfolio should closely match the target Central Default Tendency (CDT), which was defined at 0.39%, based on benchmarking with peer institutions and historical data.
 
 
-These KT values reflect a moderate-to-strong level of alignment, especially considering the qualitative nature of the input data and the small portfolio size. The scores provided a stable and interpretable basis for risk ranking, setting the foundation for subsequent PD calibration to the bank’s master scale. correlation coefficient was computed. A higher Kendall Tau value indicated stronger alignment between the model output and expert judgment.
-
-Each client’s model score was calculated as the weighted sum of the scores across all selected factors, where individual factor scores (ranging from 0 to 10) were multiplied by their respective optimized weights. Clients were then ranked based on these model scores, with higher scores indicating lower risk. The model's performance was then validated by comparing the resulting client ranks with BU-assigned ranks using Kendall Tau.
-
-To ensure interpretability and consistency, two key constraints were enforced on the final weights:
-
-1. The sum of all final factor weights across the model equals 100%.
+2. Rank Correlation Maximization: The calibration should maximize Kendall Tau rank correlation between the assigned MS rating and the BU-assigned customer ranking, thereby preserving alignment with business intuition.
 
 
-2. The sum of the final weights of all factors within a risk dimension equals the total weight assigned to that dimension.
+3. Balanced Distribution (HHI): The Herfindahl–Hirschman Index (HHI) was used to assess the spread of customers across MS buckets. A lower HHI indicates better dispersion and avoids over-concentration in a few buckets, improving rating granularity and stability.
+
+
+4. Monotonicity: The final calibration must maintain the principle that higher model scores correspond to lower PDs, i.e., less risky customers are assigned to better (lower-numbered) MS buckets.
 
 
 
-After statistical optimization, the final weights were subjected to manual review and adjustment by S&P and SCB stakeholders, ensuring the model incorporated business judgment and practical considerations not fully captured through quantitative analysis. This hybrid methodology ensured the final risk scoring framework was both statistically robust and operationally acceptable.
+Based on these criteria, the final calibrated structure consisted of six MS buckets (MS7 to MS12) for both portfolios. This range was chosen to reflect the narrow risk distribution typical of HNWI portfolios, while maintaining differentiation between customers.
+
+Average Calibrated PD:\n
+
+LBL Portfolio: 0.40%\n
+
+PBL Portfolio: 0.394%
+
+
+Herfindahl–Hirschman Index (HHI):\n
+
+LBL Portfolio: 23.5%\n
+
+PBL Portfolio: 21.4%
+
+
+Most Populated Bucket: For both portfolios, MS9 emerged as the modal bucket, reflecting a near-normal distribution of risk scores—appropriate given the overall conservative risk profile of the HNWI base.
+
+
+This calibration process ensured that the model-generated PD estimates are not only statistically aligned with internal benchmarks but also operationally consistent with how risk is measured and managed within the bank.
