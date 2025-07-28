@@ -1,1 +1,25 @@
-5. Kendall Tau Between MS Ratings and BU Rankings: In addition to point 2, the final Kendall Tau correlation between calibrated MS ratings and BU-assigned ranks was used as a direct validation metric to evaluate the strength of the risk order preservation post-calibration. A strong Kendall Tau supports that the PD calibration does not distort the original model ranking.
+The portfolio was segmented into two distinct product-based groups to reflect structural and data-driven differences in customer profiles, risk attributes, and available information. The segmentation ensured that model development and calibration were tailored to the specific characteristics of each lending product, thereby improving risk differentiation and model interpretability.
+
+The two segments defined for modeling were:
+
+1. Lombard Loan (LBL) Portfolio
+
+
+2. Property-Backed Loan (PBL) Portfolio
+
+
+
+This segmentation was driven by several key factors:
+
+Product Type Differences: LBL and PBL are fundamentally different in terms of collateral structure, repayment behavior, and use of proceeds. LBL typically involves liquid financial assets as collateral, whereas PBL is backed by immovable property.
+
+Variable Availability: Certain risk factors were specific to one segment and not applicable to the other. For example, variables such as DSCR and Average Margin Requirement (Avg MR) were available only for LBL customers, while Collateral Quality of Major Properties Pledged was relevant only for PBL customers.
+
+Portfolio Composition: Although the overall portfolio size was limited (73 customers), the segmentation allowed for a more nuanced treatment of risk given the distinct characteristics of clients within each segment. Specifically, the LBL segment had 27 customers, the PBL segment had 48 customers, with 2 customers present in both portfolios.
+
+Factor Weighting and Calibration: Segmentation enabled the development of independent scoring frameworks, allowing for separate factor weighting, model score calculation, and PD calibration for each portfolio. This approach ensured that each model was optimized based on segment-specific characteristics and stakeholder inputs.
+
+Regulatory and Business Relevance: Treating the segments separately enhances model transparency and business acceptance, particularly important given the reliance on qualitative inputs and expert judgment in the absence of historical defaults.
+
+
+Overall, this segmentation strategy supported greater model accuracy, clarity, and alignment with business reality, and was a foundational step in ensuring the credibility and effectiveness of the PD model for the HNWI lending portfolio.
