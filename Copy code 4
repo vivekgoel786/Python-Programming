@@ -2,17 +2,17 @@ Given the small portfolio size, the absence of historical default data, and the 
 
 The final model design is a weighted additive scorecard, where each customer is assigned a risk score based on the weighted combination of scores across multiple risk factors. The model specification was driven by several key considerations:
 
-Data Constraints: The limited number of customers (n=73) and lack of actual default observations made traditional statistical or machine learning models unsuitable. Instead, a structured scorecard model allowed for robust risk differentiation using expert-validated factors and scores.
+Data Constraints: The limited number of customers (n = 73) and lack of actual default observations made traditional statistical or machine learning models unsuitable. Instead, a structured scorecard model allowed for robust risk differentiation using expert-validated factors and scores.
 
 Expert-Driven Inputs: The model integrates relationship manager (RM) insights, structured through a detailed 43-question survey, and further validated through extensive discussions with SCB’s business and modeling teams.
 
-Custom Factor Design and Scoring: Each selected factor was bucketed and assigned scores on a 0–10 scale based on risk contribution. Factor weights were determined through a combination of stakeholder ranking and statistical optimization, maximizing alignment with business-assigned risk rankings using Kendall Tau correlation.
+Model Composition: The PBL model incorporates 15 risk factors across 7 risk dimensions, while the LBL model includes 16 factors across 6 dimensions. Buckets for each factor were defined through a combination of statistical analysis and expert judgment. Scores were assigned to each bucket on a consistent risk scale ranging from 0 (most risky) to 10 (least risky). Factor weighting was initially guided by stakeholder input, then optimized statistically to maximize alignment with RM-assigned rankings using Kendall Tau correlation. The final models achieve a strong balance between statistical rigor and practical interpretability.
 
-Segmentation: Two separate models were developed for LBL and PBL portfolios, accounting for differences in available variables, business characteristics, and data granularity.
+Segmentation: Two separate models were developed for the LBL and PBL portfolios to reflect portfolio-specific characteristics, data availability, and business nuances. Independent model scores and calibrations were carried out for each segment.
 
-Interpretability and Transparency: The scorecard model offers high transparency, which is essential for business acceptance, auditability, and regulatory review. The additive nature of the model allows for straightforward understanding of how each factor contributes to the overall risk profile.
+Interpretability and Transparency: The scorecard model provides high interpretability, allowing SCB stakeholders to clearly understand how each customer’s profile contributes to their overall risk score. This is particularly important for regulatory validation, business acceptance, and ongoing governance.
 
-Calibration to Internal Master Scale: The final model scores were calibrated to SCB’s internal 20-point Master Scale to convert scores into PD estimates. Calibration ensured the model met risk differentiation, concentration (HHI), and alignment (Kendall Tau) criteria.
+Calibration to Internal Master Scale: The final model scores were calibrated to SCB’s internal 20-point Master Scale, translating model outputs into PDs. Calibration targeted specific criteria such as matching the average target PD, maximizing correlation with RM ratings, achieving a well-spread distribution (low concentration), and ensuring monotonicity (i.e., higher scores reflect lower risk).
 
 
-This model specification was selected after careful evaluation of alternative approaches and was deemed the most effective and practical solution, balancing statistical rigor with business usability and governance standards.
+This scorecard-based specification was chosen after assessing various modeling options and was deemed most appropriate in balancing the business context, data limitations, transparency needs, and risk differentiation objectives.
