@@ -1,21 +1,27 @@
-The estimation of model parameters—namely bucket scores and factor weights—was carried out through a structured and iterative process combining business inputs and statistical optimization.
+The final model was selected through a rigorous, collaborative process combining statistical analysis, expert input, and iterative business feedback. The objective was to develop a robust, interpretable, and practical credit risk scoring framework for both the Lombard (LBL) and Mortgage (PBL) portfolios.
 
-1. Bucket Score Assignment:
-Each selected variable was bucketed based on its statistical risk differentiation ability and expert judgment. For numerical variables, meaningful ranges were created to capture patterns in default behaviour, while for categorical variables, similar response categories were grouped together to ensure stability and interpretability. For each bucket, scores were assigned on a scale from 0 to 10, where 10 represents the least risky profile and 0 the most risky. The scoring was guided by empirical analysis, including single-factor default rate distributions, and further refined through domain discussions to align with real-world risk interpretations.
+The PBL model comprises 15 risk factors across 7 risk dimensions, while the LBL model includes 16 factors across 6 dimensions. These factors were shortlisted not only based on their statistical strength—measured using metrics such as correlation with BU ranks, accuracy ratio, and information entropy—but also based on their business relevance, availability of information, and interpretability by Relationship Managers (RMs) and credit stakeholders.
 
-2. Factor Weight Estimation:
-A two-step approach was used to determine the weights of each factor in the model:
+Each factor was bucketed using statistical analysis and expert judgment, followed by score assignment on a 0–10 risk scale, where 10 represents the least risky and 0 the riskiest category. This scoring approach ensures intuitive understanding while capturing meaningful risk differentiation.
 
-Step 1 – Stakeholder-Based Ranking: Stakeholders were asked to rank each risk dimension by its perceived importance, and within each dimension, rank the contributing risk factors. This ensured that domain knowledge and business intuition were integrated into the model.
+Factor weights were estimated via a two-step approach:
 
-Step 2 – Statistical Optimization: The initial rankings were then statistically optimized to maximize the Kendall Tau correlation between the model-derived client risk ranks and the risk ranks assigned by Relationship Managers (RMs). This allowed for a data-driven refinement of the weight structure, aligning the model more closely with expert intuition while maintaining statistical credibility.
+1. Stakeholder ranking of dimensions and factors to reflect perceived importance.
 
 
-To ensure coherence:
-
-The sum of all final factor weights equals 100%, and
-
-The sum of factor weights within each dimension equals the dimension's weight.
+2. Statistical optimization to maximize the Kendall Tau correlation between model-derived risk ranks and RM-assigned BU ranks.
 
 
-The final model weights were also manually fine-tuned based on expert judgment and to resolve any inconsistencies observed during optimization. This combination of business input and quantitative rigor ensures that the model is both interpretable and statistically sound.
+
+The resulting models showed strong alignment with internal expert judgment while maintaining desirable statistical properties. A successful calibration to SCB’s internal Master Scale further validated the model. The calibration ensured that:
+
+The average PD of the final distribution for LBL and PBL were 0.40% and 0.394%, respectively—very close to the agreed target PD of 0.39%.
+
+Higher model scores corresponded to lower PDs, in line with risk logic.
+
+The customer distribution was well spread, as shown by healthy HHI values (23.5% for LBL, 21.4% for PBL).
+
+The Kendall Tau correlation between model score ranks and BU ranks was maintained at high levels to ensure interpretability and consistency.
+
+
+In conclusion, the final model strikes a balanced integration of statistical rigor, expert insight, and business applicability. It provides a transparent and defendable framework for risk ranking and monitoring, and sets a strong foundation for future credit risk management, portfolio segmentation, and strategy development.
