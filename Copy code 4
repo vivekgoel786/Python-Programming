@@ -1,27 +1,121 @@
-The final model was selected through a rigorous, collaborative process combining statistical analysis, expert input, and iterative business feedback. The objective was to develop a robust, interpretable, and practical credit risk scoring framework for both the Lombard (LBL) and Mortgage (PBL) portfolios.
+6. Model Validation
 
-The PBL model comprises 15 risk factors across 7 risk dimensions, while the LBL model includes 16 factors across 6 dimensions. These factors were shortlisted not only based on their statistical strength—measured using metrics such as correlation with BU ranks, accuracy ratio, and information entropy—but also based on their business relevance, availability of information, and interpretability by Relationship Managers (RMs) and credit stakeholders.
+6.1 Summary of Model Validation Results
 
-Each factor was bucketed using statistical analysis and expert judgment, followed by score assignment on a 0–10 risk scale, where 10 represents the least risky and 0 the riskiest category. This scoring approach ensures intuitive understanding while capturing meaningful risk differentiation.
+Following the finalization of the model, a comprehensive validation process was conducted to evaluate the performance, stability, and robustness of the model. The validation included in-time (development) testing, out-of-time (OOT) testing, backtesting, benchmarking against internal ratings, sensitivity and scenario testing, and key metric evaluations.
 
-Factor weights were estimated via a two-step approach:
+6.2 Performance Testing
 
-1. Stakeholder ranking of dimensions and factors to reflect perceived importance.
+6.2.1 Backtesting
+
+6.2.1.1 In-Time Validation
+
+The model's in-time validation demonstrated strong discriminatory power, alignment with RM-assigned risk ranks, and good calibration with a target average PD of 0.39%. The development sample included 27 customers for LBL and 48 for PBL, with 2 overlapping customers. The model showed good distribution spread across 6 Master Scale buckets for both portfolios and high Kendall Tau correlations with BU risk rankings—46.2% for PBL and 61% for LBL. HHI values of 21.4% (PBL) and 23.5% (LBL) indicated healthy distribution diversity. Accuracy ratios and other relevant statistics were also found to be satisfactory.
+
+6.2.1.2 Out-of-Time (OOT) Validation
+
+After the model was finalized, an OOT validation exercise was undertaken to assess stability and predictive power using updated data as of March 2025. A similar questionnaire-based data collection process was deployed. The RM team was provided with pre-filled responses for qualitative factors (e.g., personality risk, investment style, diversification), which remained largely unchanged. Time-dependent fields like age, lending relationship, and investing relationship were incremented by one year by SCB prior to RM engagement.
+
+RMs were asked to update more volatile quantitative data (e.g., master limit, net worth, AUM, DSCR, KWR). Post-submission, S&P performed a thorough data cleaning and formatting to ensure consistency with the development data. A total of 26 LBL and 44 PBL customers were included in the OOT sample, with 3 customers overlapping between the two portfolios.
+
+OOT model scores were computed using the original factor weights and bucket scores. The calibrated model scores were then mapped to MS ratings and PDs. Key performance metrics were evaluated to assess rating stability and model robustness.
+
+PBL OOT Results:
+
+PSI: 0.042, indicating no significant shift.
+
+Average PD: 0.41%, close to development average of 0.394%.
+
+Kendall Tau (BU vs. OOT): 40.5%, vs. 46.2% in development.
+
+HHI: 21.1%, vs. 21.4% in development.
+
+KT (OOT vs. Development MS rating): 57.1%.
+
+Rating movements: 15 upgraded, 11 downgraded, 18 unchanged.
+
+Spread: Ratings remained across 6 buckets, indicating stable distribution.
 
 
-2. Statistical optimization to maximize the Kendall Tau correlation between model-derived risk ranks and RM-assigned BU ranks.
+LBL OOT Results:
+
+PSI: 0.363, indicating a significant shift in rating distribution.
+
+Average PD: 0.40%, same as in development.
+
+Kendall Tau (BU vs. OOT): 65.5%, improved from 61% in development.
+
+HHI: 20.4%, vs. 23.5% in development.
+
+KT (OOT vs. Development MS rating): 85.2%.
+
+Rating movements: 5 upgraded, 7 downgraded, 13 unchanged.
+
+Spread: Distribution reduced to 5 buckets (no customers in MS12).
+
+
+6.2.2 Benchmarking
+
+The OOT ratings were benchmarked against SCB’s internal BU ratings to evaluate the model’s ability to rank-order risk. Kendall Tau correlation and notch movement analysis were key benchmarking measures. In both portfolios, the model continued to display meaningful alignment with internal expectations.
+
+6.3 Sensitivity and Scenario Testing
+
+To test the impact of specific variables on model behavior, a sensitivity check was conducted for the LBL_PBL_RELATIONSHIP factor within the PBL portfolio. Using OOT data, this factor was replaced with its values from the development dataset, while all other factor values were retained from OOT.
+
+PSI (vs. Development): 0.076
+
+PSI (vs. OOT): 0.039
+
+
+These results indicate no significant impact of this factor on the model's predictive power or calibration, confirming robustness.
+
+Additionally, an analysis was conducted to understand the primary drivers behind the shift observed in the LBL portfolio. By calculating PSI values for individual factors, the following were identified as key contributors:
+
+AUM (excluding loan proceeds): PSI = 0.72
+
+KWR: PSI = 0.33
+
+LBL_PBL_RELATIONSHIP: PSI = 0.27
+
+
+The significant change in AUM values, in particular, was indicative of broader market-driven shifts that impacted portfolio characteristics.
+
+6.4 Robustness and Stability Testing
+
+The following metrics were computed to evaluate model stability and robustness over time:
+
+1. Population Stability Index (PSI)
+
+
+2. Transition Matrices
+
+
+3. Upgrade/Downgrade Analysis
+
+
+4. Rating Distribution
+
+
+5. Average PD
+
+
+6. Kendall Tau (OOT vs. BU Ratings)
+
+
+7. Kendall Tau (OOT vs. Development Ratings)
+
+
+8. Herfindahl-Hirschman Index (HHI)
+
+
+9. Accuracy Ratio
 
 
 
-The resulting models showed strong alignment with internal expert judgment while maintaining desirable statistical properties. A successful calibration to SCB’s internal Master Scale further validated the model. The calibration ensured that:
+Despite the LBL portfolio exhibiting significant shifts in the rating distribution (PSI > 0.25), the model’s performance remains robust and aligned with internal benchmarks. The PBL portfolio continued to show strong performance with minimal shifts and high alignment to development metrics.
 
-The average PD of the final distribution for LBL and PBL were 0.40% and 0.394%, respectively—very close to the agreed target PD of 0.39%.
+The model is successful in identifying shifts in client risk, as evidenced by changes in MS ratings and model scores, while maintaining overall stability. The results affirm the model’s capability to remain valid over time and across datasets.
 
-Higher model scores corresponded to lower PDs, in line with risk logic.
+6.5 Model Adjustments
 
-The customer distribution was well spread, as shown by healthy HHI values (23.5% for LBL, 21.4% for PBL).
-
-The Kendall Tau correlation between model score ranks and BU ranks was maintained at high levels to ensure interpretability and consistency.
-
-
-In conclusion, the final model strikes a balanced integration of statistical rigor, expert insight, and business applicability. It provides a transparent and defendable framework for risk ranking and monitoring, and sets a strong foundation for future credit risk management, portfolio segmentation, and strategy development.
+No structural model adjustments were deemed necessary following the OOT validation. However, the performance shift in the LBL portfolio is acknowledged and monitored. Detailed factor-level insights and sensitivity checks justify the observed behavior and will inform future model review cycles.
