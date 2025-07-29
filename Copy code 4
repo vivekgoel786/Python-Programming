@@ -1,4 +1,21 @@
-Before initiating the calibration process, a Comparable Default Trend (CDT) analysis was jointly conducted by S&P in collaboration with the SCB Business Unit (BU) team, modeling team, and domain experts to determine an appropriate target average Probability of Default (PD) for both the Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios. This critical step aimed to ensure that the calibrated PDs align with industry benchmarks and reflect realistic portfolio-level risk expectations. The analysis leveraged exposure-weighted PD data from peer institutions—specifically JB and UBS—for comparable Lombard and Mortgage portfolios spanning the period from 2017 to 2024. After extensive deliberations and multiple rounds of discussion, a target average PD of 0.39% was mutually agreed upon.
+The estimation of model parameters—namely bucket scores and factor weights—was carried out through a structured and iterative process combining business inputs and statistical optimization.
 
-Post calibration, the average PDs obtained were 0.40% for LBL and 0.394% for PBL, both of which are very close to the target and demonstrate a well-aligned calibration process. This reinforces the robustness of the model in capturing portfolio-level risk while staying anchored to business expectations and external benchmarks.
-A detailed file containing the CDT analysis, peer data, and supporting calculations is provided in the appendix for reference.
+1. Bucket Score Assignment:
+Each selected variable was bucketed based on its statistical risk differentiation ability and expert judgment. For numerical variables, meaningful ranges were created to capture patterns in default behaviour, while for categorical variables, similar response categories were grouped together to ensure stability and interpretability. For each bucket, scores were assigned on a scale from 0 to 10, where 10 represents the least risky profile and 0 the most risky. The scoring was guided by empirical analysis, including single-factor default rate distributions, and further refined through domain discussions to align with real-world risk interpretations.
+
+2. Factor Weight Estimation:
+A two-step approach was used to determine the weights of each factor in the model:
+
+Step 1 – Stakeholder-Based Ranking: Stakeholders were asked to rank each risk dimension by its perceived importance, and within each dimension, rank the contributing risk factors. This ensured that domain knowledge and business intuition were integrated into the model.
+
+Step 2 – Statistical Optimization: The initial rankings were then statistically optimized to maximize the Kendall Tau correlation between the model-derived client risk ranks and the risk ranks assigned by Relationship Managers (RMs). This allowed for a data-driven refinement of the weight structure, aligning the model more closely with expert intuition while maintaining statistical credibility.
+
+
+To ensure coherence:
+
+The sum of all final factor weights equals 100%, and
+
+The sum of factor weights within each dimension equals the dimension's weight.
+
+
+The final model weights were also manually fine-tuned based on expert judgment and to resolve any inconsistencies observed during optimization. This combination of business input and quantitative rigor ensures that the model is both interpretable and statistically sound.
