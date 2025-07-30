@@ -1,18 +1,43 @@
-Significance of AUM Buffer Ratio
+Given the highly specialized nature of the HNWI portfolios (Lombard Loan Book - LBL and Property-Backed Loan Book - PBL), the total population available for model development was limited to 73 customers, with no historical default events. Traditional statistical credit risk modeling techniques (such as logistic regression or machine learning classifiers) were therefore not feasible, due to the lack of both data volume and outcome events.
 
-The AUM Buffer Ratio was a derived variable created to assess a customer’s financial resilience and liquidity surplus in relation to their credit exposure. It is defined as:
+To address these limitations, a hybrid expert-statistical methodology was adopted. This approach combined qualitative expert judgment, drawn from RMs, Coverage Officers, and Business Unit (BU) stakeholders, with quantitative statistical techniques to ensure an interpretable, robust, and risk-aligned model.
 
-\text{AUM Buffer Ratio} = \frac{\text{AUM (excluding loan proceeds) + Credit Limit}}{\text{Credit Limit}}
+The methodology included the following key steps:
 
-This ratio essentially captures how much liquid or near-liquid wealth a client holds in excess of their sanctioned credit limit. A higher value of the AUM Buffer Ratio indicates that the customer has substantial financial assets relative to their borrowing, which serves as a buffer in case of financial stress or adverse events.
+Proxy Default Construction: Since the dataset lacked actual defaults, a proxy dependent variable was created using Risk Manager (RM)-assigned customer risk ranks. Customers rated in the riskiest categories (D2 and E) were assumed as proxy defaults (10 out of 73 customers).
 
-Interpretation:
+Questionnaire-based Variable Design: A comprehensive questionnaire was developed to collect information on all key risk dimensions relevant for HNWI clients (e.g., credit history, liquidity, wealth, legal compliance, personality, collateral).
 
-Ratio > 2.0: Indicates strong financial standing — client holds at least twice the assets compared to their credit limit, suggesting low dependency on borrowing.
+Statistical Factor Analysis (SFA): Each factor was statistically evaluated using techniques such as accuracy ratio, Kendall Tau correlation, and relative information entropy to assess discriminatory power and monotonicity.
 
-Ratio ~1.0: Assets roughly equal the credit limit, reflecting moderate liquidity but less financial cushion.
+Bucketing and Scoring: Factor values were grouped into risk buckets, which were then scored between 0 (risky) to 10 (least risky), balancing statistical signals with expert interpretability.
 
-Ratio < 1.0: Signals potential risk — client’s AUM excluding loan proceeds is less than the credit limit, raising concerns about over-leverage or insufficient unencumbered assets.
+Weight Optimization: Stakeholders ranked factor dimensions and factors, followed by statistical optimization of weights to maximize alignment with RM rankings using Kendall Tau correlation. Final weights were manually adjusted for business logic.
+
+Model Calibration: Final model scores were calibrated to the Bank’s Master Scale, targeting an average portfolio PD of 0.39%, which was determined through collaborative analysis with BU teams and S&P, referencing UBS and JB data.
 
 
-This metric was found to be particularly useful in differentiating clients with similar income profiles but varying liquidity strength, and played a critical role in enhancing the predictive power and financial interpretability of the model.
+This hybrid methodology enabled a meaningful and transparent PD model that aligns with business understanding, supports risk ranking, and compensates for the lack of historical default data by anchoring the model in domain expertise and sound statistical principles.
+
+
+---
+
+3.4 Methodology Assumptions and Limitations
+
+While the model was designed to be both practical and statistically grounded, several key assumptions and limitations need to be acknowledged:
+
+Reliance on Proxy Defaults: The model’s dependent variable is based on RM-assigned risk ranks, which are assumed to be accurate reflections of underlying credit risk. Any bias or inconsistency in RM assessments may affect model validity.
+
+Small Sample Size: With only 73 customers across both portfolios, the dataset lacks the statistical power typically needed for model robustness. This restricts the granularity of bucketing, limits outlier detection, and precludes standard model validation techniques like backtesting or out-of-sample testing.
+
+No Actual Default Events: The absence of real defaults prevents traditional model calibration or predictive validation, increasing the reliance on expert calibration and indirect metrics (e.g., accuracy ratio, Kendall Tau).
+
+Data Completeness and Variability: Not all factors are consistently available across both portfolios (e.g., Collateral Quality was available only for PBL; DSCR and Average MR only for LBL), which introduces challenges in maintaining a unified risk framework.
+
+Assumption of Static Risk Relationships: The model assumes that risk drivers and their influence remain stable over time, which may not hold true under changing economic conditions.
+
+Manual Adjustments and Judgment Bias: While manual tuning of factor weights and calibration ensures business relevance, it introduces an element of subjectivity and potential inconsistency.
+
+Data Quality and Treatment: Source data was cleaned, formatted, and standardized, but given the manual collection process, there is a possibility of data entry errors or inconsistent interpretation of questionnaire responses.
+
+Despite these constraints, the model provides a structured, transparent, and business-aligned approach to risk differentiation, suitable for low-default, high-value HNWI portfolios.
