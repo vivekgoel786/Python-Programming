@@ -1,121 +1,53 @@
-6. Model Validation
+The Probability of Default (PD) models developed for the Lombard (LBL) and Mortgage (PBL) portfolios have multiple strategic and operational applications within SCB's risk management framework. These uses span credit decisioning, portfolio oversight, capital allocation, and risk-based client engagement, enabling a more data-driven and consistent risk culture across the business. The key uses of the models are outlined below:
 
-6.1 Summary of Model Validation Results
+7.1 Credit Risk Assessment
 
-Following the finalization of the model, a comprehensive validation process was conducted to evaluate the performance, stability, and robustness of the model. The validation included in-time (development) testing, out-of-time (OOT) testing, backtesting, benchmarking against internal ratings, sensitivity and scenario testing, and key metric evaluations.
+Client-Level Risk Evaluation: The calibrated PD scores serve as quantitative measures of credit risk at the individual client level. These help in evaluating a customer’s likelihood of default based on holistic information across qualitative and quantitative dimensions.
 
-6.2 Performance Testing
+New-to-Bank Clients: For onboarding new clients, the models provide an early, structured risk view even when financial history is limited, using factors like relationship tenure, net worth, and behavioral proxies.
 
-6.2.1 Backtesting
+Reassessment of Existing Clients: The models facilitate periodic reassessment of client risk profiles, especially during reviews or material changes in financials, ensuring early identification of deterioration or improvement.
 
-6.2.1.1 In-Time Validation
 
-The model's in-time validation demonstrated strong discriminatory power, alignment with RM-assigned risk ranks, and good calibration with a target average PD of 0.39%. The development sample included 27 customers for LBL and 48 for PBL, with 2 overlapping customers. The model showed good distribution spread across 6 Master Scale buckets for both portfolios and high Kendall Tau correlations with BU risk rankings—46.2% for PBL and 61% for LBL. HHI values of 21.4% (PBL) and 23.5% (LBL) indicated healthy distribution diversity. Accuracy ratios and other relevant statistics were also found to be satisfactory.
+7.2 Risk-Based Pricing and Credit Limits
 
-6.2.1.2 Out-of-Time (OOT) Validation
+Risk-Adjusted Pricing: PD estimates can be integrated into pricing frameworks to align loan interest rates with client riskiness, ensuring a fair risk-return tradeoff.
 
-After the model was finalized, an OOT validation exercise was undertaken to assess stability and predictive power using updated data as of March 2025. A similar questionnaire-based data collection process was deployed. The RM team was provided with pre-filled responses for qualitative factors (e.g., personality risk, investment style, diversification), which remained largely unchanged. Time-dependent fields like age, lending relationship, and investing relationship were incremented by one year by SCB prior to RM engagement.
+Limit Setting and Exposure Management: PD scores can be used as inputs for setting or revising client-level and group-level credit limits. Clients with lower PDs may be eligible for higher exposure thresholds or product eligibility.
 
-RMs were asked to update more volatile quantitative data (e.g., master limit, net worth, AUM, DSCR, KWR). Post-submission, S&P performed a thorough data cleaning and formatting to ensure consistency with the development data. A total of 26 LBL and 44 PBL customers were included in the OOT sample, with 3 customers overlapping between the two portfolios.
 
-OOT model scores were computed using the original factor weights and bucket scores. The calibrated model scores were then mapped to MS ratings and PDs. Key performance metrics were evaluated to assess rating stability and model robustness.
+7.3 Portfolio Monitoring and Early Warning
 
-PBL OOT Results:
+Portfolio Risk Segmentation: The models enable segmentation of the portfolio into risk bands using calibrated PD buckets (e.g., MS7–MS12), allowing for targeted oversight of higher-risk segments.
 
-PSI: 0.042, indicating no significant shift.
+Early Warning Signals: Clients exhibiting upward rating migration (i.e., worsening PDs) over time can be flagged for proactive review and engagement, reducing the likelihood of credit events.
 
-Average PD: 0.41%, close to development average of 0.394%.
+Concentration Analysis: By assigning PDs consistently across the book, the models support analysis of risk concentrations by segment, geography, or RM book.
 
-Kendall Tau (BU vs. OOT): 40.5%, vs. 46.2% in development.
 
-HHI: 21.1%, vs. 21.4% in development.
+7.4 Capital Planning and Provisioning
 
-KT (OOT vs. Development MS rating): 57.1%.
+Regulatory Alignment: Though currently non-regulatory, the models can be leveraged for Internal Capital Adequacy Assessment Process (ICAAP) calculations or for preparing the portfolio for potential IRB transition.
 
-Rating movements: 15 upgraded, 11 downgraded, 18 unchanged.
+Loan Loss Provisions: PD scores can be used to estimate Expected Credit Loss (ECL) under IFRS 9 frameworks, particularly in assigning Stage 1 and Stage 2 classifications for lifetime ECL modeling.
 
-Spread: Ratings remained across 6 buckets, indicating stable distribution.
 
+7.5 Strategic Decision Making
 
-LBL OOT Results:
+Risk-Adjusted Growth: The models support strategic growth by enabling selective onboarding of clients with favorable PDs while maintaining portfolio quality.
 
-PSI: 0.363, indicating a significant shift in rating distribution.
+Product Development: Insights from score distributions and factor-level importance can guide the development or tailoring of financial products to suit varying client risk appetites.
 
-Average PD: 0.40%, same as in development.
 
-Kendall Tau (BU vs. OOT): 65.5%, improved from 61% in development.
+7.6 Internal Risk Governance
 
-HHI: 20.4%, vs. 23.5% in development.
+Alignment with BU Judgments: The strong Kendall Tau correlations between model scores and Business Unit (BU) assigned risk ranks help reinforce confidence among stakeholders, promoting consistency in risk language and culture.
 
-KT (OOT vs. Development MS rating): 85.2%.
+Performance Monitoring: Regular tracking of model outputs, average PDs, and transition matrices supports model performance reviews and audit readiness.
 
-Rating movements: 5 upgraded, 7 downgraded, 13 unchanged.
 
-Spread: Distribution reduced to 5 buckets (no customers in MS12).
+7.7 Business Planning and Reporting
 
+MIS & Reporting: PD model outputs can be integrated into risk dashboards and Management Information Systems (MIS) for monthly or quarterly reporting at client, RM, or portfolio level.
 
-6.2.2 Benchmarking
-
-The OOT ratings were benchmarked against SCB’s internal BU ratings to evaluate the model’s ability to rank-order risk. Kendall Tau correlation and notch movement analysis were key benchmarking measures. In both portfolios, the model continued to display meaningful alignment with internal expectations.
-
-6.3 Sensitivity and Scenario Testing
-
-To test the impact of specific variables on model behavior, a sensitivity check was conducted for the LBL_PBL_RELATIONSHIP factor within the PBL portfolio. Using OOT data, this factor was replaced with its values from the development dataset, while all other factor values were retained from OOT.
-
-PSI (vs. Development): 0.076
-
-PSI (vs. OOT): 0.039
-
-
-These results indicate no significant impact of this factor on the model's predictive power or calibration, confirming robustness.
-
-Additionally, an analysis was conducted to understand the primary drivers behind the shift observed in the LBL portfolio. By calculating PSI values for individual factors, the following were identified as key contributors:
-
-AUM (excluding loan proceeds): PSI = 0.72
-
-KWR: PSI = 0.33
-
-LBL_PBL_RELATIONSHIP: PSI = 0.27
-
-
-The significant change in AUM values, in particular, was indicative of broader market-driven shifts that impacted portfolio characteristics.
-
-6.4 Robustness and Stability Testing
-
-The following metrics were computed to evaluate model stability and robustness over time:
-
-1. Population Stability Index (PSI)
-
-
-2. Transition Matrices
-
-
-3. Upgrade/Downgrade Analysis
-
-
-4. Rating Distribution
-
-
-5. Average PD
-
-
-6. Kendall Tau (OOT vs. BU Ratings)
-
-
-7. Kendall Tau (OOT vs. Development Ratings)
-
-
-8. Herfindahl-Hirschman Index (HHI)
-
-
-9. Accuracy Ratio
-
-
-
-Despite the LBL portfolio exhibiting significant shifts in the rating distribution (PSI > 0.25), the model’s performance remains robust and aligned with internal benchmarks. The PBL portfolio continued to show strong performance with minimal shifts and high alignment to development metrics.
-
-The model is successful in identifying shifts in client risk, as evidenced by changes in MS ratings and model scores, while maintaining overall stability. The results affirm the model’s capability to remain valid over time and across datasets.
-
-6.5 Model Adjustments
-
-No structural model adjustments were deemed necessary following the OOT validation. However, the performance shift in the LBL portfolio is acknowledged and monitored. Detailed factor-level insights and sensitivity checks justify the observed behavior and will inform future model review cycles.
+Stress Testing Scenarios: The models can be extended for scenario analysis, enabling management to simulate the impact of macroeconomic shocks or adverse events on portfolio risk.
