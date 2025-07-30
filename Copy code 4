@@ -1,44 +1,118 @@
-The development of PD models for the Lombard (LBL) and Mortgage (PBL) portfolios was undertaken in a context characterized by unique challenges and data limitations. Given the nature of the portfolios and the lack of historical default data, a conventional statistical modeling approach was not feasible. This section outlines the key features, assumptions, and constraints associated with the input data used in model development.
+4.3 Data Analysis
 
-4.2.1 Small and Specialized Portfolio
+A thorough data analysis was conducted to evaluate the structure, relevance, and consistency of information available for both the Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios. The combined portfolio consisted of 73 unique high-net-worth individual (HNWI) clients, with 27 belonging to the LBL portfolio, 48 to the PBL portfolio, and 2 clients common to both.
 
-The customer base for both LBL and PBL is relatively small, consisting primarily of High-Net-Worth Individuals (HNWIs) with bespoke credit structures and complex financial profiles.
+Given the absence of historical defaults, a conventional PD model development approach was not feasible. To address this challenge, the dependent variable was constructed using expert judgment. Relationship Managers (RMs) and Credit Officers were asked to assign a relative risk rank to each customer, using the following scale: A, B1, B2, C1, C2, D1, D2, and E, with D2 and E considered as proxy defaults. As a result, 10 out of 73 customers were treated as proxy defaults, enabling a pseudo-binary target for model development.
 
-The available sample at the time of model development was limited in size, reducing the scope for traditional statistical estimation techniques such as logistic regression or machine learning-based risk models.
+Structured Factor Analysis (SFA) was carried out for each input factor to assess:
 
+Correlation with BU-assigned ranks,
 
-4.2.2 Absence of Internal Risk Ratings
+Discriminatory power, using metrics like Accuracy Ratio (AR),
 
-Unlike more mature corporate or retail portfolios, there were no pre-existing internal risk grades or scores assigned to customers by the bank.
+Relative Information Entropy (RIE), which examines how well-distributed a variable is across risk categories,
 
-This absence made it challenging to use supervised learning approaches that rely on historical rating or default outcomes as training targets.
-
-
-4.2.3 Zero-Default and Low-Default Nature
-
-The portfolios are new and have had no observed defaults to date. This “zero-default” environment significantly restricts the ability to calibrate models using actual historical performance data.
-
-Default rates are inherently low due to the financial strength of the client base and conservative lending policies, leading to a structurally “low-default” portfolio even as the book matures.
+Business alignment, ensuring that the risk ordering of buckets followed intuitive financial logic.
 
 
-4.2.4 Expert Judgment–Driven Model Design
+During the analysis, a new variable was also engineered:
 
-Given these constraints, a traditional statistical model was not viable. Instead, the development followed an Expert Judgment–Based Approach, structured and validated through a data-informed framework.
+AUM Buffer Ratio
 
-Inputs were sourced through workshops and consultations with Credit Officers (COs), Relationship Managers (RMs), and Business Unit (BU) stakeholders who possess deep qualitative knowledge of the clients and risk dynamics.
+\text{AUM Buffer Ratio} = \frac{\text{AUM (excluding loan proceeds) + Credit Limit}}{\text{Credit Limit}}
 
-These expert inputs were translated into quantifiable factors and scorecards, which were then supplemented by statistical validation techniques such as entropy analysis, score separation, and robustness checks to ensure empirical grounding.
-
-
-4.2.5 Calibration and Assumptions
-
-Since actual default data was not available, the model calibration was aligned to a target average PD of 0.39%, based on SCB’s internal benchmarks and expert consensus on portfolio risk.
-
-Factor-level weightings and score-to-rating mappings were defined through iterative calibration exercises to ensure consistency with expert views and intended risk segmentation.
+Factors with both strong statistical performance and business rationale were prioritized. However, a few variables were retained based on expert input despite lower SFA scores, due to their qualitative relevance to customer creditworthiness.
 
 
-4.2.6 Data Quality and Consistency
+---
 
-While historical depth was limited, the available customer information was of high quality and included both qualitative and quantitative attributes.
+4.4 Model Development Data
 
-To ensure consistency, factor values were collected through a standardized questionnaire, with clear guidelines provided to RMs and Credit for accurate and unbiased responses.
+The data used for model development was collected through a one-time structured questionnaire circulated among Credit Officers, Relationship Managers, and Business Units. This questionnaire was specially designed to capture all critical risk dimensions, including financial, behavioral, relationship, personality, legal, and background factors.
+Each question was structured to provide discrete multiple-choice responses, enabling standardized interpretation and scoring.
+
+Key characteristics of the dataset:
+
+73 unique customers, comprising 27 LBL and 48 PBL clients.
+
+No internal ratings or prior default events, reinforcing the need for expert-led risk ranking.
+
+Risk classification was manually assigned by RMs using predefined grades (A to E), which were later mapped into proxy default flags.
+
+
+The dataset included responses mapped to 15 variables under 7 dimensions for PBL, and 16 variables under 6 dimensions for LBL. While many variables were common to both portfolios, certain factors were portfolio-specific:
+
+Collateral Quality of Major Properties: available only for PBL.
+
+DSCR and Average Margin Requirement: available only for LBL.
+
+
+In addition to questionnaire responses, derived metrics like the AUM Buffer Ratio were computed using available raw data fields. These new variables provided deeper insight into a client's financial flexibility and overall risk posture.
+
+
+---
+
+4.5 Data Treatment and Transformation
+
+Extensive preprocessing steps were taken to convert raw inputs into a structured dataset suitable for model development and analysis. This included:
+
+1. Data Cleaning and Formatting
+
+Raw questionnaire responses and supporting data were first standardized and formatted using Python. This included:
+
+Removing duplicates and irrelevant entries,
+
+Standardizing categorical values (e.g., Yes/No responses),
+
+Ensuring consistent treatment of missing or non-applicable values,
+
+Creating derived variables such as the AUM Buffer Ratio.
+
+
+Python scripts were used to automate data ingestion and transformation, ensuring replicability and auditability of the preprocessing steps.
+
+2. Variable Bucketing and Scoring
+
+Each factor was bucketed into 3 to 5 risk levels, with:
+
+Higher-risk levels receiving lower scores (closer to 0),
+
+Lower-risk levels receiving higher scores (closer to 10).
+
+
+Bucket cut-offs were defined based on a combination of:
+
+Correlations with BU ranks,
+
+Accuracy Ratio and Relative Information Entropy (RIE),
+
+Qualitative business review to maintain logical interpretability.
+
+
+3. Factor Weight Assignment
+
+Stakeholders were engaged to rank the importance of each factor and dimension. This input was statistically optimized using Kendall Tau correlation to align model risk ranks with BU-assigned ranks. The weights were then fine-tuned manually to incorporate business judgment and reflect domain expertise.
+
+4. Final Score Computation and Ranking
+
+For each customer:
+
+Bucketed scores were multiplied by optimized factor weights,
+
+Aggregated into a composite model score,
+
+Customers were ranked in order of risk (higher score = lower risk).
+
+
+5. Calibration to Master Scale
+
+The final scores were then mapped to PD values using the bank’s master scale. A target average PD of 0.39% was used for calibration, referencing external HNWI benchmarks (e.g., UBS, JB). Score buckets were adjusted to:
+
+Ensure monotonicity in risk to PD mapping,
+
+Align with the Conservatism Threshold (CDT),
+
+Maintain acceptable Herfindahl-Hirschman Index (HHI) for portfolio diversification.
+
+
+This completed the transformation from raw expert inputs into a fully documented, explainable, and calibrated PD model suitable for HNWI risk assessment.
