@@ -1,53 +1,44 @@
-The Probability of Default (PD) models developed for the Lombard (LBL) and Mortgage (PBL) portfolios have multiple strategic and operational applications within SCB's risk management framework. These uses span credit decisioning, portfolio oversight, capital allocation, and risk-based client engagement, enabling a more data-driven and consistent risk culture across the business. The key uses of the models are outlined below:
+The development of PD models for the Lombard (LBL) and Mortgage (PBL) portfolios was undertaken in a context characterized by unique challenges and data limitations. Given the nature of the portfolios and the lack of historical default data, a conventional statistical modeling approach was not feasible. This section outlines the key features, assumptions, and constraints associated with the input data used in model development.
 
-7.1 Credit Risk Assessment
+4.2.1 Small and Specialized Portfolio
 
-Client-Level Risk Evaluation: The calibrated PD scores serve as quantitative measures of credit risk at the individual client level. These help in evaluating a customer’s likelihood of default based on holistic information across qualitative and quantitative dimensions.
+The customer base for both LBL and PBL is relatively small, consisting primarily of High-Net-Worth Individuals (HNWIs) with bespoke credit structures and complex financial profiles.
 
-New-to-Bank Clients: For onboarding new clients, the models provide an early, structured risk view even when financial history is limited, using factors like relationship tenure, net worth, and behavioral proxies.
-
-Reassessment of Existing Clients: The models facilitate periodic reassessment of client risk profiles, especially during reviews or material changes in financials, ensuring early identification of deterioration or improvement.
+The available sample at the time of model development was limited in size, reducing the scope for traditional statistical estimation techniques such as logistic regression or machine learning-based risk models.
 
 
-7.2 Risk-Based Pricing and Credit Limits
+4.2.2 Absence of Internal Risk Ratings
 
-Risk-Adjusted Pricing: PD estimates can be integrated into pricing frameworks to align loan interest rates with client riskiness, ensuring a fair risk-return tradeoff.
+Unlike more mature corporate or retail portfolios, there were no pre-existing internal risk grades or scores assigned to customers by the bank.
 
-Limit Setting and Exposure Management: PD scores can be used as inputs for setting or revising client-level and group-level credit limits. Clients with lower PDs may be eligible for higher exposure thresholds or product eligibility.
-
-
-7.3 Portfolio Monitoring and Early Warning
-
-Portfolio Risk Segmentation: The models enable segmentation of the portfolio into risk bands using calibrated PD buckets (e.g., MS7–MS12), allowing for targeted oversight of higher-risk segments.
-
-Early Warning Signals: Clients exhibiting upward rating migration (i.e., worsening PDs) over time can be flagged for proactive review and engagement, reducing the likelihood of credit events.
-
-Concentration Analysis: By assigning PDs consistently across the book, the models support analysis of risk concentrations by segment, geography, or RM book.
+This absence made it challenging to use supervised learning approaches that rely on historical rating or default outcomes as training targets.
 
 
-7.4 Capital Planning and Provisioning
+4.2.3 Zero-Default and Low-Default Nature
 
-Regulatory Alignment: Though currently non-regulatory, the models can be leveraged for Internal Capital Adequacy Assessment Process (ICAAP) calculations or for preparing the portfolio for potential IRB transition.
+The portfolios are new and have had no observed defaults to date. This “zero-default” environment significantly restricts the ability to calibrate models using actual historical performance data.
 
-Loan Loss Provisions: PD scores can be used to estimate Expected Credit Loss (ECL) under IFRS 9 frameworks, particularly in assigning Stage 1 and Stage 2 classifications for lifetime ECL modeling.
-
-
-7.5 Strategic Decision Making
-
-Risk-Adjusted Growth: The models support strategic growth by enabling selective onboarding of clients with favorable PDs while maintaining portfolio quality.
-
-Product Development: Insights from score distributions and factor-level importance can guide the development or tailoring of financial products to suit varying client risk appetites.
+Default rates are inherently low due to the financial strength of the client base and conservative lending policies, leading to a structurally “low-default” portfolio even as the book matures.
 
 
-7.6 Internal Risk Governance
+4.2.4 Expert Judgment–Driven Model Design
 
-Alignment with BU Judgments: The strong Kendall Tau correlations between model scores and Business Unit (BU) assigned risk ranks help reinforce confidence among stakeholders, promoting consistency in risk language and culture.
+Given these constraints, a traditional statistical model was not viable. Instead, the development followed an Expert Judgment–Based Approach, structured and validated through a data-informed framework.
 
-Performance Monitoring: Regular tracking of model outputs, average PDs, and transition matrices supports model performance reviews and audit readiness.
+Inputs were sourced through workshops and consultations with Credit Officers (COs), Relationship Managers (RMs), and Business Unit (BU) stakeholders who possess deep qualitative knowledge of the clients and risk dynamics.
+
+These expert inputs were translated into quantifiable factors and scorecards, which were then supplemented by statistical validation techniques such as entropy analysis, score separation, and robustness checks to ensure empirical grounding.
 
 
-7.7 Business Planning and Reporting
+4.2.5 Calibration and Assumptions
 
-MIS & Reporting: PD model outputs can be integrated into risk dashboards and Management Information Systems (MIS) for monthly or quarterly reporting at client, RM, or portfolio level.
+Since actual default data was not available, the model calibration was aligned to a target average PD of 0.39%, based on SCB’s internal benchmarks and expert consensus on portfolio risk.
 
-Stress Testing Scenarios: The models can be extended for scenario analysis, enabling management to simulate the impact of macroeconomic shocks or adverse events on portfolio risk.
+Factor-level weightings and score-to-rating mappings were defined through iterative calibration exercises to ensure consistency with expert views and intended risk segmentation.
+
+
+4.2.6 Data Quality and Consistency
+
+While historical depth was limited, the available customer information was of high quality and included both qualitative and quantitative attributes.
+
+To ensure consistency, factor values were collected through a standardized questionnaire, with clear guidelines provided to RMs and Credit for accurate and unbiased responses.
