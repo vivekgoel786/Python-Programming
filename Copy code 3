@@ -1,110 +1,18 @@
-6.1 Summary of Model Validation Results
+Significance of AUM Buffer Ratio
 
-The final models for both Lombard (LBL) and Mortgage (PBL) portfolios underwent a comprehensive validation process. This included in-time validation, out-of-time (OOT) testing, benchmarking, sensitivity analysis, and stability assessments. The objective was to evaluate the predictive power, robustness, and generalizability of the models using recent data as of March 2025.
+The AUM Buffer Ratio was a derived variable created to assess a customer’s financial resilience and liquidity surplus in relation to their credit exposure. It is defined as:
 
-6.2 Performance Testing
+\text{AUM Buffer Ratio} = \frac{\text{AUM (excluding loan proceeds) + Credit Limit}}{\text{Credit Limit}}
 
-6.2.1 Backtesting
+This ratio essentially captures how much liquid or near-liquid wealth a client holds in excess of their sanctioned credit limit. A higher value of the AUM Buffer Ratio indicates that the customer has substantial financial assets relative to their borrowing, which serves as a buffer in case of financial stress or adverse events.
 
-6.2.1.1 In-Time Validation
+Interpretation:
 
-During development, the models were rigorously tested against SCB’s internal benchmarks using Kendall Tau (KT) correlation with BU-assigned ranks, score distributions, and average predicted default rates (PDs). The LBL model demonstrated a KT of 61.0% with BU ratings, and the PBL model showed a KT of 46.2%. Average PDs from calibration closely matched the target PD of 0.39% (0.40% for LBL and 0.394% for PBL), confirming alignment with expectations. Factor-level score differentiation and information entropy were also verified to ensure statistical rigor.
+Ratio > 2.0: Indicates strong financial standing — client holds at least twice the assets compared to their credit limit, suggesting low dependency on borrowing.
 
-6.2.1.2 Out-of-Time (OOT) Validation
+Ratio ~1.0: Assets roughly equal the credit limit, reflecting moderate liquidity but less financial cushion.
 
-To assess model stability and performance over time, an OOT validation exercise was conducted using updated customer data as of March 2025. A total of 26 customers were included in the LBL OOT sample (compared to 27 in development), and 44 in the PBL OOT sample (compared to 48 previously). There were 3 customers common to both portfolios, compared to 2 in development.
-
-The OOT data collection process used a similar questionnaire template to the development phase. Most qualitative factors such as Personality Riskiness/Stability, Investment Style, and Diversification showed no change and were pre-populated. Factors like Age and Relationship Tenure were adjusted by SCB to reflect the passage of time. RMs were responsible for updating dynamic financial values such as Master Limit, Net Worth, AUM, DSCR, and KWR.
-
-S&P conducted thorough data cleaning and ensured that the variable structure and quality were consistent with the development dataset. Using the finalized factor weights, buckets, and scores, each OOT record was scored, and Master Scale (MS) ratings and calibrated PDs were assigned.
-
-Key performance metrics calculated included:
-
-Population Stability Index (PSI)
-
-Transition matrix
-
-Rating upgrades/downgrades
-
-Average PD
-
-Kendall Tau correlation with BU and development ratings
-
-Herfindahl-Hirschman Index (HHI)
-
-Accuracy Ratio
+Ratio < 1.0: Signals potential risk — client’s AUM excluding loan proceeds is less than the credit limit, raising concerns about over-leverage or insufficient unencumbered assets.
 
 
-PBL Portfolio (OOT):
-
-PSI: 0.042 (well below 0.1; indicates stable rating distribution)
-
-Rating Changes: 15 upgrades, 11 downgrades, 18 unchanged
-
-Average PD: 0.41% vs. 0.394% in development
-
-KT with BU rating: 40.5% (vs. 46.2% in development)
-
-HHI: 21.1% (vs. 21.4% in development)
-
-KT with Development MS Rating: 57.1%
-
-Rating buckets covered: 6 (same as development, with near-normal distribution)
-
-
-LBL Portfolio (OOT):
-
-PSI: 0.363 (significant shift from development, exceeding the 0.25 threshold)
-
-Rating Changes: 5 upgrades, 7 downgrades, 13 unchanged
-
-Average PD: 0.40% (same as development)
-
-KT with BU rating: 65.5% (vs. 61.0% in development)
-
-HHI: 20.4% (vs. 23.5% in development)
-
-KT with Development MS Rating: 85.2%
-
-Rating buckets covered: 5 (down from 6; no customers in MS12 bucket)
-
-
-Despite the shift in distribution for the LBL portfolio, model performance remains robust. Investigation revealed that the PSI shifts were largely due to changes in key factors:
-
-AUM Excluding Loan Proceeds (PSI: 0.72)
-
-KWR (PSI: 0.33)
-
-LBL_PBL_Relationship (PSI: 0.27)
-
-
-6.2.2 Benchmarking
-
-Model performance was benchmarked using internal ratings provided by SCB Relationship Managers and expert analysts. Metrics such as Kendall Tau correlation, average PD alignment, and rating transitions confirmed the models’ ability to reflect creditworthiness consistently with expert judgment. In both portfolios, the final PD distributions closely matched the target value of 0.39%, confirming effective calibration.
-
-6.3 Sensitivity and Scenario Testing
-
-To assess model sensitivity, we evaluated the impact of the LBL_PBL_Relationship factor on the PBL model. We used OOT sample data but replaced responses to this specific factor with values from the development phase. New scores and ratings were calculated:
-
-PSI vs. Development: 0.076
-
-PSI vs. OOT: 0.039
-
-
-These low PSI values confirm that the LBL_PBL_Relationship factor has negligible impact on PBL model stability.
-
-6.4 Robustness and Stability Testing
-
-Robustness was assessed through PSI analysis, KT metrics, and HHI. The PBL model demonstrated strong stability, with low PSI and consistent average PDs, score distributions, and risk ranks. The LBL model exhibited greater shifts, primarily driven by market changes affecting AUM, KWR, and cross-portfolio relationships. However, model structure and predictive power remained intact.
-
-The transition matrices and upgrade/downgrade patterns further validate the models’ dynamic capabilities, showing appropriate movement in ratings based on updated financial and behavioral data.
-
-6.5 Model Adjustments
-
-No structural changes to the model were deemed necessary based on the validation results. All observed shifts were justified by changes in underlying data rather than model shortcomings. The models remain well-calibrated, interpretable, and aligned with both statistical and business requirements.
-
-A detailed file with the full OOT analysis is included in the Appendix for reference.
-
-
-
-I attempted to add comments to your document to suggest elaborating on how the model’s performance is demonstrated and to revise a directive statement for a more formal tone. However, the comment insertion failed because the system couldn't locate the exact phrases within the document text.
+This metric was found to be particularly useful in differentiating clients with similar income profiles but varying liquidity strength, and played a critical role in enhancing the predictive power and financial interpretability of the model.
