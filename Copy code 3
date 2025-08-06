@@ -1,21 +1,21 @@
-Start
- ↓
-Identify Financial Asset
- ↓
-Is Asset in ECL Scope? -- No → Exclude
- ↓ Yes
-Assess for Significant Increase in Credit Risk (SICR)
- ↓
-Classify into Stage (1, 2, 3)
- ↓
-Gather PD, LGD, EAD
- ↓
-Apply Forward-Looking Adjustments
- ↓
-Calculate ECL = PD × LGD × EAD
- ↓
-Discount ECL to Present Value
- ↓
-Recognize ECL in Financials
- ↓
-End
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.stats.diagnostic import acorr_ljungbox
+
+series = df['GDP'].dropna()
+
+# ADF Test
+adf_result = adfuller(series)
+print(f"ADF Statistic: {adf_result[0]:.4f}")
+print(f"p-value: {adf_result[1]:.4f}")
+if adf_result[1] < 0.05:
+    print("✅ Series is stationary.")
+else:
+    print("❌ Series is non-stationary.")
+
+# Ljung-Box Test
+ljung_result = acorr_ljungbox(series, lags=[10], return_df=True)
+print(ljung_result)
+if ljung_result['lb_pvalue'].iloc[0] < 0.05:
+    print("❌ Autocorrelation detected.")
+else:
+    print("✅ No significant autocorrelation.")
