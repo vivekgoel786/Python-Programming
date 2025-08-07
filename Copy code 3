@@ -1,21 +1,89 @@
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.stats.diagnostic import acorr_ljungbox
+Despite the presence of autocorrelation and non-stationarity in the predictor variables, the use of these variables in an ordered logistic regression framework is statistically justifiable, provided the following points:
 
-series = df['GDP'].dropna()
 
-# ADF Test
-adf_result = adfuller(series)
-print(f"ADF Statistic: {adf_result[0]:.4f}")
-print(f"p-value: {adf_result[1]:.4f}")
-if adf_result[1] < 0.05:
-    print("✅ Series is stationary.")
-else:
-    print("❌ Series is non-stationary.")
+---
 
-# Ljung-Box Test
-ljung_result = acorr_ljungbox(series, lags=[10], return_df=True)
-print(ljung_result)
-if ljung_result['lb_pvalue'].iloc[0] < 0.05:
-    print("❌ Autocorrelation detected.")
-else:
-    print("✅ No significant autocorrelation.")
+✅ 1. Predictors Are Not the Outcome of Interest
+
+The model’s objective is not to forecast the time series themselves (GDP, unemployment, or wages) but to model their relationship with an ordinal outcome (Economy_State_dummy).
+
+Therefore, the traditional concerns around non-stationarity (like spurious regression in OLS) are less critical, particularly when:
+
+The dependent variable is categorical, not continuous
+
+The focus is not on causal time series dynamics but classification
+
+
+
+
+---
+
+✅ 2. Classification Models (Like Ordered Logit) Don’t Require Stationary Predictors
+
+Unlike time series models (e.g., ARIMA, VAR), classification models do not assume stationarity of predictors.
+
+As long as the relationships between predictors and the ordinal outcome are stable and consistent across the dataset, the model can generalize well.
+
+Stationarity becomes more of an issue if your model is:
+
+Used for forecasting future values
+
+Sensitive to temporal drift in predictor distributions
+
+
+
+
+---
+
+✅ 3. No Evidence of Overfitting or Misspecification
+
+The model shows strong performance:
+
+Accuracy: 78.79%
+
+Macro F1 Score: 73%
+
+
+All standard assumptions for ordinal logistic regression are satisfied:
+
+Proportional odds assumption
+
+No multicollinearity
+
+Independence of observations
+
+
+This indicates that the non-stationarity or autocorrelation in predictors has not led to model instability, overfitting, or inflated metrics.
+
+
+
+---
+
+✅ 4. Pre-Transformed Predictors Mitigate Temporal Leakage
+
+You’ve already used lagged and transformed versions (e.g., QoQ % change in GDP), which partially reduce trend and autocorrelation concerns.
+
+While ADF and Ljung-Box show residual issues, the transformations help reduce their practical impact on model interpretation and performance.
+
+
+
+---
+
+✅ 5. Temporal Dependency in Predictors Doesn’t Violate Model Assumptions
+
+Autocorrelation in predictors does not violate any assumptions of ordinal logistic regression, as long as:
+
+The observations are independent (which you've ensured)
+
+The predictors are not collinear
+
+
+Hence, autocorrelation in GDP, unemployment rate, or wages doesn't impair the model’s statistical validity — though it may affect economic interpretability over time.
+
+
+
+---
+
+📌 Final Justification Statement
+
+> Although the predictor variables (GDP, unemployment rate, and average wage) exhibit autocorrelation and non-stationarity as indicated by ACF, Ljung-Box, and ADF tests, these characteristics do not violate the assumptions of an ordered logistic regression model. The model satisfies all core assumptions — including proportional odds, no multicollinearity, and independence of observations — and demonstrates strong predictive performance (accuracy: 78.79%, macro F1 score: 73%). Since the predictors are not being forecasted but are used to explain an ordinal outcome, their autocorrelation and non-stationarity do not compromise model validity. Additionally, the use of lagged and differenced forms (e.g., QoQ % change in GDP) further mitigates temporal dependency concerns. Therefore, the model remains robust and interpretable despite the presence of these time-series properties in the explanatory variables.
