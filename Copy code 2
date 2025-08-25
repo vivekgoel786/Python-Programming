@@ -1,7 +1,31 @@
-Among the cases analyzed, 12 customers had a "less than 1 year" lending relationship in the 2024 data. Upon recalculating their model scores and corresponding ratings under the adjusted inputs:
+After finalizing the model development, calibration (MS7 to MS12), and overlay warning signals, an important business question was raised:
+Should loan applications be automatically approved for all customers falling within MS12, or should a minimum model score threshold be applied to reject high-risk cases?
 
-•	Most of them(8 customers) retained the same rating as before.
+To address this, Standard Chartered Bank (SCB) conducted a detailed mock-up case analysis for both PBL (Property-Backed Lending) and LBL (Lombard-Backed Lending) portfolios. The objective was to identify the lowest feasible model score observed among potential customers and establish a threshold cut-off for rejection.
 
-•	Only 4 customers showed an improvement in their rating by 1 notch.
+Key Findings from Mock-Up Case Analysis
 
-For the 4 customers that have migrated had the final score around the threshold between successive ratings, hence small changes in the score had an impact. This indicates that increased lending tenure alone does not have a significant or consistent influence on the model rating. This outcome is aligned with the design of the scorecard. To summarize, while longer client relationships may add incremental confidence from a business perspective, their isolated impact on the scorecard output is limited, reflecting the factor's calibrated role in the overall risk assessment framework.
+A comprehensive review of customer-level cases revealed that the minimum observed model score was 1.
+
+Based on this, a new rejection bucket, MS13, was created.
+
+The model score ranges were updated as follows:
+
+MS13: 0 to 1 (Rejection Category)
+
+MS12: >1 to 4 (Acceptable Risk Category, subject to other criteria)
+
+
+
+Implementation of Rejection Rule
+
+Any customer with a model score ≤ 1 will automatically be assigned an MS13 rating.
+
+Applications falling in MS13 will be rejected without further credit approval, ensuring that extremely high-risk customers do not enter the portfolio.
+
+This threshold serves as a minimum entry safeguard, complementing the calibrated model scores and expert-judgment overlays.
+
+
+Supporting Analysis
+
+The full details of the mock-up case analysis, including portfolio examples and scoring distributions for PBL and LBL customers, have been documented and are provided in the Appendix for reference.
