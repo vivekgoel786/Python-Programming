@@ -1,38 +1,29 @@
-Following the development, calibration, and prototype finalization of the PD model for the HNWI portfolios, it was recognized that certain qualitative, event-driven risk considerations were not fully captured in the model’s statistical and expert-judgment framework. To address this, an overlay adjustment mechanism was introduced to incorporate additional factors that can materially influence a customer’s credit risk profile.
+import numpy as np
+from scipy.stats import norm
 
-Additional Factors Considered
+# Predicted cumulative probabilities
+pred_cdf = res.model.cdf(np.dot(res.model.exog, res.params[:-2])[:, None] - res.params[-2:])
 
-The following binary (Yes/No) factors were identified based on business experience, RM inputs, and portfolio monitoring insights:
+# Function to compute RQRs
+def randomized_quantile_residuals(y, pred_probs):
+    rqr = []
+    for i, yi in enumerate(y):
+        # CDF lower and upper bounds
+        lower = pred_probs[i, yi-1] if yi > 0 else 0.0
+        upper = pred_probs[i, yi]
+        
+        # Random uniform between bounds
+        u = np.random.uniform(lower, upper)
+        
+        # Normal quantile
+        r = norm.ppf(u)
+        rqr.append(r)
+    return np.array(rqr)
 
-1. Past Performance – Historical repayment discipline, arrears history, and adherence to contractual terms.
+y = df["economy_state"].cat.codes  # convert to 0,1,2 if categorical
+probs = res.model.predict(res.params, exog=res.model.exog, which="prob")  # category probs
 
+# Convert to cumulative probs
+cdf_probs = probs.cumsum(axis=1)
 
-2. Legal – Any ongoing or past legal disputes, litigations, or regulatory actions involving the customer.
-
-
-3. Margin Call – Instances where the customer has breached collateral coverage thresholds, triggering margin calls.
-
-
-4. Other Factors – Any other significant adverse developments affecting the customer’s financial stability or reputation, as identified by the RM or BU.
-
-
-
-Each factor was classified into High Risk or Low Risk categories based on its potential severity and impact.
-
-Adjustment Matrix
-
-A downgrade matrix was developed to systematically translate the presence of these factors into model score adjustments. The approach ensures consistency and transparency in applying qualitative overrides.
-
-Number of High-Risk Factors Present	Downgrade Applied
-
-0 or 1	No downgrade
-2	2-notch downgrade
-3	3-notch downgrade
-4	4-notch downgrade
-
-
-If low-risk factors are present, they are monitored but do not automatically trigger a downgrade unless accompanied by high-risk factors as per the matrix.
-
-Rationale
-
-This overlay serves as a prudential safeguard, ensuring that customers with otherwise strong model-predicted scores are not overrated if there are material qualitative concerns. It reflects the Bank’s risk appetite and aligns the final rating closer to the true underlying credit risk.
+rqr = randomized_quantile_residuals(y, cdf_probs)
