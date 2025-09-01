@@ -1,1 +1,31 @@
-The concepts of Expected Credit Loss (ECL) and Risk-Weighted Assets (RWA) capital adequacy are fundamental to financial reporting as they together ensure transparency, resilience, and stability in the financial system. ECL, under IFRS 9, enables timely recognition of expected losses, providing a forward-looking view of credit risk in the income statement and balance sheet. RWA-based capital adequacy, under Basel regulations, ensures that banks hold sufficient capital to absorb unexpected losses, safeguarding solvency and financial stability. Together, ECL and RWA present a holistic picture of both earnings quality and capital strength, thereby enhancing investor confidence and regulatory compliance.
+import numpy as np
+from scipy.stats import norm
+
+# Predicted probabilities for each class
+pred_probs = res.model.predict(res.params, which="prob")  # (n_samples, 3)
+observed = df["Economy_state_dummy"].cat.codes  # 0=poor, 1=normal, 2=good
+
+# Surrogate residual function
+def surrogate_residuals(y, probs, link="logit"):
+    r = []
+    for i, yi in enumerate(y):
+        cdf = np.cumsum(probs[i])   # cumulative probabilities
+
+        lower = 0.0 if yi == 0 else cdf[yi-1]
+        upper = cdf[yi]
+
+        # Draw a random uniform in (lower, upper)
+        u = np.random.uniform(lower, upper)
+
+        # Inverse link (logit or probit)
+        if link == "logit":
+            s = np.log(u / (1 - u))   # logit^-1
+        elif link == "probit":
+            s = norm.ppf(u)          # Φ^-1
+        else:
+            raise ValueError("link must be 'logit' or 'probit'")
+        r.append(s)
+    return np.array(r)
+
+# Compute surrogate residuals
+surr_resid = surrogate_residuals(observed, pred_probs, link="logit")
