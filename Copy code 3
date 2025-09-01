@@ -29,3 +29,32 @@ def surrogate_residuals(y, probs, link="logit"):
 
 # Compute surrogate residuals
 surr_resid = surrogate_residuals(observed, pred_probs, link="logit")
+
+
+
+
+
+
+
+import matplotlib.pyplot as plt
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.stats.stattools import durbin_watson
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.stats.diagnostic import acorr_ljungbox
+
+# ACF plot
+plot_acf(surr_resid, lags=20)
+plt.show()
+
+# Durbin-Watson
+dw_stat = durbin_watson(surr_resid)
+print("Durbin–Watson:", dw_stat)  # ~2 = no autocorrelation
+
+# ADF stationarity test
+adf_stat, pval, _, _, _, _ = adfuller(surr_resid)
+print("ADF statistic:", adf_stat, " p-value:", pval)
+# p < 0.05 => residuals are stationary
+
+# Ljung-Box test for autocorrelation
+lb = acorr_ljungbox(surr_resid, lags=[10], return_df=True)
+print(lb)
