@@ -1,60 +1,111 @@
-import numpy as np
-from scipy.stats import norm
+Here’s a summary of the paper you uploaded: “Residuals and Diagnostics for Ordinal Regression Models: A Surrogate Approach” by Dungang Liu and Heping Zhang (JASA, 2018).
 
-# Predicted probabilities for each class
-pred_probs = res.model.predict(res.params, which="prob")  # (n_samples, 3)
-observed = df["Economy_state_dummy"].cat.codes  # 0=poor, 1=normal, 2=good
 
-# Surrogate residual function
-def surrogate_residuals(y, probs, link="logit"):
-    r = []
-    for i, yi in enumerate(y):
-        cdf = np.cumsum(probs[i])   # cumulative probabilities
+---
 
-        lower = 0.0 if yi == 0 else cdf[yi-1]
-        upper = cdf[yi]
+🔑 Motivation
 
-        # Draw a random uniform in (lower, upper)
-        u = np.random.uniform(lower, upper)
+Ordinal regression models (e.g., probit, logit, cumulative link) are widely used in medicine, social sciences, and economics.
 
-        # Inverse link (logit or probit)
-        if link == "logit":
-            s = np.log(u / (1 - u))   # logit^-1
-        elif link == "probit":
-            s = norm.ppf(u)          # Φ^-1
-        else:
-            raise ValueError("link must be 'logit' or 'probit'")
-        r.append(s)
-    return np.array(r)
+Unlike linear regression, there has been a lack of effective residual-based diagnostics for ordinal outcomes.
 
-# Compute surrogate residuals
-surr_resid = surrogate_residuals(observed, pred_probs, link="logit")
+Traditional residuals (like Pearson or SBS residuals) have limitations:
+
+Depend on arbitrary category labels.
+
+Discrete distributions → hard to interpret.
+
+Show unusual patterns even when models are correctly specified.
 
 
 
 
+---
+
+🧩 Proposed Method: Surrogate Residuals
+
+Introduces a continuous surrogate variable (S) that represents the ordinal outcome.
+
+Defines residuals as .
+
+This approach transforms ordinal outcomes into a continuous diagnostic framework.
 
 
 
-import matplotlib.pyplot as plt
-from statsmodels.graphics.tsaplots import plot_acf
-from statsmodels.stats.stattools import durbin_watson
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.stats.diagnostic import acorr_ljungbox
+---
 
-# ACF plot
-plot_acf(surr_resid, lags=20)
-plt.show()
+📊 Key Properties
 
-# Durbin-Watson
-dw_stat = durbin_watson(surr_resid)
-print("Durbin–Watson:", dw_stat)  # ~2 = no autocorrelation
+1. Null distribution of residuals is explicit and invariant to covariates (unlike SBS residuals).
 
-# ADF stationarity test
-adf_stat, pval, _, _, _, _ = adfuller(surr_resid)
-print("ADF statistic:", adf_stat, " p-value:", pval)
-# p < 0.05 => residuals are stationary
 
-# Ljung-Box test for autocorrelation
-lb = acorr_ljungbox(surr_resid, lags=[10], return_df=True)
-print(lb)
+2. Symmetry and constant variance under correct model specification.
+
+
+3. Monotonicity: residuals preserve ordering of categories.
+
+
+4. Residuals resemble those in linear regression, enabling the use of:
+
+QQ plots
+
+Residual vs. covariate plots
+
+Density plots
+
+Goodness-of-fit measures
+
+
+
+
+
+---
+
+🛠 Diagnostic Power
+
+Surrogate residuals can detect:
+
+Mean structure misspecification (e.g., missing nonlinear terms).
+
+Incorrect link function (e.g., probit vs. skewed link).
+
+Heteroscedasticity (non-constant variance).
+
+Proportionality assumption violations in ordinal models.
+
+Mixed populations / missing covariates (bimodal residual distributions).
+
+
+
+---
+
+🧪 Applications
+
+Demonstrated through simulations.
+
+Applied to the SAGE genetic study on alcohol dependence:
+
+Detected need to adjust for age and study effects.
+
+Helped refine the model, improving goodness-of-fit.
+
+
+
+
+---
+
+📌 Contributions
+
+Provides a general residual framework for ordinal regression, with better theoretical properties than earlier methods (like SBS residuals).
+
+Extends naturally to binary models and more general categorical models (via jittering).
+
+Offers diagnostic insights beyond a single p-value test, guiding model improvement.
+
+
+
+---
+
+✅ In Summary
+
+The paper introduces surrogate residuals as a powerful new diagnostic tool for ordinal regression models. These residuals behave like continuous residuals, enabling familiar diagnostic techniques and offering deeper insights into model misspecification (mean, link, variance, proportionality, covariate effects). Compared to older methods, surrogate residuals are more robust, interpretable, and practically useful.
