@@ -1,32 +1,48 @@
-from scipy.stats import norm
+Here’s a clear summary of the paper titled “Residuals and Diagnostics for Binary and Ordinal Regression Models: An Introduction to the sure Package” (R Journal 2018, Vol 10(1), pp 381–394), authored by Greenwell, McCarthy, Boehmke, and Liu:
 
-# predicted_probs: shape (n_samples, 3)
-# observed: vector of observed classes (0, 1, 2)
 
-rqr = []
+---
 
-for i in range(len(observed)):
-    y = observed[i]
-    
-    # Get cumulative predicted probabilities
-    cdf = np.cumsum(predicted_probs[i])
-    
-    if y == 0:
-        lower = 0.0
-        upper = cdf[0]
-    elif y == 1:
-        lower = cdf[0]
-        upper = cdf[1]
-    elif y == 2:
-        lower = cdf[1]
-        upper = cdf[2]
-    
-    # Draw a random uniform value between lower and upper CDF
-    #u = np.random.uniform(lower, upper)
-    u = (lower + upper) / 2 
-    
-    # Randomized quantile residual
-    r = norm.ppf(u)
-    rqr.append(r)
+Overview & Motivation
 
-rqr = np.array(rqr)
+Regression models for binary and ordinal outcomes—such as logistic regression or cumulative link models—do not yield residuals that are as straightforward to interpret or diagnose as those in ordinary linear regression .
+
+Consequently, residual diagnostics are underused in practice, despite their importance in model checking (e.g., detecting misspecification, heteroscedasticity, or non-proportionality) .
+
+
+Main Contribution: The sure Package
+
+The authors introduce the R package sure, which implements a method based on SUrrogate REsiduals (surrogate residuals) originally described by Liu & Zhang (2017) .
+
+This approach constructs continuous residuals for discrete models, enabling the generation of diagnostic plots akin to those used in standard linear regression.
+
+
+Key Features of the Method
+
+The surrogate residuals apply to a broad class of models of the form:
+
+
+\mathcal{Y} \sim F_a(y; \mathbf{X}, \boldsymbol{\beta})
+
+These surrogate residuals make assumptions and model evaluation—such as checking for link function mis‐specification, proportionality, heteroscedasticity, and interaction effects—visually and analytically accessible via plots .
+
+
+Demonstrations & Validation
+
+The paper illustrates the properties and utility of surrogate residuals using simulated datasets.
+
+The authors show how diagnostic plots produced using sure can highlight various model misfits, closely mirroring the interpretability offered by residual diagnostics in classical linear regression contexts .
+
+
+
+---
+
+In Summary
+
+Problem: Traditional residual-based diagnostics are difficult or unintuitive in binary/ordinal regression contexts.
+
+Solution: The sure package introduces surrogate residuals that produce interpretable, continuous diagnostics.
+
+Utility: These residuals and corresponding plots help practitioners detect issues like misspecified link functions, non-proportionality, heteroscedasticity, and interactions—all common model pitfalls—more easily.
+
+Validation: Demonstrated via simulations and modeled examples in the paper.
