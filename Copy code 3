@@ -1,31 +1,43 @@
-The choice of methodology was guided by the nature of the dependent variable, regulatory requirements under IFRS9, and the practical constraints of the portfolio.
+The methodology rests on a set of key assumptions and acknowledges certain limitations that are important for interpreting the model’s outputs.
 
-A standard binary logistic regression was first considered but rejected because the dependent variable, Economy State, is not binary but ordinal with three ordered categories (Poor < Normal < Good). Treating these categories as nominal would ignore their inherent ranking, while collapsing them into a binary variable would result in significant information loss.
+1. Economy Tagging Assumptions
 
-An Ordered Logit Model (OLM) was therefore selected as the core methodology for the Macro Model. The OLM is particularly suitable because:
+The construction of the dependent variable (Economy State) assumes that historical crisis periods (e.g., the Lehman Brothers collapse in 2008–09 and the COVID-19 pandemic in 2020–21) and equity market movements provide a reliable proxy for systemic stress.
 
-It respects the ordinal structure of the dependent variable, ensuring that estimates capture the monotonic progression from Poor to Normal to Good.
-
-It operates under the proportional odds assumption, which simplifies interpretation by assuming that the relationship between independent variables and the odds of being in a “higher” economic state is consistent across thresholds. This is a natural fit for modelling macroeconomic cycles.
-
-It provides a parsimonious yet interpretable framework, allowing results to be communicated clearly to stakeholders and regulators.
-
-It is statistically robust and widely used in credit risk modelling where ordered risk ratings or economic states are involved.
+The tagging criterion, based on the 80th percentile threshold of SET index quarterly changes, is assumed to robustly distinguish Good, Normal, and Poor economic states. This assumes that past equity performance is a valid indicator of macro-financial health.
 
 
-Once the Macro Model generates probabilities of economic states, these outputs are mapped into the LGD framework. To ensure compliance with IFRS9’s forward-looking, probability-weighted requirements, a scenario-based estimation approach is adopted:
+2. Stability of Relationships
 
-Three macroeconomic scenarios—Baseline, Better, and Worse—are constructed using forecasts of macroeconomic variables (MEVs).
-
-For each scenario, the Macro Model produces an economic state trajectory, which then drives LGD adjustments through changes in liquidity horizons.
-
-The LGD outputs across scenarios are combined through probability-weighted blending (60% Baseline, 20% Better, 20% Worse), ensuring unbiased estimates that reflect expected conditions rather than single-point forecasts.
+The relationship between macroeconomic variables (MEVs) and economic state is assumed to be time-invariant, i.e., the predictive patterns observed in the historical sample remain relevant for future periods. While reasonable, this assumption may be challenged in the event of structural breaks (e.g., policy regime changes or unprecedented shocks).
 
 
-This combination of Ordered Logit regression with scenario blending strikes the right balance between statistical rigor and regulatory alignment. It ensures that the model:
+3. LGD Behaviour Assumptions
 
-Appropriately captures the ordered nature of economic cycles.
+It is assumed that LGD for Lombard loans is macro-sensitive, primarily through its dependence on liquidity horizons and collateral realization. In Poor states, liquidation is expected to take longer and recoveries to be lower; in Good states, faster liquidation and higher recoveries are expected.
 
-Produces forward-looking estimates consistent with IFRS9 requirements.
+Since the portfolio has no historical defaults, the model does not estimate LGD from observed recovery data. Instead, the IRB Performing LGD framework is used as a structural base, with PIT calibration introduced through the Macro Model. This assumes that liquidity horizon adjustments provide a reasonable proxy for macro-driven LGD variability.
 
-Provides a transparent and intuitive link between macroeconomic conditions and LGD outcomes in a portfolio where historical defaults are absent.
+
+4. Ordered Logit Model (OLM) Assumptions
+
+Ordinal dependent variable: Economy states have a natural ordering (Poor < Normal < Good), justifying the use of OLM.
+
+Proportional odds assumption: The effect of each predictor is constant across thresholds, i.e., the relationship between predictors and the likelihood of being in a higher state (e.g., Poor vs. Normal/Good, or Poor/Normal vs. Good) is assumed to be the same.
+
+Linearity in log-odds: The log-odds of the dependent variable categories are assumed to be a linear function of the independent variables.
+
+Independence of observations: Quarterly observations are assumed independent, even though autocorrelation checks have been performed using surrogate residuals to mitigate risk of violation.
+
+No perfect multicollinearity: Selected predictors are assumed not to exhibit perfect correlation with each other, ensuring model stability.
+
+
+5. Limitations
+
+The reliance on constructed dependent variables (economic tags) introduces subjectivity, even though tagging criteria were grounded in economic rationale.
+
+The assumption of stable macro-LGD linkages may not hold in unprecedented or highly volatile conditions.
+
+Given the absence of defaults, the model cannot be validated against realized LGDs; instead, reliance on IRB methodology and scenario calibration serves as a theoretical workaround.
+
+The proportional odds assumption in OLM may oversimplify relationships if the impact of predictors differs substantially across state thresholds, although statistical testing was conducted to confirm its validity.
