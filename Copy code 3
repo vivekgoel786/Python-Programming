@@ -1,37 +1,31 @@
-The IFRS9 LGD model is designed for a low-default HNWI Lombard loan portfolio, where traditional historical default/recovery-based LGD modelling is not feasible due to the absence of observed defaults. To overcome this challenge, the model leverages a two-layered theoretical framework:
+The choice of methodology was guided by the nature of the dependent variable, regulatory requirements under IFRS9, and the practical constraints of the portfolio.
 
-1. Macro Model (Economy State Classification)
-The first layer of the model involves constructing a Macro Model to classify the state of the economy on a quarterly basis into three ordered categories: Poor, Normal, and Good. This classification reflects the recognition that economic downturns typically lengthen collateral liquidation horizons and reduce recovery rates, while favorable conditions shorten liquidation periods and improve recoveries.
+A standard binary logistic regression was first considered but rejected because the dependent variable, Economy State, is not binary but ordinal with three ordered categories (Poor < Normal < Good). Treating these categories as nominal would ignore their inherent ranking, while collapsing them into a binary variable would result in significant information loss.
 
-Choice of Model: An Ordered Logit Model (OLM) was selected because the dependent variable (Economy State) is inherently ordinal in nature, with Poor < Normal < Good. This approach ensures that parameter estimates respect the monotonic structure of economic states.
+An Ordered Logit Model (OLM) was therefore selected as the core methodology for the Macro Model. The OLM is particularly suitable because:
 
-Dependent Variable Construction: The Economy State was defined through macro tagging, combining (a) historically significant crisis events (e.g., Global Financial Crisis 2008–09, COVID-19 pandemic 2020–21) and (b) movements in the SET equity index. Specifically, quarters with equity index growth below the 80th percentile threshold (6.48% QoQ) were tagged as Normal, while extreme downturn periods were tagged as Poor and strong growth periods as Good. This tagging created a historical economic classification over 73 quarters (Mar 2006 – Mar 2024).
+It respects the ordinal structure of the dependent variable, ensuring that estimates capture the monotonic progression from Poor to Normal to Good.
 
-Independent Variables: The predictors consist of transformations of key macroeconomic indicators, such as GDP, unemployment, CPI, wages, farm income, interest rates, and consumption. To capture dynamic relationships, these indicators were transformed through lags, leads, differences, growth rates, and moving averages, resulting in over 800 candidate predictors. Rigorous variable selection was applied, ensuring statistical significance, proportional odds validity, and economic interpretability. The final macro model includes Unemployment Rate (lead 2), GDP growth (lag 1), and Average Monthly Wage growth (lead 1), offering robust predictive power (Pseudo-R² = 0.34, Accuracy ≈ 79%).
+It operates under the proportional odds assumption, which simplifies interpretation by assuming that the relationship between independent variables and the odds of being in a “higher” economic state is consistent across thresholds. This is a natural fit for modelling macroeconomic cycles.
 
+It provides a parsimonious yet interpretable framework, allowing results to be communicated clearly to stakeholders and regulators.
 
-
-2. Linkage to LGD Estimation (IRB + PIT Calibration)
-The second layer of the framework connects macroeconomic states to LGD estimation. Since Lombard loans are secured against marketable collateral, LGD is highly sensitive to liquidity horizons and market conditions. The IRB Performing LGD framework is therefore used as the structural foundation, while PIT adjustments are introduced through the Macro Model:
-
-Liquidity Horizon Adjustment: In Poor states, stressed market conditions imply longer liquidation timelines and reduced recovery values, resulting in higher LGD. Conversely, Good states assume quicker realization and lower LGD.
-
-Scenario-Based Estimation: In line with IFRS9, three macroeconomic scenarios (Baseline, Better, Worse) are projected using MEV forecasts, each mapped into economic states via the Macro Model. Separate LGD paths are derived for each scenario.
-
-Blending and PIT LGD: The scenario LGDs are blended using IFRS9-compliant weights (60% Baseline, 20% Better, 20% Worse). To prevent excessive quarter-to-quarter volatility, the final PIT LGD estimates are smoothed using an Exponential Weighted Moving Average (EWMA) process.
+It is statistically robust and widely used in credit risk modelling where ordered risk ratings or economic states are involved.
 
 
+Once the Macro Model generates probabilities of economic states, these outputs are mapped into the LGD framework. To ensure compliance with IFRS9’s forward-looking, probability-weighted requirements, a scenario-based estimation approach is adopted:
 
-3. Conceptual Integration
-The model thus integrates economic theory (macro-financial linkages), statistical modelling (Ordered Logit regression), and regulatory frameworks (IRB and IFRS9). This integration allows the bank to derive forward-looking LGD estimates that are:
+Three macroeconomic scenarios—Baseline, Better, and Worse—are constructed using forecasts of macroeconomic variables (MEVs).
 
-Risk-sensitive, reflecting the state of the economy.
+For each scenario, the Macro Model produces an economic state trajectory, which then drives LGD adjustments through changes in liquidity horizons.
 
-Scenario-based, aligning with IFRS9 ECL requirements.
-
-Practical for low-default portfolios, where historical LGD data is insufficient.
+The LGD outputs across scenarios are combined through probability-weighted blending (60% Baseline, 20% Better, 20% Worse), ensuring unbiased estimates that reflect expected conditions rather than single-point forecasts.
 
 
+This combination of Ordered Logit regression with scenario blending strikes the right balance between statistical rigor and regulatory alignment. It ensures that the model:
 
+Appropriately captures the ordered nature of economic cycles.
 
-In essence, the theory behind this model rests on the idea that macroeconomic cycles drive credit loss severity through their impact on collateral liquidity and realizations. By formally linking macroeconomic indicators to LGD estimation through an ordered-state framework, the model creates a robust, transparent, and compliant approach to loss forecasting in HNWI Lombard portfolios.
+Produces forward-looking estimates consistent with IFRS9 requirements.
+
+Provides a transparent and intuitive link between macroeconomic conditions and LGD outcomes in a portfolio where historical defaults are absent.
