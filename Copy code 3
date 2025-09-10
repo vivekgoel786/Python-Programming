@@ -1,43 +1,19 @@
-The methodology rests on a set of key assumptions and acknowledges certain limitations that are important for interpreting the model’s outputs.
+The primary data used in model development was macroeconomic time-series data provided by SCB’s Economic Intelligence Center (EIC) team. This dataset forms the backbone of the Macro Model, as the objective is to forecast the state of the economy (Poor, Normal, Good) based on macroeconomic dynamics and subsequently link these forecasts to LGD estimation.
 
-1. Economy Tagging Assumptions
+Source: SCB EIC team (internal research division).
 
-The construction of the dependent variable (Economy State) assumes that historical crisis periods (e.g., the Lehman Brothers collapse in 2008–09 and the COVID-19 pandemic in 2020–21) and equity market movements provide a reliable proxy for systemic stress.
+Frequency: Quarterly.
 
-The tagging criterion, based on the 80th percentile threshold of SET index quarterly changes, is assumed to robustly distinguish Good, Normal, and Poor economic states. This assumes that past equity performance is a valid indicator of macro-financial health.
+Time Period Covered: March 2006 – March 2024, providing a total of 73 quarterly observations.
 
-
-2. Stability of Relationships
-
-The relationship between macroeconomic variables (MEVs) and economic state is assumed to be time-invariant, i.e., the predictive patterns observed in the historical sample remain relevant for future periods. While reasonable, this assumption may be challenged in the event of structural breaks (e.g., policy regime changes or unprecedented shocks).
+Initial Scope: The data was initially shared for the Baseline scenario only, to support exploratory analysis and model development.
 
 
-3. LGD Behaviour Assumptions
+The dataset consisted of multiple macroeconomic variables (MEVs) that represent key dimensions of Thailand’s economy, including growth, consumption, employment, inflation, and financial conditions. These variables were considered as potential predictors for the economy state classification model.
 
-It is assumed that LGD for Lombard loans is macro-sensitive, primarily through its dependence on liquidity horizons and collateral realization. In Poor states, liquidation is expected to take longer and recoveries to be lower; in Good states, faster liquidation and higher recoveries are expected.
+[Table Placeholder – List of Macroeconomic Variables Used in Development]
+(This table will list all MEVs such as GDP, Unemployment Rate, CPI, Average Monthly Wage, Farm Income Index, Minimum Loan Rate, Real Private Consumption, Nominal GDP Growth, Motor Vehicle Sales, etc.)
 
-Since the portfolio has no historical defaults, the model does not estimate LGD from observed recovery data. Instead, the IRB Performing LGD framework is used as a structural base, with PIT calibration introduced through the Macro Model. This assumes that liquidity horizon adjustments provide a reasonable proxy for macro-driven LGD variability.
+During data processing, steps were undertaken to ensure data quality and usability, including handling of missing values, formatting consistency, and alignment of time periods across all series. Various transformations (e.g., growth rates, log differences, moving averages, leads, and lags) were applied to expand the predictive feature set and capture both contemporaneous and forward-looking economic effects.
 
-
-4. Ordered Logit Model (OLM) Assumptions
-
-Ordinal dependent variable: Economy states have a natural ordering (Poor < Normal < Good), justifying the use of OLM.
-
-Proportional odds assumption: The effect of each predictor is constant across thresholds, i.e., the relationship between predictors and the likelihood of being in a higher state (e.g., Poor vs. Normal/Good, or Poor/Normal vs. Good) is assumed to be the same.
-
-Linearity in log-odds: The log-odds of the dependent variable categories are assumed to be a linear function of the independent variables.
-
-Independence of observations: Quarterly observations are assumed independent, even though autocorrelation checks have been performed using surrogate residuals to mitigate risk of violation.
-
-No perfect multicollinearity: Selected predictors are assumed not to exhibit perfect correlation with each other, ensuring model stability.
-
-
-5. Limitations
-
-The reliance on constructed dependent variables (economic tags) introduces subjectivity, even though tagging criteria were grounded in economic rationale.
-
-The assumption of stable macro-LGD linkages may not hold in unprecedented or highly volatile conditions.
-
-Given the absence of defaults, the model cannot be validated against realized LGDs; instead, reliance on IRB methodology and scenario calibration serves as a theoretical workaround.
-
-The proportional odds assumption in OLM may oversimplify relationships if the impact of predictors differs substantially across state thresholds, although statistical testing was conducted to confirm its validity.
+Once the Macro Model was finalized, the EIC team provided extended macroeconomic forecasts up to December 2065 under three scenarios—Baseline, Worse, and Better. These long-term MEV forecasts serve as inputs into the Macro Model to generate projected economy states under each scenario, which are subsequently incorporated into the LGD framework for IFRS9-compliant, forward-looking estimation.
