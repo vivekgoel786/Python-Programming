@@ -1,47 +1,48 @@
-4.4 Model Development Data
+The quality and reliability of the Macro Model depend heavily on the assumptions made in defining the dependent variable (Economy State) and selecting macroeconomic predictors. While care has been taken to ensure economic consistency and statistical robustness, certain assumptions and limitations remain inherent in the data inputs:
 
-The final dataset used for model development was derived from the processed and transformed macroeconomic variables covering the period March 2006 to March 2024 (73 quarters). This timeframe was selected as it spans both normal macroeconomic conditions and major systemic stress events (Global Financial Crisis 2008–09, COVID-19 pandemic 2020–21), ensuring that the dependent variable reflects sufficient variability for robust model training.
+1. Subjectivity in Economic Tagging
 
+The tagging of the dependent variable into Poor, Normal, and Good states is partly based on judgemental thresholds and crisis triggers.
 
----
+For example, systemic stress periods such as the Global Financial Crisis (2008–09) and the COVID-19 pandemic (2020–21) were manually classified as Poor states.
 
-Dependent Variable (Economy State)
-The dependent variable was constructed through economic tagging, combining historical crisis events with equity market performance to assign each quarter into one of three ordered economic states.
-
-Economy State	Number of Quarters	% of Sample	Key Events / Conditions
-
-Poor	11	15%	Global Financial Crisis (2008–09), COVID-19 Pandemic (2020–21)
-Normal	49	67%	Stable periods with moderate equity index growth
-Good	13	18%	High-growth periods exceeding SET Index threshold (6.48% QoQ change)
+While this approach ensures alignment with observable economic reality, it introduces an element of subjectivity that could affect reproducibility if different tagging criteria were applied.
 
 
-This distribution is imbalanced toward the Normal class, which aligns with real-world economic cycles where extreme stress or boom conditions are less frequent.
+
+2. Equity Market Threshold for “Good” State
+
+The distinction between Good and Normal states was operationalized using the 80th percentile threshold of SET Index quarterly returns (6.48%).
+
+Quarters with SET Index growth above this level were tagged as Good.
+
+This rule is simple and transparent but assumes that equity market performance is a sufficient proxy for broader economic prosperity, which may not always capture underlying fundamentals.
 
 
----
 
-Independent Variables (Final Predictors)
-The original dataset of ~10 macroeconomic indicators was expanded into 810 candidate predictors through transformations (growth rates, log differences, moving averages, leads/lags). Following rigorous univariate and multivariate screening, three predictors were retained for the final Ordered Logit Model:
+3. Limited Dependent Variable Observations
 
-Variable	Transformation	Economic Rationale
+The dataset spans 73 quarters, of which only 11 are tagged as Poor and 13 as Good, leaving a dominant majority of 49 Normal states.
 
-Unemployment Rate	Lead by 2 quarters	Anticipates labor market stress; early warning of downturns.
-YoY GDP Growth	Lag by 1 quarter	Captures momentum from prior quarter’s output; reflects economic inertia.
-YoY Average Monthly Wage Growth	Lead by 1 quarter	Forward-looking indicator of household income, spending power, and consumption trends.
+While the Ordered Logit framework is well-suited for ordinal data, the relatively small number of Poor and Good observations could reduce the robustness of coefficient estimates for these categories.
 
 
-These predictors were selected for their statistical significance, ability to satisfy the proportional odds assumption, and their clear linkage to macroeconomic theory.
+
+4. Assumptions Around Macro Variables
+
+Independent variables were derived from macroeconomic indicators provided by the SCB EIC team. It is assumed that these indicators are accurately measured, timely, and consistent over the full sample period.
+
+Forecasted values of the same variables (till Dec 2065) are also assumed to reflect plausible scenarios (baseline, better, worse) and serve as valid inputs for forward-looking model application.
 
 
----
 
-Sample Size and Structure
+5. Scope Limitation to Lombard Loans Portfolio
 
-Observations: 73 quarters.
+Since the portfolio under consideration is a High-Net-Worth Individual (HNWI) Lombard Loan portfolio with zero defaults, the tagging framework indirectly incorporates macro sensitivity instead of relying on realized default events.
 
-Predictors: 3 selected MEVs (post-transformation and selection).
-
-Dependent variable: Economy State (ordinal, 3 levels).
+This makes the model highly relevant for stress testing and scenario-based projections, but less directly validated against actual historical default data.
 
 
-By combining a well-tagged dependent variable with systematically filtered macroeconomic predictors, the development dataset provided a statistically robust and economically intuitive foundation for estimating the Ordered Logit Macro Model.
+
+
+In summary, while the tagging framework and input transformations provide a structured and economically defensible basis for model development, users of the model should remain aware of the subjectivity in tagging, equity market reliance, and limited Poor/Good sample size, all of which may influence the interpretation of results.
