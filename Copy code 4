@@ -1,118 +1,234 @@
-4.3 Data Analysis
+6. Model Testing
 
-A thorough data analysis was conducted to evaluate the structure, relevance, and consistency of information available for both the Lombard Loan (LBL) and Property-Backed Loan (PBL) portfolios. The combined portfolio consisted of 73 unique high-net-worth individual (HNWI) clients, with 27 belonging to the LBL portfolio, 48 to the PBL portfolio, and 2 clients common to both.
-
-Given the absence of historical defaults, a conventional PD model development approach was not feasible. To address this challenge, the dependent variable was constructed using expert judgment. Relationship Managers (RMs) and Credit Officers were asked to assign a relative risk rank to each customer, using the following scale: A, B1, B2, C1, C2, D1, D2, and E, with D2 and E considered as proxy defaults. As a result, 10 out of 73 customers were treated as proxy defaults, enabling a pseudo-binary target for model development.
-
-Structured Factor Analysis (SFA) was carried out for each input factor to assess:
-
-Correlation with BU-assigned ranks,
-
-Discriminatory power, using metrics like Accuracy Ratio (AR),
-
-Relative Information Entropy (RIE), which examines how well-distributed a variable is across risk categories,
-
-Business alignment, ensuring that the risk ordering of buckets followed intuitive financial logic.
-
-
-During the analysis, a new variable was also engineered:
-
-AUM Buffer Ratio
-
-\text{AUM Buffer Ratio} = \frac{\text{AUM (excluding loan proceeds) + Credit Limit}}{\text{Credit Limit}}
-
-Factors with both strong statistical performance and business rationale were prioritized. However, a few variables were retained based on expert input despite lower SFA scores, due to their qualitative relevance to customer creditworthiness.
+This section documents the evaluation, validation and robustness checks performed on the Macro Model (Ordered Logit) that feeds into the IFRS9 LGD framework.  Testing was performed in-sample only (no out-of-time hold-out was available). Where possible we quantify performance, show diagnostic tests, describe sensitivity / scenario exercises and record the model changes / adjustments implemented.
 
 
 ---
 
-4.4 Model Development Data
+6.1 Summary of Model Validation Result
 
-The data used for model development was collected through a one-time structured questionnaire circulated among Credit Officers, Relationship Managers, and Business Units. This questionnaire was specially designed to capture all critical risk dimensions, including financial, behavioral, relationship, personality, legal, and background factors.
-Each question was structured to provide discrete multiple-choice responses, enabling standardized interpretation and scoring.
+Sample used for validation:
 
-Key characteristics of the dataset:
+Model development period: Mar 2006 – Mar 2024 (73 quarters).
 
-73 unique customers, comprising 27 LBL and 48 PBL clients.
-
-No internal ratings or prior default events, reinforcing the need for expert-led risk ranking.
-
-Risk classification was manually assigned by RMs using predefined grades (A to E), which were later mapped into proxy default flags.
+Due to transformations (QoQ%, leads/lags), 66 observations were usable for model fitting and in-sample validation.
 
 
-The dataset included responses mapped to 15 variables under 7 dimensions for PBL, and 16 variables under 6 dimensions for LBL. While many variables were common to both portfolios, certain factors were portfolio-specific:
+Confusion matrix (rows = actual, columns = predicted; 66 obs):
 
-Collateral Quality of Major Properties: available only for PBL.
+Actual \ Predicted	Poor	Normal	Good	Total
 
-DSCR and Average Margin Requirement: available only for LBL.
+Poor	8	3	0	11
+Normal	1	38	4	43
+Good	0	6	6	12
+Total	9	47	10	66
 
 
-In addition to questionnaire responses, derived metrics like the AUM Buffer Ratio were computed using available raw data fields. These new variables provided deeper insight into a client's financial flexibility and overall risk posture.
+Key summary metrics
+
+Accuracy (AR) = correct / total = (8 + 38 + 6) / 66 = 52 / 66 = 78.79%.
+
+Interpretation: ~79% of quarters were classified correctly (substantially above a random 3-class baseline of ~33%).
+
+
+Macro F1 score (unweighted mean of per-class F1s) ≈ 0.73. This is the score reported earlier and corresponds to the balanced performance across classes given class imbalance.
+
+Per-class precision, recall, F1 (rounded):
+
+Class	Precision	Recall	F1
+
+Poor	0.889	0.727	0.800
+Normal	0.809	0.884	0.844
+Good	0.600	0.500	0.545
+
+
+
+Practical interpretation:
+
+The model is strongest at detecting Normal states (high precision and recall) and good at detecting Poor states (73% of Poor were correctly identified).
+
+Good states are the most difficult to distinguish from Normal (50% recall); misclassifications are predominantly Normal↔Good rather than Good→Poor or Poor→Good.
+
+Crucially for risk/provisioning purposes, the model does not make “false optimism” errors (i.e., no Poor quarter was predicted as Good). This property reduces the risk of under-provisioning driven by model misclassification.
+
 
 
 ---
 
-4.5 Data Treatment and Transformation
+6.2 Performance Testing
 
-Extensive preprocessing steps were taken to convert raw inputs into a structured dataset suitable for model development and analysis. This included:
+We evaluated model performance through in-sample backtesting, and conducted benchmarking and sensitivity checks to ensure the model is robust for PIT LGD purposes.
 
-1. Data Cleaning and Formatting
+6.2.1 Backtesting
 
-Raw questionnaire responses and supporting data were first standardized and formatted using Python. This included:
+6.2.1.1 In-time validation (in-sample backtest)
 
-Removing duplicates and irrelevant entries,
+Approach: compare predicted economy state to historical tagged state (the confusion matrix above).
 
-Standardizing categorical values (e.g., Yes/No responses),
+Findings:
 
-Ensuring consistent treatment of missing or non-applicable values,
+The model correctly identifies systemic stress periods (e.g., the 2008–09 crisis and 2020–21 COVID downturn) in the majority of relevant quarters.
 
-Creating derived variables such as the AUM Buffer Ratio.
+Quantitatively: 8 of 11 Poor quarters correctly identified (73% recall on Poor). Normal quarters show the strongest coverage (38/43 correct; 88% recall). Good quarters show 6/12 correct (50% recall), with the remainder predicted as Normal.
 
-
-Python scripts were used to automate data ingestion and transformation, ensuring replicability and auditability of the preprocessing steps.
-
-2. Variable Bucketing and Scoring
-
-Each factor was bucketed into 3 to 5 risk levels, with:
-
-Higher-risk levels receiving lower scores (closer to 0),
-
-Lower-risk levels receiving higher scores (closer to 10).
+Model goodness-of-fit: pseudo-R² ≈ 0.3437 (reported earlier), indicating substantial explanatory power for an economic state model.
 
 
-Bucket cut-offs were defined based on a combination of:
 
-Correlations with BU ranks,
+6.2.1.2 Out-of-time validation
 
-Accuracy Ratio and Relative Information Entropy (RIE),
+Not performed. No dedicated out-of-time hold-out or external dataset was available at development time.
 
-Qualitative business review to maintain logical interpretability.
-
-
-3. Factor Weight Assignment
-
-Stakeholders were engaged to rank the importance of each factor and dimension. This input was statistically optimized using Kendall Tau correlation to align model risk ranks with BU-assigned ranks. The weights were then fine-tuned manually to incorporate business judgment and reflect domain expertise.
-
-4. Final Score Computation and Ranking
-
-For each customer:
-
-Bucketed scores were multiplied by optimized factor weights,
-
-Aggregated into a composite model score,
-
-Customers were ranked in order of risk (higher score = lower risk).
+Implication: in-sample metrics may be optimistically biased; therefore, the model should be subject to ongoing monitoring and future out-of-time validation as new quarters accrue or if external validation data becomes available. (Recommended validation approaches are listed at end of this section.)
 
 
-5. Calibration to Master Scale
+6.2.2 Benchmarking
 
-The final scores were then mapped to PD values using the bank’s master scale. A target average PD of 0.39% was used for calibration, referencing external HNWI benchmarks (e.g., UBS, JB). Score buckets were adjusted to:
+Benchmark strategies used / recommended:
 
-Ensure monotonicity in risk to PD mapping,
+Naïve benchmark: random classification baseline (~33% accuracy for 3 classes). The Macro Model substantially outperforms this.
 
-Align with the Conservatism Threshold (CDT),
+Rule-based benchmark (SET index threshold): the historical tagging used the SET index 80th percentile rule (6.48% QoQ) to help define Good vs Normal. The Macro Model was benchmarked qualitatively against this rule — it produces closer alignment to tagged crisis periods than a simple SET-only rule because it integrates multiple MEVs and leads/lags.
 
-Maintain acceptable Herfindahl-Hirschman Index (HHI) for portfolio diversification.
+Model alternatives: multinomial logit or machine-learning classifiers were considered conceptually but OLM was retained due to ordered DV and interpretability (see Section 3.3).
 
 
-This completed the transformation from raw expert inputs into a fully documented, explainable, and calibrated PD model suitable for HNWI risk assessment.
+Conclusion: the ordered logit Macro Model outperforms simple benchmarks and provides a stronger, economically interpretable mapping to history than single-indicator rules.
+
+
+
+---
+
+6.3 Sensitivity and Scenario Testing
+
+Scenario framework: the model is integrated with three macroeconomic scenarios provided by EIC — Baseline, Better, Worse — to produce forward-looking economy state trajectories. Scenario outputs are used in the LGD pipeline as required by IFRS9.
+
+Sensitivity testing performed:
+
+One-at-a-time (OAT) shocks: each normalized predictor was shocked by ±1 standard deviation to evaluate impact on the latent score and on the predicted probability vector (Poor/Normal/Good). Results show the relative sensitivity ranking (per standard deviation):
+
+1. pct_change_GDP_lag1 (largest marginal effect, β magnitude ≈ 1.12)
+
+
+2. UNEMP_RATE_lead2 (next largest; β ≈ +0.85)
+
+
+3. pct_change_AVG_MONTHLY_WAGE_lead1 (β ≈ –0.64)
+
+
+
+Interpretation: a 1 SD increase in GDP growth strongly increases the probability of Good; a 1 SD increase in expected unemployment materially raises probability of Poor.
+
+
+Scenario mapping: for each scenario, forecasted MEVs are input to the OLM to produce quarterly probability distributions over states; the modal/expected state is then applied to LGD adjustments.
+
+LGD Sensitivity: changes in modelled economy state directly map to liquidity horizon adjustments and therefore change PIT LGD materially in stress scenarios. The model is purposefully responsive to macro shocks so that LGD moves in the expected direction under stress.
+
+
+
+---
+
+6.4 Robustness and Stability Testing
+
+Key diagnostic results and what they imply
+
+Proportional Odds Assumption (POA):
+
+LR test statistic = 5.8390 (insignificant) and Brant test results both support the POA.
+
+Interpretation: predictor effects can be treated as constant across the two thresholds (Poor/Normal and Normal/Good); Ordered Logit is appropriate.
+
+
+Multicollinearity:
+
+VIFs: UNEMP_RATE_lead2 = 1.3148, pct_change_GDP_lag1 = 1.1802, pct_change_AVG_MONTHLY_WAGE_lead1 = 1.1384.
+
+Interpretation: VIFs ≪ 5 (even ≪ 2) — there is negligible collinearity between predictors; coefficients are stable and interpretable.
+
+
+Normalization/scaling:
+
+All predictors were mean-centered and scaled by their standard deviation prior to estimation. This makes coefficients interpretable as the effect of a 1-SD change on the latent economic score, stabilizes estimation and helps compare relative influence across predictors.
+
+
+Residual diagnostics (time-series aspects):
+
+Surrogate residuals were used to assess stationarity and autocorrelation of the ordered model residuals. Tests did not indicate significant serial correlation nor systematic non-stationarity in residuals. This supports the model’s time-series use for quarterly forecasting.
+
+
+Coefficient stability across specifications:
+
+Candidate multivariable specifications and the 127 model runs showed that the final three predictors maintained sign and significance across alternative specifications, indicating stability of parameter estimates.
+
+
+Crisis capture:
+
+The model reliably identifies known crisis windows (2008–09 and 2020–21). This is an important robustness check for models used to adjust PIT LGD under stress.
+
+
+
+
+---
+
+6.5 Model Adjustments
+
+Adjustments applied during development:
+
+1. Variable normalization — all predictors standardized (mean = 0, SD = 1) before estimation.
+
+
+2. Feature selection funnel — 810 → 224 → 87 → 49 → 7 → final 3 following statistical and economic criteria (p-value, pseudo-R², proportional odds, AIC/BIC, multicollinearity and interpretability).
+
+
+3. Final parsimony decision — selected a 3-variable model to balance explanatory power and operational simplicity.
+
+
+4. Smoothing of PIT LGD outputs — after LGD is calculated under each scenario, an EWMA smoother is applied to the PIT LGD time-series to reduce short-term volatility while preserving responsiveness to macro shifts.
+
+
+5. Scenario blending — LGD outputs for Baseline/Better/Worse blended using 60% / 20% / 20% weights to produce IFRS9-compliant probability-weighted LGD estimates.
+
+
+6. Mapping to IRB Performing LGD — economy states are linked to liquidity horizon assumptions within the IRB LGD framework (Poor → longer horizon, higher LGD; Good → shorter horizon, lower LGD).
+
+
+
+No further statistical corrections were required (e.g., no need to switch to generalized ordered logit or to drop variables for multicollinearity).
+
+Operational & governance adjustments (recommended & implemented):
+
+Implement quarterly model performance monitoring (track AR, macro F1, confusion matrix, and changes in predictor distributions).
+
+Recalibration trigger(s): consider formal triggers such as sustained AR drop > X pp, or structural break detection in MEVs. (Exact thresholds to be decided by governance.)
+
+Plan and execute out-of-time validation when additional quarterly data or alternative external tagging become available. Suggested methods: rolling time-window validation, time-series cross-validation, and periodic backtesting against realized macro events.
+
+
+
+---
+
+Closing remarks and recommended next steps
+
+1. Document the in-sample results (confusion matrix, AR = 78.79%, macro F1 ≈ 0.73) in the model pack — these are the primary evidence of discriminatory power today.
+
+
+2. Schedule regular monitoring (quarterly) of model performance and residual diagnostics.
+
+
+3. Plan out-of-time validation as soon as new data accumulate (or consider alternative external datasets / proxies for validation). Recommended approaches: rolling window OOT, expanding the sample with higher-frequency indicators (careful alignment needed) or benchmarking vs other macro models.
+
+
+4. Retain liquidity-horizon mapping and EWMA smoothing as part of the LGD pipeline; document all assumptions and smoothing parameters clearly for audit/regulatory review.
+
+
+
+
+---
+
+If you want, I can:
+
+produce a one-page results summary (confusion matrix + AR + F1 + key diagnostics) you can paste into your final model pack, or
+
+draft the out-of-time validation plan (methods, sample splits, metrics and governance triggers) to include in the documentation.
+
+
