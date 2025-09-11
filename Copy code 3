@@ -1,19 +1,61 @@
-The primary data used in model development was macroeconomic time-series data provided by SCB’s Economic Intelligence Center (EIC) team. This dataset forms the backbone of the Macro Model, as the objective is to forecast the state of the economy (Poor, Normal, Good) based on macroeconomic dynamics and subsequently link these forecasts to LGD estimation.
+4.3 Data Analysis
 
-Source: SCB EIC team (internal research division).
+A comprehensive exploratory data analysis (EDA) was undertaken to assess the quality, consistency, and predictive potential of the macroeconomic variables (MEVs) provided by the SCB EIC team. This stage was crucial to ensure that the inputs to the Macro Model were both statistically valid and economically meaningful.
 
-Frequency: Quarterly.
+Key steps in the analysis included:
 
-Time Period Covered: March 2006 – March 2024, providing a total of 73 quarterly observations.
+1. Data Validation and Quality Checks
 
-Initial Scope: The data was initially shared for the Baseline scenario only, to support exploratory analysis and model development.
+Each time series was checked for missing values, outliers, and structural breaks.
+
+Formatting issues (e.g., inconsistent units or scales) were standardized to ensure comparability across variables.
+
+Outliers were examined in the context of economic events (e.g., sharp GDP contractions during COVID-19) to distinguish genuine shocks from data errors.
 
 
-The dataset consisted of multiple macroeconomic variables (MEVs) that represent key dimensions of Thailand’s economy, including growth, consumption, employment, inflation, and financial conditions. These variables were considered as potential predictors for the economy state classification model.
 
-[Table Placeholder – List of Macroeconomic Variables Used in Development]
-(This table will list all MEVs such as GDP, Unemployment Rate, CPI, Average Monthly Wage, Farm Income Index, Minimum Loan Rate, Real Private Consumption, Nominal GDP Growth, Motor Vehicle Sales, etc.)
+2. Descriptive Statistics and Distributional Analysis
 
-During data processing, steps were undertaken to ensure data quality and usability, including handling of missing values, formatting consistency, and alignment of time periods across all series. Various transformations (e.g., growth rates, log differences, moving averages, leads, and lags) were applied to expand the predictive feature set and capture both contemporaneous and forward-looking economic effects.
+Summary statistics (mean, variance, skewness, kurtosis) were generated to understand the behavior of each MEV over time.
 
-Once the Macro Model was finalized, the EIC team provided extended macroeconomic forecasts up to December 2065 under three scenarios—Baseline, Worse, and Better. These long-term MEV forecasts serve as inputs into the Macro Model to generate projected economy states under each scenario, which are subsequently incorporated into the LGD framework for IFRS9-compliant, forward-looking estimation.
+Correlation heatmaps were produced to identify potential redundancies and multicollinearity across predictors.
+
+
+
+3. Stationarity and Time-Series Properties
+
+Since MEVs are inherently time-series data, tests such as the Augmented Dickey-Fuller (ADF) test were performed to check for stationarity.
+
+Where non-stationarity was detected, transformations (e.g., log differences, percentage changes) were applied to stabilize the series.
+
+
+
+4. Transformations and Feature Expansion
+
+Multiple transformations were applied to generate additional predictive features:
+
+Growth rates (YoY, QoQ)
+
+Logarithmic differences
+
+Smoothing via moving averages (2, 3, and 4-quarter windows)
+
+Leads and lags (up to four quarters) to capture predictive and delayed relationships.
+
+
+This process expanded the dataset from 10 original MEVs to 810 transformed features.
+
+
+
+5. Univariate Screening
+
+Each transformed variable was first tested individually using Ordered Logit models against the dependent variable (Economy State).
+
+Performance criteria included significance of coefficients (p-value < 0.05), pseudo-R² thresholds (≥ 0.10), and validity of proportional odds assumptions.
+
+This filtering reduced the feature set from 810 to a smaller pool of statistically strong and interpretable variables.
+
+
+
+
+This structured analysis ensured that the predictors selected for the final Macro Model were both empirically robust and aligned with economic intuition, forming the foundation for subsequent multivariate modelling.
