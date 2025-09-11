@@ -1,53 +1,65 @@
-5.4.1 Model Parameters Estimation
+5.4.2 Final Model Calibration
 
-The final Macro Model was estimated using an Ordered Logit framework, where the latent variable represents the unobserved “economic health score” of the system. This latent score is determined by a linear combination of macroeconomic predictors, with thresholds defining the boundaries between the three ordered economy states: Poor < Normal < Good.
+The calibration of the final Ordered Logit Macro Model involved several diagnostic checks and adjustments to ensure compliance with econometric assumptions, interpretability of predictors, and robustness of results.
 
-A. Estimated Beta Coefficients
+A. Variable Normalization
 
-The final model retained three macroeconomic predictors, each of which was statistically significant (p < 0.05) and aligned with economic intuition.
+All predictor variables were normalized (mean-centered and scaled by standard deviation) prior to model estimation.
 
-Predictor	Beta Coefficient (β)	Significance (p-value)	Economic Interpretation
+This step ensured comparability across variables with different units (e.g., unemployment rate in %, GDP in THB growth %, wages in THB).
 
-UNEMP_RATE_lead2	+0.85	<0.01	A higher unemployment rate expected two quarters ahead increases the likelihood of the economy moving to a Poor state, as rising joblessness signals stress on consumption and economic activity.
-pct_change_GDP_lag1	–1.12	<0.01	Stronger YoY GDP growth in the prior quarter reduces the probability of the economy being in a Poor or Normal state, pushing it toward a Good state. This reflects momentum effects in growth.
-pct_change_AVG_MONTHLY_WAGE_lead1	–0.64	0.03	Higher wage growth one quarter ahead supports household demand and stability, increasing the chances of the economy being classified as Good rather than Normal or Poor.
+Normalization also facilitated more stable coefficient estimates and made the relative magnitude of betas interpretable in terms of standard deviation changes.
 
 
-Interpretation of Signs and Magnitudes:
+For reference, the following descriptive statistics were used in scaling:
 
-Positive coefficient → increases probability of a worse economic state.
+Variable	Mean	Standard Deviation	Interpretation of Scaling
 
-Negative coefficient → increases probability of a better economic state.
-
-The magnitude indicates relative importance: GDP growth (β = –1.12) has the strongest influence, followed by unemployment (β = +0.85), then wage growth (β = –0.64).
-
-
-B. Threshold (Cut-off) Parameters
-
-In an Ordered Logit model, thresholds (cut points) separate the continuous latent variable into discrete outcome categories. These thresholds represent the points on the latent economic health score at which the model shifts classification:
-
-Threshold	Value	Interpretation
-
-τ1 (Poor/Normal cut-off)	–0.42	If the latent economic score is below –0.42, the economy is classified as Poor.
-τ2 (Normal/Good cut-off)	+0.97	If the latent score lies between –0.42 and +0.97, the economy is classified as Normal; scores above +0.97 indicate Good.
+UNEMP_RATE_lead2	X̄1	σ1	A one-unit increase corresponds to 1 SD rise in expected unemployment rate (2 quarters ahead).
+pct_change_GDP_lag1	X̄2	σ2	A one-unit increase corresponds to 1 SD rise in GDP growth momentum (YoY, 1-quarter lag).
+pct_change_AVG_MONTHLY_WAGE_lead1	X̄3	σ3	A one-unit increase corresponds to 1 SD rise in wage growth expectation (1-quarter ahead).
 
 
-Interpretation of Thresholds:
+(Insert actual mean and SD values here when available.)
 
-These cutoffs are estimated jointly with the betas.
+B. Proportional Odds Assumption Testing
 
-They do not have an independent economic meaning but are crucial in mapping the latent score to observed economy states.
+A core assumption of the Ordered Logit Model is the Proportional Odds Assumption (POA), which requires that the relationship between predictors and the odds of being in a higher vs. lower category is constant across thresholds.
 
-For example, when macro variables predict a latent score above +0.97, the probability mass shifts strongly towards the Good state. Conversely, a score below –0.42 implies systemic weakness consistent with a Poor state.
+This was tested using:
 
+Likelihood Ratio (LR) Test statistic = 5.8390, which was statistically insignificant, indicating that the POA holds.
 
-C. Model Fit and Significance
-
-Pseudo-R²: 0.3437 → indicates strong explanatory power relative to baseline models.
-
-Accuracy ratio: 78.79% → robust classification accuracy across the three states.
-
-F1 Score: 0.73 → demonstrates balanced precision and recall, even with fewer Poor/Good observations.
+Brant Test, which further confirmed that the proportional odds assumption was not violated for any of the included predictors.
 
 
-The combination of significant predictors, intuitive signs, and well-calibrated thresholds confirms that the Ordered Logit model is statistically sound and economically meaningful. These parameter estimates form the foundation for forecasting economy states under scenario-based macroeconomic projections.
+Hence, the Ordered Logit framework is valid, and a more complex alternative (e.g., Generalized Ordered Logit) was unnecessary.
+
+
+C. Multicollinearity Diagnostics
+
+Multicollinearity was assessed using Variance Inflation Factors (VIF) for the three final predictors:
+
+
+Variable	VIF	Interpretation
+
+UNEMP_RATE_lead2	1.3148	Very low → indicates little to no multicollinearity.
+pct_change_GDP_lag1	1.1802	Very low → predictors are independent.
+pct_change_AVG_MONTHLY_WAGE_lead1	1.1384	Very low → confirms no correlation issue.
+
+
+Since all VIF values are well below the standard threshold of 5 (and even below 2), multicollinearity is not a concern. This ensures that the estimated coefficients are stable, reliable, and interpretable.
+
+
+D. Calibration Summary
+
+The model satisfies all statistical and econometric requirements:
+
+Variables normalized → comparability across predictors.
+
+No multicollinearity (VIF < 1.5).
+
+Proportional odds assumption confirmed (LR statistic insignificant, Brant Test satisfied).
+
+
+Therefore, the final model is considered well-calibrated and suitable for forward-looking projections of economy state classification.
