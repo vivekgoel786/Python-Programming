@@ -1,63 +1,146 @@
-D. Threshold Parameters
+6. Model Testing
 
-The Ordered Logit framework estimated two thresholds on the latent economic score:
+The purpose of model testing is to evaluate the predictive accuracy, discriminatory power, and robustness of the Macro Model that underpins the IFRS9 LGD framework. Given the absence of defaults in the HNWI Lombard loan portfolio and the limited dataset size, the testing was primarily conducted in-sample, with statistical tests applied to ensure methodological soundness.
 
-τ1 (Poor/Normal cut-off) = –0.42 → Below this value, the economy is classified as Poor.
-
-τ2 (Normal/Good cut-off) = +0.97 → Between –0.42 and +0.97, the state is Normal; above +0.97, the state is Good.
+The model was estimated using quarterly macroeconomic data from Mar 2006 – Mar 2024. After accounting for leads, lags, and transformations, 66 usable quarterly observations were retained out of 73.
 
 
-These thresholds provide the decision boundaries for converting the continuous latent score into discrete economy states.
+---
 
-E. Integration into IFRS9 LGD Framework
+6.1 In-Sample Classification Performance
 
-The calibrated Macro Model serves as the driver of scenario-dependent LGD estimates:
+The Ordered Logit Model was applied to predict the economy state (Poor, Normal, Good). The predicted values were compared against the tagged historical classifications.
 
-1. Economy State Prediction
+Confusion Matrix (rows = actual, columns = predicted):
 
-For each quarter from Mar 2006 to Dec 2065, the Ordered Logit model classifies the state (Poor, Normal, Good) using SCB’s forecasted macroeconomic variables under Baseline, Better, and Worse scenarios.
+Actual \ Predicted	Poor	Normal	Good	Total
 
-
-
-2. Mapping to LGD Adjustments
-
-Each economy state is linked to liquidity horizon adjustments within the IRB Performing LGD framework.
-
-Poor states → longer liquidation horizons, higher LGD.
-
-Good states → shorter liquidation horizons, lower LGD.
+Poor	8	3	0	11
+Normal	1	38	4	43
+Good	0	6	6	12
+Total	9	47	10	66
 
 
+Performance Metrics:
 
-3. Scenario Blending (IFRS9 Requirement)
+Accuracy Ratio (AR): 78.79% → 52 out of 66 observations were correctly predicted.
 
-LGD estimates are blended across scenarios with regulatory-compliant weights:
+F1 Score: 0.73 → good balance between precision and recall across classes.
 
-Baseline (60%)
+Error Analysis:
 
-Better (20%)
+Poor States (73% accuracy): Most critical cases were well captured; no misclassification into Good.
 
-Worse (20%)
+Normal States (88% accuracy): Strong separation, with few spillovers into Poor or Good.
 
-
-This ensures LGDs are probability-weighted and forward-looking, in line with IFRS9.
+Good States (50% accuracy): Some misclassification into Normal, reflecting transitional difficulty, but importantly, none misclassified as Poor.
 
 
 
-4. Smoothing with EWMA
+Interpretation:
 
-To reduce quarter-to-quarter volatility, LGD series are smoothed using an Exponentially Weighted Moving Average (EWMA).
+The model performs strongly where it matters most: distinguishing stress (Poor) from non-stress conditions.
 
-This preserves responsiveness to macro shifts while ensuring stability for capital planning and provisioning.
+Misclassifications occur mainly between Normal and Good, which aligns with economic theory that expansion phases often blur in terms of macro indicators.
+
+The absence of “false optimism” (no Poor classified as Good) provides confidence for its use in LGD stress calibration.
+
+
+
+---
+
+6.2 Statistical Validation
+
+Beyond raw classification, a series of statistical checks were performed to validate the model’s consistency and compliance with Ordered Logit assumptions:
+
+Proportional Odds Assumption (POA):
+
+LR Test statistic = 5.8390 → indicates no significant violation of POA.
+
+Confirms that the effect of predictors is stable across thresholds (Poor–Normal, Normal–Good).
+
+
+Multicollinearity Diagnostics:
+
+VIF values for the three predictors were low:
+
+UNEMP_RATE_lead2: 1.3148
+
+pct_change_GDP_lag1: 1.1802
+
+pct_change_AVG_MONTHLY_WAGE_lead1: 1.1384
+
+
+All < 2, confirming negligible multicollinearity.
+
+
+Normalization:
+
+All predictors were normalized (mean-centered and scaled to standard deviation) before estimation.
+
+Ensures interpretability and comparability of coefficients.
+
+
+Stationarity & Residual Checks:
+
+Surrogate residuals were used to test for autocorrelation and stationarity.
+
+No evidence of significant serial correlation, supporting model reliability for time-series forecasting.
 
 
 
 
-F. Calibration Outcome
+---
 
-The final model is statistically sound (valid POA, no multicollinearity, significant predictors).
+6.3 Sensitivity and Scenario Testing
 
-Economically, the model captures labor market, growth, and wage dynamics as the key drivers of systemic risk.
+Sensitivity testing is embedded in the design of the Macro Model and its linkage to the LGD framework:
 
-Practically, it provides a structured way to generate Point-in-Time (PIT) LGD estimates that incorporate macroeconomic sensitivity, scenario diversity, and smoothing for operational use.
+The model is run under three forecasted MEV scenarios: Baseline, Better, and Worse.
+
+These scenario-driven economy states feed directly into PIT LGD calibration, ensuring forward-looking responsiveness.
+
+Weights (60% Baseline, 20% Better, 20% Worse) smoothen volatility while maintaining IFRS9 compliance.
+
+
+
+---
+
+6.4 Robustness and Stability Testing
+
+Robustness Across Cycles:
+
+The model successfully identified the 2008–09 Global Financial Crisis and the 2020–21 COVID downturn as Poor states, validating its ability to capture systemic shocks.
+
+Transitional phases (recovery periods) were tagged as Normal, which the model reproduced with good fidelity.
+
+
+Stability of Coefficients:
+
+Predictors (unemployment, GDP, wages) remained statistically significant and economically intuitive across specifications.
+
+Signs of coefficients matched theory:
+
+Higher unemployment → higher likelihood of Poor state.
+
+Strong GDP growth → greater probability of Good state.
+
+Rising wages → linked to stronger economic conditions.
+
+
+
+
+
+---
+
+6.5 Model Adjustments
+
+No statistical adjustments were required, as:
+
+Predictors were well-specified and significant.
+
+POA was not violated.
+
+No defaults in the portfolio limited direct LGD backtesting, but macro validation and stress scenario design provide sufficient forward-looking coverage.
+
 
