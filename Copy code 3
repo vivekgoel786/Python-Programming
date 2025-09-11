@@ -1,65 +1,63 @@
-5.4.2 Final Model Calibration
+D. Threshold Parameters
 
-The calibration of the final Ordered Logit Macro Model involved several diagnostic checks and adjustments to ensure compliance with econometric assumptions, interpretability of predictors, and robustness of results.
+The Ordered Logit framework estimated two thresholds on the latent economic score:
 
-A. Variable Normalization
+τ1 (Poor/Normal cut-off) = –0.42 → Below this value, the economy is classified as Poor.
 
-All predictor variables were normalized (mean-centered and scaled by standard deviation) prior to model estimation.
-
-This step ensured comparability across variables with different units (e.g., unemployment rate in %, GDP in THB growth %, wages in THB).
-
-Normalization also facilitated more stable coefficient estimates and made the relative magnitude of betas interpretable in terms of standard deviation changes.
+τ2 (Normal/Good cut-off) = +0.97 → Between –0.42 and +0.97, the state is Normal; above +0.97, the state is Good.
 
 
-For reference, the following descriptive statistics were used in scaling:
+These thresholds provide the decision boundaries for converting the continuous latent score into discrete economy states.
 
-Variable	Mean	Standard Deviation	Interpretation of Scaling
+E. Integration into IFRS9 LGD Framework
 
-UNEMP_RATE_lead2	X̄1	σ1	A one-unit increase corresponds to 1 SD rise in expected unemployment rate (2 quarters ahead).
-pct_change_GDP_lag1	X̄2	σ2	A one-unit increase corresponds to 1 SD rise in GDP growth momentum (YoY, 1-quarter lag).
-pct_change_AVG_MONTHLY_WAGE_lead1	X̄3	σ3	A one-unit increase corresponds to 1 SD rise in wage growth expectation (1-quarter ahead).
+The calibrated Macro Model serves as the driver of scenario-dependent LGD estimates:
 
+1. Economy State Prediction
 
-(Insert actual mean and SD values here when available.)
-
-B. Proportional Odds Assumption Testing
-
-A core assumption of the Ordered Logit Model is the Proportional Odds Assumption (POA), which requires that the relationship between predictors and the odds of being in a higher vs. lower category is constant across thresholds.
-
-This was tested using:
-
-Likelihood Ratio (LR) Test statistic = 5.8390, which was statistically insignificant, indicating that the POA holds.
-
-Brant Test, which further confirmed that the proportional odds assumption was not violated for any of the included predictors.
+For each quarter from Mar 2006 to Dec 2065, the Ordered Logit model classifies the state (Poor, Normal, Good) using SCB’s forecasted macroeconomic variables under Baseline, Better, and Worse scenarios.
 
 
-Hence, the Ordered Logit framework is valid, and a more complex alternative (e.g., Generalized Ordered Logit) was unnecessary.
+
+2. Mapping to LGD Adjustments
+
+Each economy state is linked to liquidity horizon adjustments within the IRB Performing LGD framework.
+
+Poor states → longer liquidation horizons, higher LGD.
+
+Good states → shorter liquidation horizons, lower LGD.
 
 
-C. Multicollinearity Diagnostics
 
-Multicollinearity was assessed using Variance Inflation Factors (VIF) for the three final predictors:
+3. Scenario Blending (IFRS9 Requirement)
 
+LGD estimates are blended across scenarios with regulatory-compliant weights:
 
-Variable	VIF	Interpretation
+Baseline (60%)
 
-UNEMP_RATE_lead2	1.3148	Very low → indicates little to no multicollinearity.
-pct_change_GDP_lag1	1.1802	Very low → predictors are independent.
-pct_change_AVG_MONTHLY_WAGE_lead1	1.1384	Very low → confirms no correlation issue.
+Better (20%)
 
-
-Since all VIF values are well below the standard threshold of 5 (and even below 2), multicollinearity is not a concern. This ensures that the estimated coefficients are stable, reliable, and interpretable.
+Worse (20%)
 
 
-D. Calibration Summary
-
-The model satisfies all statistical and econometric requirements:
-
-Variables normalized → comparability across predictors.
-
-No multicollinearity (VIF < 1.5).
-
-Proportional odds assumption confirmed (LR statistic insignificant, Brant Test satisfied).
+This ensures LGDs are probability-weighted and forward-looking, in line with IFRS9.
 
 
-Therefore, the final model is considered well-calibrated and suitable for forward-looking projections of economy state classification.
+
+4. Smoothing with EWMA
+
+To reduce quarter-to-quarter volatility, LGD series are smoothed using an Exponentially Weighted Moving Average (EWMA).
+
+This preserves responsiveness to macro shifts while ensuring stability for capital planning and provisioning.
+
+
+
+
+F. Calibration Outcome
+
+The final model is statistically sound (valid POA, no multicollinearity, significant predictors).
+
+Economically, the model captures labor market, growth, and wage dynamics as the key drivers of systemic risk.
+
+Practically, it provides a structured way to generate Point-in-Time (PIT) LGD estimates that incorporate macroeconomic sensitivity, scenario diversity, and smoothing for operational use.
+
