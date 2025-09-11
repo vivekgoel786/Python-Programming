@@ -1,61 +1,47 @@
-4.3 Data Analysis
+4.4 Model Development Data
 
-A comprehensive exploratory data analysis (EDA) was undertaken to assess the quality, consistency, and predictive potential of the macroeconomic variables (MEVs) provided by the SCB EIC team. This stage was crucial to ensure that the inputs to the Macro Model were both statistically valid and economically meaningful.
-
-Key steps in the analysis included:
-
-1. Data Validation and Quality Checks
-
-Each time series was checked for missing values, outliers, and structural breaks.
-
-Formatting issues (e.g., inconsistent units or scales) were standardized to ensure comparability across variables.
-
-Outliers were examined in the context of economic events (e.g., sharp GDP contractions during COVID-19) to distinguish genuine shocks from data errors.
+The final dataset used for model development was derived from the processed and transformed macroeconomic variables covering the period March 2006 to March 2024 (73 quarters). This timeframe was selected as it spans both normal macroeconomic conditions and major systemic stress events (Global Financial Crisis 2008–09, COVID-19 pandemic 2020–21), ensuring that the dependent variable reflects sufficient variability for robust model training.
 
 
+---
 
-2. Descriptive Statistics and Distributional Analysis
+Dependent Variable (Economy State)
+The dependent variable was constructed through economic tagging, combining historical crisis events with equity market performance to assign each quarter into one of three ordered economic states.
 
-Summary statistics (mean, variance, skewness, kurtosis) were generated to understand the behavior of each MEV over time.
+Economy State	Number of Quarters	% of Sample	Key Events / Conditions
 
-Correlation heatmaps were produced to identify potential redundancies and multicollinearity across predictors.
-
-
-
-3. Stationarity and Time-Series Properties
-
-Since MEVs are inherently time-series data, tests such as the Augmented Dickey-Fuller (ADF) test were performed to check for stationarity.
-
-Where non-stationarity was detected, transformations (e.g., log differences, percentage changes) were applied to stabilize the series.
+Poor	11	15%	Global Financial Crisis (2008–09), COVID-19 Pandemic (2020–21)
+Normal	49	67%	Stable periods with moderate equity index growth
+Good	13	18%	High-growth periods exceeding SET Index threshold (6.48% QoQ change)
 
 
-
-4. Transformations and Feature Expansion
-
-Multiple transformations were applied to generate additional predictive features:
-
-Growth rates (YoY, QoQ)
-
-Logarithmic differences
-
-Smoothing via moving averages (2, 3, and 4-quarter windows)
-
-Leads and lags (up to four quarters) to capture predictive and delayed relationships.
+This distribution is imbalanced toward the Normal class, which aligns with real-world economic cycles where extreme stress or boom conditions are less frequent.
 
 
-This process expanded the dataset from 10 original MEVs to 810 transformed features.
+---
+
+Independent Variables (Final Predictors)
+The original dataset of ~10 macroeconomic indicators was expanded into 810 candidate predictors through transformations (growth rates, log differences, moving averages, leads/lags). Following rigorous univariate and multivariate screening, three predictors were retained for the final Ordered Logit Model:
+
+Variable	Transformation	Economic Rationale
+
+Unemployment Rate	Lead by 2 quarters	Anticipates labor market stress; early warning of downturns.
+YoY GDP Growth	Lag by 1 quarter	Captures momentum from prior quarter’s output; reflects economic inertia.
+YoY Average Monthly Wage Growth	Lead by 1 quarter	Forward-looking indicator of household income, spending power, and consumption trends.
 
 
-
-5. Univariate Screening
-
-Each transformed variable was first tested individually using Ordered Logit models against the dependent variable (Economy State).
-
-Performance criteria included significance of coefficients (p-value < 0.05), pseudo-R² thresholds (≥ 0.10), and validity of proportional odds assumptions.
-
-This filtering reduced the feature set from 810 to a smaller pool of statistically strong and interpretable variables.
+These predictors were selected for their statistical significance, ability to satisfy the proportional odds assumption, and their clear linkage to macroeconomic theory.
 
 
+---
+
+Sample Size and Structure
+
+Observations: 73 quarters.
+
+Predictors: 3 selected MEVs (post-transformation and selection).
+
+Dependent variable: Economy State (ordinal, 3 levels).
 
 
-This structured analysis ensured that the predictors selected for the final Macro Model were both empirically robust and aligned with economic intuition, forming the foundation for subsequent multivariate modelling.
+By combining a well-tagged dependent variable with systematically filtered macroeconomic predictors, the development dataset provided a statistically robust and economically intuitive foundation for estimating the Ordered Logit Macro Model.
