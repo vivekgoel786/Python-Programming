@@ -1,48 +1,125 @@
-The quality and reliability of the Macro Model depend heavily on the assumptions made in defining the dependent variable (Economy State) and selecting macroeconomic predictors. While care has been taken to ensure economic consistency and statistical robustness, certain assumptions and limitations remain inherent in the data inputs:
+5. Model Development
 
-1. Subjectivity in Economic Tagging
+5.1 Model Development Process
 
-The tagging of the dependent variable into Poor, Normal, and Good states is partly based on judgemental thresholds and crisis triggers.
+The model development process for the Macro Model was iterative and systematic, ensuring that only the most predictive and economically interpretable variables were retained. The major steps were:
 
-For example, systemic stress periods such as the Global Financial Crisis (2008–09) and the COVID-19 pandemic (2020–21) were manually classified as Poor states.
+Step 1: Variable Screening
 
-While this approach ensures alignment with observable economic reality, it introduces an element of subjectivity that could affect reproducibility if different tagging criteria were applied.
+The initial dataset consisted of 10 raw macroeconomic variables.
 
+Through transformations (log, square-root, percentage change, log-difference, moving averages of 2, 3, and 4 quarters, and leads/lags up to 4 quarters), the predictor set expanded to 810 candidate variables.
 
+A univariate Ordered Logit Model (OLM) was fitted for each variable against the dependent variable (Economy State).
 
-2. Equity Market Threshold for “Good” State
+Variables were screened through the following criteria:
 
-The distinction between Good and Normal states was operationalized using the 80th percentile threshold of SET Index quarterly returns (6.48%).
+Statistical significance of coefficients (p-value < 0.05) → reduced to 224 variables.
 
-Quarters with SET Index growth above this level were tagged as Good.
+Model fit quality (Pseudo-R² ≥ 0.1) → reduced to 87 variables.
 
-This rule is simple and transparent but assumes that equity market performance is a sufficient proxy for broader economic prosperity, which may not always capture underlying fundamentals.
+Proportional odds assumption checks (via Likelihood Ratio Tests and Brant Test) → reduced to 49 variables.
 
-
-
-3. Limited Dependent Variable Observations
-
-The dataset spans 73 quarters, of which only 11 are tagged as Poor and 13 as Good, leaving a dominant majority of 49 Normal states.
-
-While the Ordered Logit framework is well-suited for ordinal data, the relatively small number of Poor and Good observations could reduce the robustness of coefficient estimates for these categories.
+Model fit and interpretability trade-off → narrowed down to 7 high-performing predictors, representing diverse macroeconomic dimensions.
 
 
 
-4. Assumptions Around Macro Variables
+Step 2: Correlation & Multicollinearity Checks
 
-Independent variables were derived from macroeconomic indicators provided by the SCB EIC team. It is assumed that these indicators are accurately measured, timely, and consistent over the full sample period.
+Pairwise correlations among the shortlisted variables were assessed to avoid redundancy.
 
-Forecasted values of the same variables (till Dec 2065) are also assumed to reflect plausible scenarios (baseline, better, worse) and serve as valid inputs for forward-looking model application.
+Only variables that were statistically strong, economically interpretable, and not highly correlated with each other were retained.
 
-
-
-5. Scope Limitation to Lombard Loans Portfolio
-
-Since the portfolio under consideration is a High-Net-Worth Individual (HNWI) Lombard Loan portfolio with zero defaults, the tagging framework indirectly incorporates macro sensitivity instead of relying on realized default events.
-
-This makes the model highly relevant for stress testing and scenario-based projections, but less directly validated against actual historical default data.
+This ensured robustness of the multivariable OLM estimation and avoided unstable coefficient estimates.
 
 
+Step 3: Multivariable OLM Estimation
+
+All possible combinations of the 7 shortlisted variables were tested, resulting in 127 multivariable model runs.
+
+Each model was evaluated on multiple statistical criteria:
+
+Pseudo-R² (>0.32 for strong explanatory power).
+
+Information criteria (AIC, BIC – lower values preferred).
+
+Significance of all included predictors (p-value < 0.05).
+
+Proportional odds assumption validity.
+
+Absence of multicollinearity.
 
 
-In summary, while the tagging framework and input transformations provide a structured and economically defensible basis for model development, users of the model should remain aware of the subjectivity in tagging, equity market reliance, and limited Poor/Good sample size, all of which may influence the interpretation of results.
+This process allowed balancing parsimony and performance.
+
+
+Step 4: Final Model Selection
+
+The final Macro Model retained 3 predictors (see section 5.3).
+
+This choice ensured a model that was statistically strong, economically meaningful, and practically implementable, while avoiding overfitting.
+
+
+
+---
+
+5.2 Segmentation/Grouping
+
+Unlike retail or wholesale credit models, no borrower-level segmentation was required since the Macro Model is designed at a systemic (economy-wide) level.
+
+The model produces a quarterly classification of the economy state (Poor, Normal, Good), which is then applied uniformly across the Lombard loan portfolio.
+
+This approach is justified given the homogeneous portfolio characteristics:
+
+Small number of obligors (28 HNWI clients).
+
+Zero historical defaults.
+
+Loans backed by highly liquid collateral.
+
+
+Therefore, segmentation at borrower or product level was unnecessary, and the macroeconomic driver approach sufficed.
+
+
+
+---
+
+5.3 Model Specification and Selection
+
+The final specification of the Macro Model is an Ordered Logit Model (OLM) with 3 macroeconomic predictors, chosen for their predictive power, economic interpretability, and compliance with proportional odds assumptions:
+
+1. UNEMP_RATE_lead2
+
+Unemployment rate (in %) two quarters ahead.
+
+Acts as a leading indicator of labor market stress and household consumption potential.
+
+
+
+2. pct_change_GDP_lag1
+
+Year-on-Year % change in GDP with a one-quarter lag.
+
+Captures recent momentum in economic growth, linking directly to systemic performance.
+
+
+
+3. pct_change_AVG_MONTHLY_WAGE_lead1
+
+Year-on-Year % change in average monthly wage, one quarter ahead.
+
+Reflects income growth and demand-side resilience, crucial for consumption and credit performance.
+
+
+
+
+Model Performance Metrics:
+
+Pseudo-R²: 0.3437 (strong explanatory power for macro models).
+
+Accuracy Ratio: 78.79%.
+
+F1 Score: 0.73, indicating balanced precision and recall across economy states.
+
+
+This final model strikes a balance between statistical robustness, economic rationale, and forward-looking capability, making it well-suited for integration into the IFRS9 LGD framework.
