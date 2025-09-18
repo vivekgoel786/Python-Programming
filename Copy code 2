@@ -1,2 +1,8 @@
 Blending
 Instead of using static scenario weights, the PIT LGD framework leverages predicted probabilities from the Ordered Logit Model (OLM) to weight each scenario dynamically. For every forecast quarter, the OLM generates probabilities of the economy being in Poor, Normal, or Good states. These probabilities are then used as blending weights to combine scenario-level PIT LGD estimates. This ensures that the final PIT LGD is fully consistent with the macro model’s forward-looking view, and automatically adapts to changing economic outlooks without relying on arbitrary fixed weights.
+
+Smoothening
+To mitigate volatility and avoid abrupt shifts in PIT LGD estimates arising from quarter-to-quarter macroeconomic fluctuations, an Exponential Weighted Moving Average (EWMA) approach is applied. EWMA places higher weight on more recent observations while gradually decaying the influence of older ones. This smoothening process preserves responsiveness to structural macro changes (such as crises) while filtering out short-term noise, leading to more stable and interpretable PIT LGD outcomes.
+
+Smoothening
+To prevent excessive quarter-on-quarter variability in PIT LGD outputs, we apply an Exponential Weighted Moving Average (EWMA) smoothening technique. EWMA gives higher weight to the most recent estimates while still retaining the influence of past periods through a decaying factor (λ). This approach stabilizes the PIT LGD trajectory, ensuring that outputs are not overly sensitive to short-term noise, while remaining responsive to structural shifts (e.g., crises, recoveries). The combination of OLM-driven probability blending and EWMA smoothening provides a balance of forward-looking accuracy and stability in PIT LGD estimation.
