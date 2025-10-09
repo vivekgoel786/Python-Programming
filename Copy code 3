@@ -1,3 +1,40 @@
-The long history also provides robustness in calibrating the impact of macro-driven liquidity horizons on collateral recovery values.
+1. Model Performance
+the model continues to perform well	for PBL with low PSI of 0.042 indicating strong stability in predict power
+for LBL, PSI is higher at 0.363 however, this should be interpreted with a caution due to limited sample with one yr data
 
-In summary, the PIT LGD development dataset integrates loan and collateral attributes (Feb 2024 snapshot) with historical market data (2007–2024), enabling a forward-looking, scenario-driven estimation of LGDs aligned with IFRS 9 requirements.
+2. Rating transition analysis
+	the matrix indicates movements of clients from mid range ratings to both extremes of the master scale
+	these are reflective of change in observed behaviours of business dynamics especially in small and concentrated Lombard sample
+
+4. Drivers of PSI shift in LBL
+the higher PSI primarily stems from shifts in factor distributions, particularly
+	AUM
+	AUM Buffer ratio
+	KWR
+	
+	these shifts appear to be more data driven than model driven, likely reflecting changing portfolio characteristics 
+	rather than instability in the model itself
+
+
+	
+4. key metrices to support model soundness
+	Avg PD - remains within acceptable bounds, suggesting that the overall risk profile is preserved
+	
+	KT has shown improvement indicating better rank iordering of risky clients
+	
+	AR is strong, reinforcing the model's discriminatory power
+	
+	HHI has slighly declined as there is no observation in MS-12 like before, otherwise it does not compromise concentration risk insights
+	
+
+5. Small sample
+	small datasets is inherently sensitive to even minor distributional changes. The elevated PSI is likely an artifact of small volatility not model instability
+	
+	as more LBL clients join in, we expect more robust and representative validation metrices
+	
+	
+
+conclusion 
+despite PSI shift in LBL model remains stable overall. specially in core metrices like rank ordering, KT, avg pD, AR
+ongoing monitoring and periodic validation, especially as LBL portfolio grows, will ensure continued alignment with portfolio behaviour
+	
