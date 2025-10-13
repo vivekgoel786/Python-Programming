@@ -1,40 +1,26 @@
-1. Model Performance
-the model continues to perform well	for PBL with low PSI of 0.042 indicating strong stability in predict power
-for LBL, PSI is higher at 0.363 however, this should be interpreted with a caution due to limited sample with one yr data
+Once the macro model was finalized and validated, it was employed to generate forward-looking economic state predictions under three macroeconomic scenarios — Baseline, Better, and Worse — using the forecasted macroeconomic variables (MEVs) provided by SCB’s EIC team. These MEV forecasts span from March 2024 to December 2045, enabling long-term estimation of economic conditions for each quarter within the forecast horizon.
 
-2. Rating transition analysis
-	the matrix indicates movements of clients from mid range ratings to both extremes of the master scale
-	these are reflective of change in observed behaviours of business dynamics especially in small and concentrated Lombard sample
+For each scenario, the Ordered Logit Macro Model produced a quarterly probability distribution across the three possible economic states (Poor, Normal, and Good). These probabilities represent the model’s forward-looking assessment of the likely economic condition for each future quarter.
 
-4. Drivers of PSI shift in LBL
-the higher PSI primarily stems from shifts in factor distributions, particularly
-	AUM
-	AUM Buffer ratio
-	KWR
-	
-	these shifts appear to be more data driven than model driven, likely reflecting changing portfolio characteristics 
-	rather than instability in the model itself
+The predicted economy states were then mapped to the LGD framework by linking them with the corresponding liquidity horizons and collateral characteristics within the Lombard portfolio. This ensured that LGD estimates were sensitive to expected macroeconomic variations while remaining consistent with the structural behavior of collateralized exposures.
+
+To generate the Point-in-Time (PIT) LGD estimates, the following sequential steps were applied:
+
+1. Scenario-wise LGD Estimation:
+Using the forecasted economy states under each of the three scenarios, LGD estimates were computed for each quarter from 2007Q2 to 2045Q4, capturing both historical and projected periods.
 
 
-	
-4. key metrices to support model soundness
-	Avg PD - remains within acceptable bounds, suggesting that the overall risk profile is preserved
-	
-	KT has shown improvement indicating better rank iordering of risky clients
-	
-	AR is strong, reinforcing the model's discriminatory power
-	
-	HHI has slighly declined as there is no observation in MS-12 like before, otherwise it does not compromise concentration risk insights
-	
+2. Blending:
+The scenario-specific LGDs were initially combined using probability weights derived from the macro model’s predicted probabilities, ensuring the final PIT LGDs reflected the relative likelihood of each macroeconomic path in line with IFRS 9’s probability-weighted requirement.
 
-5. Small sample
-	small datasets is inherently sensitive to even minor distributional changes. The elevated PSI is likely an artifact of small volatility not model instability
-	
-	as more LBL clients join in, we expect more robust and representative validation metrices
-	
-	
 
-conclusion 
-despite PSI shift in LBL model remains stable overall. specially in core metrices like rank ordering, KT, avg pD, AR
-ongoing monitoring and periodic validation, especially as LBL portfolio grows, will ensure continued alignment with portfolio behaviour
-	
+3. Smoothening:
+To eliminate short-term noise and avoid abrupt quarter-on-quarter jumps, an Exponentially Weighted Moving Average (EWMA) technique was applied to the blended LGD series. This provided a smooth, stable, and interpretable LGD trajectory over time while retaining sensitivity to material macroeconomic changes.
+
+
+4. Averaging with Scenario Weights (IFRS 9 Alignment):
+Finally, in accordance with SCB’s current IFRS 9 practices, the PIT LGD estimates across the three scenarios were also averaged using fixed scenario weights of 60% Baseline, 20% Better, and 20% Worse. This step ensures consistency with regulatory provisioning frameworks while maintaining comparability with existing models and reporting structures.
+
+
+
+The resulting PIT LGD term structure provides a forward-looking, probability-weighted, and smoothed series of LGD estimates through 2045. It successfully balances responsiveness to macroeconomic expectations with stability required for reliable credit loss estimation under IFRS 9.
