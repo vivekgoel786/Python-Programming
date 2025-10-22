@@ -1,10 +1,209 @@
-Given the absence of defaults in the HNWI Lombard portfolio, traditional statistical backtesting approaches could not be applied to the PIT LGD model. Instead, the focus of robustness and stability testing was on evaluating the behavior of LGD outputs across time to ensure that the model produces consistent and interpretable results.
 
-A key evaluation criterion was to confirm that there are no cliff effects or sudden jumps in LGD values from one quarter to the next. Such discontinuities would undermine the reliability of PIT LGDs for risk management and capital planning. To address this, two methodological safeguards were embedded into the framework:
+---
 
-Blending: Scenario outputs were combined using probabilities derived from the macro model, ensuring that LGD results reflect smooth transitions across economic conditions rather than abrupt shifts.
+Slide 1: Title Slide
 
-Smoothening: An Exponentially Weighted Moving Average (EWMA) was applied to further filter out quarter-on-quarter volatility, preserving structural changes while reducing short-term noise.
+Quasi Moment Matching (QMM)
+Calibration Technique for PD Models in Low Default Portfolios
 
 
-The resulting PIT LGD time series demonstrated gradual and stable movements over the full historical horizon (2007Q2–2024Q1), while still capturing increases during stressed macroeconomic periods (e.g., Global Financial Crisis, COVID-19). This confirms that the model outputs are both robust to noise and stable for long-term use in IFRS 9 provisioning and internal risk management.
+---
+
+Slide 2: What is Quasi Moment Matching?
+
+QMM is a calibration technique that adjusts PD estimates to match target default rates and distributional moments (mean, variance).
+
+Commonly used in low-default portfolios (LDPs) where historical defaults are scarce.
+
+Ensures realistic, smooth, and monotonic PD curves while maintaining ranking of credit risk grades.
+
+
+
+---
+
+Slide 3: Uses of QMM
+
+PD Calibration in Low Default Portfolios (LDP)
+Adjusts PDs for high-rated corporates, sovereigns, and project finance.
+
+Regulatory Compliance
+Meets Basel II/III requirements by aligning PD estimates with long-term expectations.
+
+IFRS 9 / ECL Models
+Supports lifetime PD estimation when defaults are rare.
+
+Mapping TTC → PIT PDs
+Converts long-term through-the-cycle PDs to point-in-time PDs reflecting current conditions.
+
+Stress Testing
+Adjust PDs for stressed scenarios in capital planning.
+
+Rating System Calibration
+Ensures each rating grade aligns with benchmarks (internal/external).
+
+
+
+---
+
+Slide 4: Why QMM is Useful
+
+Avoids zero PD problem in low default portfolios.
+
+Aligns model outputs with target portfolio default rates.
+
+Combines statistical rigor and expert judgment.
+
+Maintains discriminatory power among rating grades.
+
+
+
+---
+
+Slide 5: Benefits of QMM
+
+Works with very low or zero historical defaults.
+
+Ensures regulatory compliance (Basel II/III, IFRS 9).
+
+Produces smooth and monotonic PD curves.
+
+Allows consistency across portfolios and over time.
+
+Supports flexible calibration (match mean PD or variance as well).
+
+
+
+---
+
+Slide 6: Limitations of QMM
+
+Sensitive to target PD inputs — wrong target distorts results.
+
+Assumes logit-normal distribution of PDs.
+
+Requires numerical optimization and careful initialization.
+
+Poor implementation may flatten differences between rating grades (loss of discrimination).
+
+Perceived as a black-box technique by stakeholders.
+
+
+
+---
+
+Slide 7: How QMM Works
+
+1. Define target portfolio default rate (mean) and optionally variance.
+
+
+2. Compute empirical PDs for each rating grade.
+
+
+3. Apply logistic transformation:
+
+
+
+PD_{i}^{\text{cal}} = \frac{1}{1 + e^{-(\alpha + \beta \cdot \ln(PD_{i}^{\text{emp}}))}}
+
+5. Calibrated PDs replace empirical PDs for model and reporting use.
+
+
+
+
+---
+
+Slide 8: Mathematical Formulas
+
+Step 1: Logistic Transformation of Empirical PDs
+
+PD_i^{cal} = \frac{1}{1 + \exp\big(-(\alpha + \beta \cdot \ln(PD_i^{emp}))\big)}
+
+Step 2: Match Portfolio Mean (1st Moment)
+
+\frac{1}{N} \sum_{i=1}^N PD_i^{cal} = PD_{\text{target}}
+
+Step 3: Optionally Match Variance (2nd Moment)
+
+\frac{1}{N} \sum_{i=1}^N (PD_i^{cal} - PD_{\text{target}})^2 = \text{Var}_{\text{target}}
+
+Step 4: Optimization
+
+Minimize loss function:
+
+
+\text{Loss} = (\text{Mean}_{cal} - PD_{\text{target}})^2 + \lambda \cdot (\text{Var}_{cal} - \text{Var}_{target})^2
+
+
+---
+
+Slide 9: Sample Python Code
+
+import numpy as np
+from scipy.optimize import minimize
+
+# Example target default rate and empirical PDs
+target_pd = 0.01
+empirical_pds = np.array([0.002, 0.005, 0.01, 0.02])
+
+# Loss function to minimize
+def qmm_loss(params):
+    alpha, beta = params
+    calibrated = 1 / (1 + np.exp(-(alpha + beta * np.log(empirical_pds))))
+    mean_loss = (np.mean(calibrated) - target_pd) ** 2
+    return mean_loss
+
+# Optimization
+res = minimize(qmm_loss, [0.1, 0.1])
+alpha_opt, beta_opt = res.x
+calibrated_pds = 1 / (1 + np.exp(-(alpha_opt + beta_opt * np.log(empirical_pds))))
+
+print("Optimized alpha, beta:", alpha_opt, beta_opt)
+print("Calibrated PDs:", calibrated_pds)
+
+
+---
+
+Slide 10: Visual Illustration (Concept)
+
+Before QMM:
+
+Raw empirical PDs for low-default grades: [0.0, 0.0, 0.01, 0.02]
+
+PD curve is flat at zero → unrealistic
+
+
+After QMM:
+
+Calibrated PDs: [0.002, 0.005, 0.009, 0.015]
+
+Smooth, monotonic curve that aligns with target portfolio PD
+
+
+Visual Concept:
+
+PD
+^
+|           *
+|        *
+|     *
+|  *
+|*
++-----------------> Rating Grades
+  AAA   AA   A   BBB
+Before: Empirical PDs (flat / sparse)
+After:  Calibrated PDs (smooth & monotonic)
+
+
+---
+
+Slide 11: Key Takeaways
+
+QMM is essential for low-default portfolios.
+
+Balances statistical rigor with regulatory expectations.
+
+Produces smooth, monotonic PD curves while avoiding zero-PD problems.
+
+Requires careful selection of target PDs and optimization settings.
+
+Works well in TTC → PIT conversions, stress testing, IFRS 9 calibration, and regulatory reporting.
