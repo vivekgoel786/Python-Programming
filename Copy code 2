@@ -1,209 +1,156 @@
+1. Data Construction
 
----
+You’re manually defining lists of economic and financial variables for Thailand across multiple quarters — from Mar 2006 to Mar 2024.
+These include:
+Macro indicators: GDP, GDPGR (GDP growth rate), CPI (inflation), UNEMP_RATE, AVG_MONTHLY_WAGE, MLR (minimum lending rate)
+Consumption and investment data: PVT_CONSUMPTION, FII (foreign investment inflows), MV_SALES (motor vehicle sales)
+External economic data: THAI_GDP (GDP growth of Thailand)
+Categorical state: Economy_State_dummy (Good, Normal, Poor)
+You combine them all into a pandas DataFrame called data.
 
-Slide 1: Title Slide
 
-Quasi Moment Matching (QMM)
-Calibration Technique for PD Models in Low Default Portfolios
+2. Data Transformations
+You perform mathematical and statistical transformations on all numerical variables to prepare them for modeling or analysis.
+a. Square Root Transformation
+You create new columns like sqrt_GDP, sqrt_CPI, etc.
+→ Useful to stabilize variance and reduce skewness.
 
+b. Log Transformation
+You create log_* versions for all variables.
+→ Common in econometrics to linearize exponential growth relationships.
+(⚠️ Note: You’re taking np.log() of some values that might be negative — that would result in NaNs or errors. You may want to handle those with np.where(x>0, np.log(x), np.nan).)
 
----
+c. Percentage Changes
+You calculate both:
+Quarter-on-Quarter (%QoQ) → data['q_pct_change_*'] = .pct_change()
+Year-on-Year (%YoY) → data['pct_change_*'] = .pct_change(periods=4)
+→ These show short-term and annualized growth rates for each variable.
 
-Slide 2: What is Quasi Moment Matching?
+d. Log Differences
+log_diff_* = log(x) - log(x.shift(1))
+→ Approximates the growth rate of each variable (often more stable than percentage change).
 
-QMM is a calibration technique that adjusts PD estimates to match target default rates and distributional moments (mean, variance).
+e. Moving Averages
+You compute 2-, 3-, and 4-quarter moving averages for each variable.
+→ These smooth out short-term volatility and help detect trends.
 
-Commonly used in low-default portfolios (LDPs) where historical defaults are scarce.
+📅 3. Convert and Sort by Date
+data['Date'] = pd.to_datetime(data['Date'], format='%b-%y')
+data = data.sort_values('Date').reset_index(drop=True)
 
-Ensures realistic, smooth, and monotonic PD curves while maintaining ranking of credit risk grades.
+⏳ 4. Lag and Lead Variables Creation
 
+You create lag (past) and lead (future) versions for every variable:
 
+data[f'{var}_lag1'] = data[var].shift(1)  # 1 quarter before
+...
+data[f'{var}_lead1'] = data[var].shift(-1) # 1 quarter ahead
 
----
 
-Slide 3: Uses of QMM
+→ This gives you a dataset where each row has access to previous and future values of all indicators — ideal for predictive modeling, causality testing, or feature engineering.
 
-PD Calibration in Low Default Portfolios (LDP)
-Adjusts PDs for high-rated corporates, sovereigns, and project finance.
+You also separate these into:
 
-Regulatory Compliance
-Meets Basel II/III requirements by aligning PD estimates with long-term expectations.
+data_lags1, data_lags2, data_lags3, data_lags4
 
-IFRS 9 / ECL Models
-Supports lifetime PD estimation when defaults are rare.
+data_leads1, data_leads2, data_leads3, data_leads4
 
-Mapping TTC → PIT PDs
-Converts long-term through-the-cycle PDs to point-in-time PDs reflecting current conditions.
+Each holds the variables shifted by 1–4 quarters.
 
-Stress Testing
-Adjust PDs for stressed scenarios in capital planning.
+🧱 5. Creating Master Feature Sets
 
-Rating System Calibration
-Ensures each rating grade aligns with benchmarks (internal/external).
+You then construct two large DataFrames:
 
+🧩 all_independent_variables_df
 
+Contains only independent (numerical) features, combining:
 
----
+the base data (excluding Date & Economy_State_dummy)
 
-Slide 4: Why QMM is Useful
+all lagged and lead versions of the same variables
 
-Avoids zero PD problem in low default portfolios.
+➡️ Shape roughly:
+[#rows, (#features × (1 original + 4 lags + 4 leads))]
 
-Aligns model outputs with target portfolio default rates.
+Used for machine learning model inputs.
 
-Combines statistical rigor and expert judgment.
+🧾 all_variables_df
 
-Maintains discriminatory power among rating grades.
+Similar to above, but includes the main Date and Economy_State_dummy columns
+→ Full dataset with all lagged and lead variables, preserving temporal context.
+→ Ensures your dataset is chronologically ordered (important for lags/leads).
 
 
 
----
 
-Slide 5: Benefits of QMM
 
-Works with very low or zero historical defaults.
+correlation_matrix = all_independent_variables_df.corr()
+print(correlation_matrix)
+This calculates and prints the correlation matrix for all independent variables in your dataset (all_independent_variables_df).
+It helps identify how strongly variables are linearly related to one another.
 
-Ensures regulatory compliance (Basel II/III, IFRS 9).
 
-Produces smooth and monotonic PD curves.
 
-Allows consistency across portfolios and over time.
 
-Supports flexible calibration (match mean PD or variance as well).
+⚙️ Part 2: Fitting Ordered Logit Models
+The main function is:
+fit_ordered_logit_models(data, target='Economy_State_dummy')
+Purpose:
+To fit separate ordered logistic regression models (one for each independent variable) to predict an ordered categorical dependent variable (like "Poor", "Normal", "Good").
 
-
-
----
-
-Slide 6: Limitations of QMM
-
-Sensitive to target PD inputs — wrong target distorts results.
-
-Assumes logit-normal distribution of PDs.
-
-Requires numerical optimization and careful initialization.
-
-Poor implementation may flatten differences between rating grades (loss of discrimination).
-
-Perceived as a black-box technique by stakeholders.
-
-
-
----
-
-Slide 7: How QMM Works
-
-1. Define target portfolio default rate (mean) and optionally variance.
-
-
-2. Compute empirical PDs for each rating grade.
-
-
-3. Apply logistic transformation:
-
-
-
-PD_{i}^{\text{cal}} = \frac{1}{1 + e^{-(\alpha + \beta \cdot \ln(PD_{i}^{\text{emp}}))}}
-
-5. Calibrated PDs replace empirical PDs for model and reporting use.
-
-
-
-
----
-
-Slide 8: Mathematical Formulas
-
-Step 1: Logistic Transformation of Empirical PDs
-
-PD_i^{cal} = \frac{1}{1 + \exp\big(-(\alpha + \beta \cdot \ln(PD_i^{emp}))\big)}
-
-Step 2: Match Portfolio Mean (1st Moment)
-
-\frac{1}{N} \sum_{i=1}^N PD_i^{cal} = PD_{\text{target}}
-
-Step 3: Optionally Match Variance (2nd Moment)
-
-\frac{1}{N} \sum_{i=1}^N (PD_i^{cal} - PD_{\text{target}})^2 = \text{Var}_{\text{target}}
-
-Step 4: Optimization
-
-Minimize loss function:
-
-
-\text{Loss} = (\text{Mean}_{cal} - PD_{\text{target}})^2 + \lambda \cdot (\text{Var}_{cal} - \text{Var}_{target})^2
-
-
----
-
-Slide 9: Sample Python Code
-
-import numpy as np
-from scipy.optimize import minimize
-
-# Example target default rate and empirical PDs
-target_pd = 0.01
-empirical_pds = np.array([0.002, 0.005, 0.01, 0.02])
-
-# Loss function to minimize
-def qmm_loss(params):
-    alpha, beta = params
-    calibrated = 1 / (1 + np.exp(-(alpha + beta * np.log(empirical_pds))))
-    mean_loss = (np.mean(calibrated) - target_pd) ** 2
-    return mean_loss
-
-# Optimization
-res = minimize(qmm_loss, [0.1, 0.1])
-alpha_opt, beta_opt = res.x
-calibrated_pds = 1 / (1 + np.exp(-(alpha_opt + beta_opt * np.log(empirical_pds))))
-
-print("Optimized alpha, beta:", alpha_opt, beta_opt)
-print("Calibrated PDs:", calibrated_pds)
-
-
----
-
-Slide 10: Visual Illustration (Concept)
-
-Before QMM:
-
-Raw empirical PDs for low-default grades: [0.0, 0.0, 0.01, 0.02]
-
-PD curve is flat at zero → unrealistic
-
-
-After QMM:
-
-Calibrated PDs: [0.002, 0.005, 0.009, 0.015]
-
-Smooth, monotonic curve that aligns with target portfolio PD
-
-
-Visual Concept:
-
-PD
-^
-|           *
-|        *
-|     *
-|  *
-|*
-+-----------------> Rating Grades
-  AAA   AA   A   BBB
-Before: Empirical PDs (flat / sparse)
-After:  Calibrated PDs (smooth & monotonic)
-
-
----
-
-Slide 11: Key Takeaways
-
-QMM is essential for low-default portfolios.
-
-Balances statistical rigor with regulatory expectations.
-
-Produces smooth, monotonic PD curves while avoiding zero-PD problems.
-
-Requires careful selection of target PDs and optimization settings.
-
-Works well in TTC → PIT conversions, stress testing, IFRS 9 calibration, and regulatory reporting.
+🔍 Step-by-Step Breakdown
+
+1.Set up the target variable
+ordered_categories = ['Poor', 'Normal', 'Good']
+data[target] = pd.Categorical(data[target], categories=ordered_categories, ordered=True)
+
+Converts the dependent variable (Economy_State_dummy) into an ordered categorical variable.
+
+2. Identify independent variables
+    exclude_cols = ['Date', target]
+    independent_vars = [col for col in data.columns if col not in exclude_cols]
+
+Excludes Date and the target variable from the list of predictors.
+Everything else is treated as a potential independent variable.
+
+3. Loop through each independent variable
+For each variable:
+    It keeps only that variable and the target.
+    Drops missing values.
+    Fits an ordered logit model (via statsmodels.miscmodels.ordinal_model.OrderedModel) using:
+        model = OrderedModel(y, X, distr='logit')
+        res = model.fit(method='lbfgs', disp=False)
+
+
+4.Extract results
+For each fitted model:
+It collects:
+    Variable name
+    Coefficients (including threshold parameters)
+    P-values
+    T-statistics
+    Model fit statistics (AIC, BIC, Log-Likelihood, Number of observations)
+    Pseudo R² (if available)
+Each result is stored as a dictionary in a list.
+
+5. Handle failed models
+except Exception as e:
+    print(f"Model failed for variable {var}: {e}")
+If the model can’t be fit (due to missing data or convergence issues), it prints an error message but continues with the rest.
+
+6. Return results
+return pd.DataFrame(results_list)
+Converts the list of results into a DataFrame for easy viewing and export.
+
+🧾 Final Output
+results_df = fit_ordered_logit_models(all_variables_df, target='Economy_State_dummy')
+print(results_df)
+
+Runs the function on your full dataset (all_variables_df).
+Returns and prints a summary DataFrame containing all model statistics for each independent variable.
+
+🧠 In Short
+This script:
+Checks correlations between independent variables.
+Fits individual ordered logistic regressions for each variable predicting the economic state (Poor, Normal, Good).
+Collects and summarizes model performance metrics and parameter estimates into a single, tidy table.
