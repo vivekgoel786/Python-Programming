@@ -1,26 +1,142 @@
-Once the macro model was finalized and validated, it was employed to generate forward-looking economic state predictions under three macroeconomic scenarios — Baseline, Better, and Worse — using the forecasted macroeconomic variables (MEVs) provided by SCB’s EIC team. These MEV forecasts span from March 2024 to December 2045, enabling long-term estimation of economic conditions for each quarter within the forecast horizon.
-
-For each scenario, the Ordered Logit Macro Model produced a quarterly probability distribution across the three possible economic states (Poor, Normal, and Good). These probabilities represent the model’s forward-looking assessment of the likely economic condition for each future quarter.
-
-The predicted economy states were then mapped to the LGD framework by linking them with the corresponding liquidity horizons and collateral characteristics within the Lombard portfolio. This ensured that LGD estimates were sensitive to expected macroeconomic variations while remaining consistent with the structural behavior of collateralized exposures.
-
-To generate the Point-in-Time (PIT) LGD estimates, the following sequential steps were applied:
-
-1. Scenario-wise LGD Estimation:
-Using the forecasted economy states under each of the three scenarios, LGD estimates were computed for each quarter from 2007Q2 to 2045Q4, capturing both historical and projected periods.
+Good question — and a very reasonable validation-team concern. Below I’ll (a) explain why we used the development BU ranking as the anchor during OOT, (b) set out the limitations of that approach, (c) show what we did to mitigate the limitation (with the OOT metrics you already have), and (d) propose an operationally defensible policy going forward — all in a tone you can paste straight into the validation response.
 
 
-2. Blending:
-The scenario-specific LGDs were initially combined using probability weights derived from the macro model’s predicted probabilities, ensuring the final PIT LGDs reflected the relative likelihood of each macroeconomic path in line with IFRS 9’s probability-weighted requirement.
+---
+
+Short answer (one line)
+
+We used the development BU ranking as the anchor for OOT to preserve a consistent benchmark of business judgement while testing model stability; this is defensible for a low-default, small-sample HNWI portfolio, but it has limits — in particular, where the population or key factor distributions change materially we recommend re-eliciting BU ranks (or at minimum a targeted refresh). We also ran sensitivity / stability diagnostics to quantify the impact of changed inputs.
 
 
-3. Smoothening:
-To eliminate short-term noise and avoid abrupt quarter-on-quarter jumps, an Exponentially Weighted Moving Average (EWMA) technique was applied to the blended LGD series. This provided a smooth, stable, and interpretable LGD trajectory over time while retaining sensitivity to material macroeconomic changes.
+---
+
+1) Why we reused the development BU ranking for OOT (rationale)
+
+1. Consistency of the gold standard: The BU ranking used in development represents the business’ calibrated view of client risk at model build time and was the basis for proxy-default construction, bucketing logic and weight optimisation. Re-using it provides a fixed reference point so that OOT primarily assesses whether the model produces stable, consistent scores given new inputs — rather than measuring a moving target (BU opinion), which would confound interpretation.
 
 
-4. Averaging with Scenario Weights (IFRS 9 Alignment):
-Finally, in accordance with SCB’s current IFRS 9 practices, the PIT LGD estimates across the three scenarios were also averaged using fixed scenario weights of 60% Baseline, 20% Better, and 20% Worse. This step ensures consistency with regulatory provisioning frameworks while maintaining comparability with existing models and reporting structures.
+2. Practical constraints: Re-running a full BU re-ranking for OOT is time-consuming and can be operationally burdensome for RMs and BUs (especially for HNWI clients with complex profiles). Given the small sample, the cost (time, consistency) of a full re-ranking can outweigh the benefits for a routine OOT check.
+
+
+3. Objective of OOT in our program: The primary goal of the OOT exercise was model stability and sensitivity testing (do scores/rankings move in line with updated inputs?), not to revalidate BU judgement per se. Holding BU rank fixed lets us isolate model behavior.
+
+
+4. Precedent for low-default portfolios: For zero-default or low-default portfolios, it is common practice to hold the original expert-judgement anchor and use distributional tests (PSI, transition matrices) and rank correlations to detect meaningful drift.
 
 
 
-The resulting PIT LGD term structure provides a forward-looking, probability-weighted, and smoothed series of LGD estimates through 2045. It successfully balances responsiveness to macroeconomic expectations with stability required for reliable credit loss estimation under IFRS 9.
+
+---
+
+2) Limitations & why the validation team’s point is valid
+
+Using stale BU ranks is not perfect:
+
+BU perception can legitimately change when balance-sheet items (AUM, net worth, DSCR) move materially; fixed ranks cannot capture that evolution.
+
+Some model validation metrics (e.g., KT with BU) will naturally decline if the BU view changed materially even if the model behaved correctly.
+
+Interpretation complexity: A drop in KT could mean (a) model deterioration, (b) business view change, or (c) natural noise in small samples. Fixed BU ranks don’t distinguish these causes.
+
+
+Because of these issues, re-ranking is preferable when the population or key drivers show material change.
+
+
+---
+
+3) What we did to mitigate the issue (and evidence)
+
+We were aware of the risk and applied multiple mitigations to quantify and justify our approach:
+
+Score-to-score and MS-to-MS comparisons (KT between OOT and Development MS ratings) were computed to measure internal score stability (not BU alignment). Results show good internal stability:
+
+PBL: KT (OOT vs DEV MS rating) = 57.1%
+
+LBL: KT (OOT vs DEV MS rating) = 85.2%
+These indicate the model’s ordering remained consistent with development ordering — especially strong for LBL.
+
+
+PSI and factor-level PSI were calculated to detect distributional shifts. This provided objective evidence of whether input changes were material:
+
+PBL overall PSI = 0.042 (no material shift)
+
+LBL overall PSI = 0.363 (material shift — exceeds conventional threshold)
+Factor-level PSI for LBL highlighted drivers: AUM excl. loan proceeds (0.72), KWR (0.33), LBL_PBL_Relationship (0.27).
+
+
+Sensitivity test: for the PBL, we replaced just the LBL_PBL_Relationship factor with its development values (keeping all other OOT responses). The resulting PSIs were 0.076 vs dev and 0.039 vs OOT, indicating this factor alone had negligible impact on PBL stability — a concrete test showing the model is not overly sensitive to that single input.
+
+Transition matrices and notch movement analysis were computed to assess practical impact (how many customers moved up/down a notch). This provides business-meaningful context beyond raw KT numbers.
+
+
+Taken together these diagnostics let us distinguish whether a divergence in KT was due to model instability or a genuine change in client financials.
+
+
+---
+
+4) How credible are the OOT results given we used the old BU ranks?
+
+Where input changes were small (PBL) the OOT results are credible: PSI small, distribution similar, and KT/dev alignment remains acceptable — so using the development BU ranks provided a stable, interpretable validation anchor.
+
+Where input changes were material (LBL) the OOT results indicate real population change (factor PSIs large); here, results are still useful but must be interpreted as showing the model correctly captured shifts in client profiles — however, re-ranking by BU would be desirable to re-establish the judgmental benchmark and confirm that model-assigned moves align with updated business views.
+
+
+In short: the results are credible for assessing model stability and sensitivity; they are less suited for assessing current alignment to BU opinion when the portfolio exhibits material change.
+
+
+---
+
+5) Recommended policy & validation wording (practical, defensible)
+
+You can present the following recommendations to the validation team and include it in the model documentation:
+
+Proposed OOT / Re-ranking policy
+
+1. Routine OOT (light-touch): For routine periodic OOT (e.g., annual, semi-annual) where overall PSI < 0.10, reuse the development BU ranking as the anchor; perform full diagnostics (PSI, KT vs dev, KT vs BU, transitions). No fresh BU ranking required.
+
+
+2. Trigger for BU re-ranking: If overall PSI > 0.25 or factor-level PSI for any top-weighted factor > 0.30, then initiate a targeted BU re-ranking exercise. Targeted re-ranking can focus only on customers whose scores moved materially (e.g., more than one bucket or notch) rather than the entire portfolio.
+
+
+3. Ad-hoc re-ranking: For events (market shock, major client events, regulatory request), perform full BU re-ranking.
+
+
+4. Documented sensitivity tests: Always run the sensitivity experiments we executed (replace single-factor values with dev values; compute KT, PSI, transition matrices) and include them in OOT appendix.
+
+
+
+Suggested validation response paragraph (paste-ready)
+
+> “Given the zero-default nature and small size of the HNWI portfolios, we used the BU risk ranking from the development phase as an anchor during OOT in order to maintain a consistent business benchmark while testing model stability. This approach is industry-standard for low-default portfolios where re-eliciting full BU ranking for every OOT is operationally burdensome. To address the concern that BU views may have shifted, we conducted a suite of objective diagnostics (PSI, factor-level PSI, KT between OOT and development MS ratings, transition matrices and sensitivity tests). These diagnostics indicate that the PBL portfolio experienced minimal distributional change (PSI = 0.042), and the model’s ordering remained broadly consistent (KT OOT vs DEV = 57.1%). The LBL portfolio showed a material distributional shift (PSI = 0.363) driven primarily by changes in AUM (PSI = 0.72), KWR (PSI = 0.33) and relationship structure (PSI = 0.27). For LBL, we therefore recommend a targeted BU re-ranking of materially moved customers to re-align the business benchmark; for PBL no re-ranking is required at this stage. This hybrid approach preserves consistency for model stability testing while ensuring refreshed business judgement where objective evidence suggests it is needed.”
+
+
+
+
+---
+
+6) Concrete next steps you can propose to the validation team
+
+1. Agree the PSI thresholds and the re-ranking trigger formally (we propose PSI > 0.25).
+
+
+2. If validation wants, run a pilot re-ranking for LBL limited to customers whose scores moved >1 notch. Compare new BU ranks to model ranks and quantify KT improvement.
+
+
+3. Document the sensitivity experiments performed (already done) in the OOT appendix so the validation team can review inputs and exact numbers.
+
+
+4. For ongoing governance, include a clause: “If OOT diagnostics indicate material drift, BU re-ranking shall be performed within the next review cycle.”
+
+
+
+
+---
+
+7) Final reassurance to the validation team
+
+The approach is transparent, reproducible, and conservative (we used development BU ranks as a fixed benchmark).
+
+We augmented this with objective diagnostics that quantify whether the portfolio actually changed; where evidence shows material change (LBL), we recommend and can support a BU re-ranking.
+
+Therefore, the OOT findings are interpretable and defensible: they reliably indicate model stability in PBL and correctly flagged material change in LBL — which merits targeted BU re-assessment.
+
