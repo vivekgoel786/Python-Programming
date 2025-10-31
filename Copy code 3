@@ -15,7 +15,8 @@ We used the development BU ranking as the anchor for OOT to preserve a consisten
 1. Consistency of the gold standard: The BU ranking used in development represents the business’ calibrated view of client risk at model build time and was the basis for proxy-default construction, bucketing logic and weight optimisation. Re-using it provides a fixed reference point so that OOT primarily assesses whether the model produces stable, consistent scores given new inputs — rather than measuring a moving target (BU opinion), which would confound interpretation.
 
 
-2. Practical constraints: Re-running a full BU re-ranking for OOT is time-consuming and can be operationally burdensome for RMs and BUs (especially for HNWI clients with complex profiles). Given the small sample, the cost (time, consistency) of a full re-ranking can outweigh the benefits for a routine OOT check.
+Re-running a full BU re-ranking for the OOT sample is time-consuming and operationally burdensome for Relationship Managers and Business Units, particularly given the complex financial profiles of HNWI clients. Considering the very small sample size, the cost—in terms of both time and consistency—of a full re-ranking exercise would likely outweigh the incremental analytical benefit for a routine OOT stability check.
+It was therefore mutually agreed with the SCB internal Credit Risk Modelling team to use the same BU risk rankings from the development phase as the benchmark for OOT testing, ensuring consistency in the reference point and alignment with the agreed validation scope.
 
 
 3. Objective of OOT in our program: The primary goal of the OOT exercise was model stability and sensitivity testing (do scores/rankings move in line with updated inputs?), not to revalidate BU judgement per se. Holding BU rank fixed lets us isolate model behavior.
