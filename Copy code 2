@@ -1,156 +1,68 @@
-1. Data Construction
 
-You’re manually defining lists of economic and financial variables for Thailand across multiple quarters — from Mar 2006 to Mar 2024.
-These include:
-Macro indicators: GDP, GDPGR (GDP growth rate), CPI (inflation), UNEMP_RATE, AVG_MONTHLY_WAGE, MLR (minimum lending rate)
-Consumption and investment data: PVT_CONSUMPTION, FII (foreign investment inflows), MV_SALES (motor vehicle sales)
-External economic data: THAI_GDP (GDP growth of Thailand)
-Categorical state: Economy_State_dummy (Good, Normal, Poor)
-You combine them all into a pandas DataFrame called data.
+1. NEW OFFERINGS: Support on Client KRAs | Enhance Market Relevance: Special Initiatives
+
+Contributed beyond core project scope by supporting IFRS-9 ECL framework development through implementation of an Ordered Logit Model to predict economic regimes. Actively supported client KRAs by enabling smooth transition and continuity through detailed handover sessions, code walkthroughs, and documentation. Participated in knowledge transfer initiatives and supported technology enhancements by resolving PySpark-to-Python execution challenges, creating reusable and scalable solutions for the team.
 
 
-2. Data Transformations
-You perform mathematical and statistical transformations on all numerical variables to prepare them for modeling or analysis.
-a. Square Root Transformation
-You create new columns like sqrt_GDP, sqrt_CPI, etc.
-→ Useful to stabilize variance and reduce skewness.
+---
 
-b. Log Transformation
-You create log_* versions for all variables.
-→ Common in econometrics to linearize exponential growth relationships.
-(⚠️ Note: You’re taking np.log() of some values that might be negative — that would result in NaNs or errors. You may want to handle those with np.where(x>0, np.log(x), np.nan).)
+2. Analytical / Process Excellence
 
-c. Percentage Changes
-You calculate both:
-Quarter-on-Quarter (%QoQ) → data['q_pct_change_*'] = .pct_change()
-Year-on-Year (%YoY) → data['pct_change_*'] = .pct_change(periods=4)
-→ These show short-term and annualized growth rates for each variable.
-
-d. Log Differences
-log_diff_* = log(x) - log(x.shift(1))
-→ Approximates the growth rate of each variable (often more stable than percentage change).
-
-e. Moving Averages
-You compute 2-, 3-, and 4-quarter moving averages for each variable.
-→ These smooth out short-term volatility and help detect trends.
-
-📅 3. Convert and Sort by Date
-data['Date'] = pd.to_datetime(data['Date'], format='%b-%y')
-data = data.sort_values('Date').reset_index(drop=True)
-
-⏳ 4. Lag and Lead Variables Creation
-
-You create lag (past) and lead (future) versions for every variable:
-
-data[f'{var}_lag1'] = data[var].shift(1)  # 1 quarter before
-...
-data[f'{var}_lead1'] = data[var].shift(-1) # 1 quarter ahead
+Demonstrated strong analytical excellence by developing and implementing Ordered Logit Models in Python for both PD macro modeling and IFRS-9 ECL economic scenario classification. Delivered high-quality statistical solutions, model diagnostics, and interpretations aligned with regulatory and client expectations. Improved process efficiency through reusable Python frameworks, structured templates, and robust documentation. Ensured analytical rigor while delivering all milestones on time with consistent quality.
 
 
-→ This gives you a dataset where each row has access to previous and future values of all indicators — ideal for predictive modeling, causality testing, or feature engineering.
+---
 
-You also separate these into:
+3. Capability Development and Community Engagement
 
-data_lags1, data_lags2, data_lags3, data_lags4
-
-data_leads1, data_leads2, data_leads3, data_leads4
-
-Each holds the variables shifted by 1–4 quarters.
-
-🧱 5. Creating Master Feature Sets
-
-You then construct two large DataFrames:
-
-🧩 all_independent_variables_df
-
-Contains only independent (numerical) features, combining:
-
-the base data (excluding Date & Economy_State_dummy)
-
-all lagged and lead versions of the same variables
-
-➡️ Shape roughly:
-[#rows, (#features × (1 original + 4 lags + 4 leads))]
-
-Used for machine learning model inputs.
-
-🧾 all_variables_df
-
-Similar to above, but includes the main Date and Economy_State_dummy columns
-→ Full dataset with all lagged and lead variables, preserving temporal context.
-→ Ensures your dataset is chronologically ordered (important for lags/leads).
+Actively contributed to team capability building by conducting structured training and knowledge-transfer sessions on SMOTE and QMM methodologies for the SCB validation team. Provided detailed walkthroughs of Ordered Logit Model Python implementation to clients as part of project handover. Completed all mandatory and technical trainings on time, adhered to Return-to-Office norms, and participated in office cultural initiatives, contributing to a collaborative and engaged work environment.
 
 
+---
+
+4. Client Rating – Overall & Reasonable CSAT | Enhance Quality Delivered to Clients
+
+Consistently delivered all SCB project deliverables on time while maintaining high analytical and documentation quality. Took ownership of critical modeling, IFRS-9 documentation updates, and client handovers with minimal managerial intervention. Demonstrated leadership by addressing client queries on methodology and interpretation with clarity. Maintained appropriate client visibility and supported overall project objectives, contributing positively to client satisfaction and trust.
 
 
+---
 
-correlation_matrix = all_independent_variables_df.corr()
-print(correlation_matrix)
-This calculates and prints the correlation matrix for all independent variables in your dataset (all_independent_variables_df).
-It helps identify how strongly variables are linearly related to one another.
+5. Adherence to Client & Company Compliance / Confidentiality Requirements
 
-
+Fully adhered to all corporate and client compliance requirements, including information security, data confidentiality, and reporting obligations. Ensured zero client escalations, zero compliance breaches, and zero PTP violations throughout the year. Maintained strong discipline in understanding client requirements and delivering strictly within governance and regulatory frameworks.
 
 
-⚙️ Part 2: Fitting Ordered Logit Models
-The main function is:
-fit_ordered_logit_models(data, target='Economy_State_dummy')
-Purpose:
-To fit separate ordered logistic regression models (one for each independent variable) to predict an ordered categorical dependent variable (like "Poor", "Normal", "Good").
+---
 
-🔍 Step-by-Step Breakdown
+6. Customer Focus: Build Strong Customer Relationships & Deliver Customer-Centric Solutions
 
-1.Set up the target variable
-ordered_categories = ['Poor', 'Normal', 'Good']
-data[target] = pd.Categorical(data[target], categories=ordered_categories, ordered=True)
-
-Converts the dependent variable (Economy_State_dummy) into an ordered categorical variable.
-
-2. Identify independent variables
-    exclude_cols = ['Date', target]
-    independent_vars = [col for col in data.columns if col not in exclude_cols]
-
-Excludes Date and the target variable from the list of predictors.
-Everything else is treated as a potential independent variable.
-
-3. Loop through each independent variable
-For each variable:
-    It keeps only that variable and the target.
-    Drops missing values.
-    Fits an ordered logit model (via statsmodels.miscmodels.ordinal_model.OrderedModel) using:
-        model = OrderedModel(y, X, distr='logit')
-        res = model.fit(method='lbfgs', disp=False)
+Maintained a strong customer-centric approach by proactively understanding client requirements and translating them into practical, high-quality analytical solutions. Ensured smooth client transitions through structured handovers, detailed documentation, and transparent communication. Built trust through responsiveness, ownership, and consistent delivery aligned with client expectations.
 
 
-4.Extract results
-For each fitted model:
-It collects:
-    Variable name
-    Coefficients (including threshold parameters)
-    P-values
-    T-statistics
-    Model fit statistics (AIC, BIC, Log-Likelihood, Number of observations)
-    Pseudo R² (if available)
-Each result is stored as a dictionary in a list.
+---
 
-5. Handle failed models
-except Exception as e:
-    print(f"Model failed for variable {var}: {e}")
-If the model can’t be fit (due to missing data or convergence issues), it prints an error message but continues with the rest.
+7. Cultivated Innovation
 
-6. Return results
-return pd.DataFrame(results_list)
-Converts the list of results into a DataFrame for easy viewing and export.
+Applied a problem-solving mindset to introduce innovative analytical approaches and process improvements. Identified methodological gaps and implemented Ordered Logit Models where traditional techniques were not applicable. Enabled dynamic, flexible modeling solutions and improved code usability. Supported cross-technology innovation by resolving PySpark compatibility issues, enhancing execution efficiency and scalability.
 
-🧾 Final Output
-results_df = fit_ordered_logit_models(all_variables_df, target='Economy_State_dummy')
-print(results_df)
 
-Runs the function on your full dataset (all_variables_df).
-Returns and prints a summary DataFrame containing all model statistics for each independent variable.
+---
 
-🧠 In Short
-This script:
-Checks correlations between independent variables.
-Fits individual ordered logistic regressions for each variable predicting the economic state (Poor, Normal, Good).
-Collects and summarizes model performance metrics and parameter estimates into a single, tidy table.
+8. Drives Results
+
+Consistently delivered results under tight timelines with decisiveness and agility. Proactively identified the need for Ordered Logit Models due to ordinal dependent variables in macro and IFRS-9 modeling and successfully implemented, evaluated, and interpreted multiple model variants. Addressed complex client queries confidently and ensured uninterrupted delivery across all project phases.
+
+
+---
+
+9. Collaborates
+
+Worked collaboratively with cross-functional team members to achieve shared objectives. Supported Soham in resolving PySpark code issues, partnered with validation and client teams during knowledge transfer, and engaged openly with peers to incorporate feedback and domain insights. Maintained an open-minded approach, fostering strong professional relationships and effective teamwork.
+
+
+---
+
+10. Develops Talent
+
+Contributed to people development by conducting training and handover sessions on advanced modeling techniques such as SMOTE, QMM, and Ordered Logit Models. Supported peers through code reviews, troubleshooting, and knowledge sharing. Helped build team capability by documenting best practices and enabling smoother onboarding and continuity for ongoing and future engagements.
+
